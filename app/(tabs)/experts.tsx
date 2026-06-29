@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
+import { useRouter } from 'expo-router';
 import { EXPERTS, type Expert } from '@/constants/experts';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const ALL = 'All';
 
 export default function ExpertsScreen() {
+  const router = useRouter();
   const [active, setActive] = useState<string>(ALL);
 
   const categories = useMemo(() => {
@@ -23,7 +24,7 @@ export default function ExpertsScreen() {
   const questions = useMemo(
     () =>
       EXPERTS.flatMap((e) =>
-        e.faqs.slice(0, 1).map((q) => ({ q, name: e.name, url: e.profileUrl }))
+        e.faqs.slice(0, 1).map((q) => ({ q, name: e.name, id: e.id }))
       ),
     []
   );
@@ -53,7 +54,7 @@ export default function ExpertsScreen() {
         <Text style={styles.section}>Questions people bring</Text>
         <Text style={styles.sectionSub}>Tap a question to meet the expert who works with it.</Text>
         {questions.map((item, i) => (
-          <Pressable key={i} style={styles.qRow} onPress={() => WebBrowser.openBrowserAsync(item.url)}>
+          <Pressable key={i} style={styles.qRow} onPress={() => router.push(`/expert/${item.id}`)}>
             <Text style={styles.qText}>{'\u201C' + item.q + '\u201D'}</Text>
             <Text style={styles.qName}>{item.name}</Text>
           </Pressable>
@@ -64,6 +65,7 @@ export default function ExpertsScreen() {
 }
 
 function ExpertCard({ expert }: { expert: Expert }) {
+  const router = useRouter();
   const initials = expert.name
     .replace('Dr. ', '')
     .split(' ')
@@ -72,7 +74,7 @@ function ExpertCard({ expert }: { expert: Expert }) {
     .join('');
 
   return (
-    <Pressable style={styles.card} onPress={() => WebBrowser.openBrowserAsync(expert.profileUrl)}>
+    <Pressable style={styles.card} onPress={() => router.push(`/expert/${expert.id}`)}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initials}</Text>
       </View>

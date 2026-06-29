@@ -1,24 +1,11 @@
-import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF, USER } from '@/constants/brand';
-import { ARTICLES } from '@/constants/articles';
-
-const MOODS = [
-  { key: 'calm', label: 'Calm', suggestion: 'Lovely. Keep the momentum with a short gratitude note in your journal.' },
-  { key: 'stressed', label: 'Stressed', suggestion: 'Try a few minutes of breathwork. Omar and Irina both work with the nervous system.' },
-  { key: 'anxious', label: 'Anxious', suggestion: 'Ground yourself first. A nervous system reset can ease the edge before anything else.' },
-  { key: 'tired', label: 'Tired', suggestion: 'Be gentle today. A slow somatic practice may serve you more than pushing through.' },
-  { key: 'inspired', label: 'Inspired', suggestion: 'Channel it. Explore the experts while the energy is here.' },
-];
-
-const RECOMMENDATIONS = [
-  'Breathwork for stress',
-  'Nervous system regulation',
-  'Financial wellbeing',
-  'Women\u2019s health',
-];
+import { useArticles } from '@/lib/articles';
+import { CLASSES, PROGRAMS } from '@/constants/sessions';
+import { useBookings, useProgress } from '@/lib/store';
 
 function greeting() {
   const h = new Date().getHours();
@@ -27,16 +14,21 @@ function greeting() {
   return 'Good evening';
 }
 
+const FEATURED = [
+  { kind: 'program' as const, item: PROGRAMS[0] },
+  { kind: 'program' as const, item: PROGRAMS[1] },
+  { kind: 'class' as const, item: CLASSES[0] },
+];
+
 export default function HomeScreen() {
   const router = useRouter();
-  const [mood, setMood] = useState<string | null>(null);
+  const bookings = useBookings();
+  const { map, lastReadId } = useProgress();
+  const { articles } = useArticles();
 
-  const suggestion = useMemo(
-    () => MOODS.find((m) => m.key === mood)?.suggestion ?? null,
-    [mood]
-  );
-
-  const latest = ARTICLES[0];
+  const upcoming = bookings[0] ?? null;
+  const reading = lastReadId ? articles.find((a) => a.id === lastReadId) : null;
+  const pct = lastReadId ? Math.round((map[lastReadId] ?? 0) * 100) : 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -45,38 +37,70 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>
           {greeting()}, {USER.name}.
         </Text>
-        <Text style={styles.sub}>Continue your healing journey.</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>How are you feeling today?</Text>
-          <View style={styles.moodRow}>
-            {MOODS.map((m) => {
-              const on = m.key === mood;
-              return (
-                <Pressable key={m.key} onPress={() => setMood(m.key)} style={[styles.mood, on && styles.moodOn]}>
-                  <Text style={[styles.moodText, on && styles.moodTextOn]}>{m.label}</Text>
-                </Pressable>
-              );
-            })}
+        <Text style={styles.label}>UPCOMING SESSION</Text>
+        {upcoming ? (
+          <Pressable
+            style={styles.sessionCard}
+            onPress={() =>
+              router.push(upcoming.kind === 'program' ? `/program/${upcoming.refId}` : `/class/${upcoming.refId}`)
+            }
+          >
+            <View style={styles.sessionIcon}>
+              <Ionicons name="videocam" size={18} color={COLORS.bg} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sessionTitle}>{upcoming.title}</Text>
+              <Text style={styles.sessionMeta}>{upcoming.when}</Text>
+              <Text style={styles.sessionMeta}>with {upcoming.expert}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+          </Pressable>
+        ) : (
+          <Pressable style={styles.emptyCard} onPress={() => router.navigate('/sessions')}>
+            <Text style={styles.emptyText}>No sessions booked yet.</Text>
+            <Text style={styles.emptyLink}>Browse what's coming up</Text>
+          </Pressable>
+        )}
+
+        {reading ? (
+          <View>
+            <Text style={styles.label}>CONTINUE READING</Text>
+            <Pressable style={styles.readCard} onPress={() => router.push(`/article/${reading.id}`)}>
+              <Text style={styles.readCat}>{reading.category.toUpperCase()}</Text>
+              <Text style={styles.readTitle}>{reading.title}</Text>
+              <View style={styles.track}>
+                <View style={[styles.trackFill, { width: `${Math.max(pct, 3)}%` }]} />
+              </View>
+              <Text style={styles.pctText}>{pct}% complete</Text>
+            </Pressable>
           </View>
-          {suggestion ? <Text style={styles.suggestion}>{suggestion}</Text> : null}
-        </View>
+        ) : (
+          <View>
+            <Text style={styles.label}>START A READ</Text>
+            <Pressable style={styles.emptyCard} onPress={() => router.navigate('/read')}>
+              <Text style={styles.emptyText}>Open an article and it picks up right here.</Text>
+              <Text style={styles.emptyLink}>Go to Library</Text>
+            </Pressable>
+          </View>
+        )}
 
-        <Text style={styles.section}>Today's recommendations</Text>
-        <View style={styles.recWrap}>
-          {RECOMMENDATIONS.map((r) => (
-            <Pressable key={r} style={styles.rec} onPress={() => router.navigate('/experts')}>
-              <Text style={styles.recText}>{r}</Text>
+        <Text style={styles.section}>Featured courses</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredRow}>
+          {FEATURED.map((f) => (
+            <Pressable
+              key={f.item.id}
+              style={styles.featuredCard}
+              onPress={() => router.push(f.kind === 'program' ? `/program/${f.item.id}` : `/class/${f.item.id}`)}
+            >
+              <View style={[styles.featuredCover, { backgroundColor: f.item.color }]}>
+                <Text style={styles.featuredCoverTitle}>{f.item.title}</Text>
+              </View>
+              <Text style={styles.featuredName}>{f.item.expertName}</Text>
+              <Text style={styles.featuredKind}>{f.kind === 'program' ? 'Program' : 'Live class'}</Text>
             </Pressable>
           ))}
-        </View>
-
-        <Text style={styles.section}>Latest article</Text>
-        <Pressable style={styles.articleCard} onPress={() => router.navigate('/read')}>
-          <Text style={styles.articleCat}>{latest.category.toUpperCase()}</Text>
-          <Text style={styles.articleTitle}>{latest.title}</Text>
-          <Text style={styles.articleMeta}>{latest.readMinutes} min read</Text>
-        </Pressable>
+        </ScrollView>
       </ScrollView>
     </SafeAreaView>
   );
@@ -86,22 +110,26 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 10 },
-  greeting: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink },
-  sub: { fontFamily: FONT_SERIF, fontStyle: 'italic', fontSize: 17, color: COLORS.muted, marginTop: 6, marginBottom: 22 },
-  card: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 26 },
-  cardTitle: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginBottom: 14 },
-  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  mood: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
-  moodOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
-  moodText: { fontSize: 13, color: COLORS.ink },
-  moodTextOn: { color: COLORS.bg },
-  suggestion: { marginTop: 14, fontSize: 14, lineHeight: 21, color: COLORS.ink, opacity: 0.85 },
-  section: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 14 },
-  recWrap: { gap: 10, marginBottom: 28 },
-  rec: { backgroundColor: COLORS.accentSoft, borderRadius: 16, paddingVertical: 18, paddingHorizontal: 18 },
-  recText: { fontSize: 15, color: COLORS.ink },
-  articleCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 20 },
-  articleCat: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },
-  articleTitle: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 25, color: COLORS.ink, marginBottom: 8 },
-  articleMeta: { fontSize: 13, color: COLORS.muted },
+  greeting: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink, marginBottom: 26 },
+  label: { fontSize: 12, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 12 },
+  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 28 },
+  sessionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  sessionTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  sessionMeta: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
+  emptyCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
+  emptyText: { fontSize: 14, color: COLORS.ink, opacity: 0.85 },
+  emptyLink: { fontSize: 14, color: COLORS.accent, marginTop: 8 },
+  readCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
+  readCat: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },
+  readTitle: { fontFamily: FONT_SERIF, fontSize: 18, lineHeight: 24, color: COLORS.ink, marginBottom: 14 },
+  track: { height: 5, borderRadius: 3, backgroundColor: COLORS.line, overflow: 'hidden' },
+  trackFill: { height: 5, backgroundColor: COLORS.accent },
+  pctText: { fontSize: 12, color: COLORS.muted, marginTop: 8 },
+  section: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
+  featuredRow: { gap: 14, paddingRight: 8 },
+  featuredCard: { width: 220 },
+  featuredCover: { height: 140, borderRadius: 18, padding: 16, justifyContent: 'flex-end' },
+  featuredCoverTitle: { fontFamily: FONT_SERIF, fontSize: 21, lineHeight: 25, color: '#FFFFFF' },
+  featuredName: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, marginTop: 10 },
+  featuredKind: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
 });

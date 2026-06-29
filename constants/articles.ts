@@ -1,63 +1,31 @@
-// The Intend — reading library data.
-// A small local list so the Read tab works now. Next we pull the full, live list
-// from your Wix CMS. Items open on the web for now; in-app reading comes once we
-// connect the article content from Wix.
+// The Intend — Article type plus a small offline fallback.
+// Live articles (with their Wix formatting) are pulled in lib/articles.ts.
+
+export type Run = { text: string; bold?: boolean; italic?: boolean };
+export type Block = { type: 'h' | 'p'; runs: Run[] };
 
 export type Article = {
   id: string;
   title: string;
   category: string;
   excerpt: string;
+  image?: string | null;
+  author?: string;
   readMinutes: number;
-  url: string;
+  body: Block[];
 };
 
-export const ARTICLES: Article[] = [
+export const FALLBACK_ARTICLES: Article[] = [
   {
-    id: 'ocd-gut-microbiome',
-    title: 'Is OCD in the Gut? The Surprising Link Between Microbiome and Mental Health',
-    category: 'Mental Health',
-    excerpt:
-      'New research is reshaping how we think about obsessive thoughts, pointing to the gut as an unexpected player in mental wellbeing.',
-    readMinutes: 6,
-    url: 'https://www.theintend.com/articles',
-  },
-  {
-    id: 'nervous-system-reset',
-    title: 'How to Reset a Nervous System Stuck in Overdrive',
-    category: 'Healing',
-    excerpt:
-      'When the body cannot switch off, rest does not land. A look at the simple practices that bring the nervous system back to baseline.',
-    readMinutes: 5,
-    url: 'https://www.theintend.com/articles',
-  },
-  {
-    id: 'money-and-the-body',
-    title: 'Why Money Stress Lives in the Body, Not Just the Spreadsheet',
-    category: 'Wealth',
-    excerpt:
-      'Financial anxiety is rarely about the numbers alone. Understanding the patterns underneath changes how we decide.',
-    readMinutes: 7,
-    url: 'https://www.theintend.com/articles',
-  },
-  {
-    id: 'feminine-energy-reconnect',
-    title: 'Coming Home to the Body: Reconnecting With Feminine Energy',
-    category: 'Women\u2019s Health',
-    excerpt:
-      'For women who function on the outside but feel flat within, the way back is through sensation, not effort.',
-    readMinutes: 5,
-    url: 'https://www.theintend.com/articles',
-  },
-  {
-    id: 'breathwork-beginners',
-    title: 'Breathwork for Beginners: Where to Actually Start',
-    category: 'Breathwork',
-    excerpt:
-      'A grounded introduction to using the breath to calm the mind and release what the body has been holding.',
+    id: 'fallback-space',
+    title: 'Space Comes First',
+    category: 'Wellbeing',
+    excerpt: 'A different way to think about waiting and what really brings us closer to what we want.',
+    image: null,
     readMinutes: 4,
-    url: 'https://www.theintend.com/articles',
+    body: [
+      { type: 'p', runs: [{ text: 'We tend to treat time as the price of getting what we want. But presence, not the passing of time, may be the thing that actually moves us closer.' }] },
+      { type: 'p', runs: [{ text: 'This is a sample shown only when the live connection to your blog is unavailable.' }] },
+    ],
   },
 ];
-
-export const READ_FORMATS = ['Articles', 'E-books', 'Workbooks', 'Books'];
