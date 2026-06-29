@@ -1,23 +1,18 @@
-// The Intend — expert directory data
-//
-// These experts are stored here in the app on purpose. Each one is a hand-built
-// page on theintend.com rather than a CMS collection, and there are only a
-// handful that rarely change, so a local file is the simplest reliable source.
-//
-// To send "See Profile" straight to an expert's own page, just replace their
-// `profileUrl` below with that expert's page link from your site.
-// To show a real photo instead of initials, put an image URL in `photo`.
+// The Intend — expert directory.
+// Profiles (bio, title, FAQs) are the real summaries from your site. Photos are
+// imported from theintend.com/experts. Each expert's offerings (classes, programs,
+// consultations) are drawn from your Sessions data by matching expertId.
 
 export type Expert = {
   id: string;
   name: string;
-  title: string; // specialty line shown on the card
-  category: string; // used to build the filter chips
-  blurb: string; // short description on the card
-  bio: string; // longer description, for the profile screen later
-  faqs: string[]; // client questions, for later use
-  profileUrl: string; // opens in the in-app browser
-  photo: string | null; // null shows an initials avatar for now
+  title: string;
+  category: string;
+  blurb: string;
+  bio: string;
+  faqs: string[];
+  profileUrl: string;
+  photo: string | null;
 };
 
 export const EXPERTS: Expert[] = [
@@ -34,7 +29,7 @@ export const EXPERTS: Expert[] = [
       `My body is healthy but I still can't get pregnant. Could something deeper be blocking this?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_c30b5193603e46d990e3f5a3ffb7ef3f~mv2.jpeg',
   },
   {
     id: 'scheherazade-hasan',
@@ -49,7 +44,7 @@ export const EXPERTS: Expert[] = [
       `I always feel like I'm running out of money, why is that?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_b489e1d91e9f48e9949985e30007600b~mv2.jpg',
   },
   {
     id: 'ekaterina-murray',
@@ -64,7 +59,7 @@ export const EXPERTS: Expert[] = [
       `I feel stuck between two life stages or roles.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_7f29c751856b44ba9d514866a0251eab~mv2.jpeg',
   },
   {
     id: 'joanna-gudkina',
@@ -79,7 +74,7 @@ export const EXPERTS: Expert[] = [
       `I want to focus on anti-aging and perfect skin without botox or fillers.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_50e4762e170a491786f9f1df3d4c9295~mv2.jpeg',
   },
   {
     id: 'zahra-gozal',
@@ -94,7 +89,7 @@ export const EXPERTS: Expert[] = [
       `I've rebuilt my life on the outside, but on the inside nothing has really changed.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_1c2f322723d24ed88816686e615cbbcb~mv2.jpg',
   },
   {
     id: 'alevtina-buzynarska',
@@ -109,7 +104,7 @@ export const EXPERTS: Expert[] = [
       `I want more love and passion out of my life and my relationships.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_72bd9b4dafc149ecb05aec5964d7e167~mv2.jpg',
   },
   {
     id: 'irina-goldenberg',
@@ -124,6 +119,6 @@ export const EXPERTS: Expert[] = [
       `I have neck pain that leads to headaches. How can I relieve this tension?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: null,
+    photo: 'https://static.wixstatic.com/media/5445e6_cc83748887964f41b610058e7c362806~mv2.jpg',
   },
 ];

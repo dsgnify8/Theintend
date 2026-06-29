@@ -1,12 +1,13 @@
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { COLORS, FONT_SERIF, USER } from '@/constants/brand';
+import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
 import { useBookings, useLiked, useSaved, type Booking } from '@/lib/store';
+import { signOut, useAuth } from '@/lib/auth';
 
 const VIEWS = ['Overview', 'Saved', 'Bookings'];
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -21,6 +22,7 @@ const NOTIFICATIONS = [
 
 export default function YouScreen() {
   const router = useRouter();
+  const { profile, role } = useAuth();
   const [view, setView] = useState('Overview');
   const [notifOpen, setNotifOpen] = useState(false);
   const savedIds = useSaved();
@@ -29,7 +31,10 @@ export default function YouScreen() {
   const { articles } = useArticles();
   const saved = articles.filter((a) => savedIds.includes(a.id));
   const liked = articles.filter((a) => likedIds.includes(a.id));
-  const initials = USER.name.split(' ').map((p) => p[0]).slice(0, 2).join('');
+
+  const displayName = profile?.full_name || 'there';
+  const email = profile?.email || '';
+  const initials = displayName === 'there' ? '·' : displayName.split(' ').map((p) => p[0]).slice(0, 2).join('');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -51,8 +56,13 @@ export default function YouScreen() {
               <Ionicons name="camera" size={13} color={COLORS.bg} />
             </View>
           </View>
-          <Text style={styles.name}>{USER.name}</Text>
-          <Text style={styles.handle}>Your space at The Intend</Text>
+          <Text style={styles.name}>{displayName}</Text>
+          <Text style={styles.handle}>{email || 'Your space at The Intend'}</Text>
+          {role !== 'user' ? (
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleText}>{role.toUpperCase()}</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.segment}>
@@ -127,7 +137,7 @@ export default function YouScreen() {
               <Row label="Notifications" />
               <Row label="Language" value="English" />
               <Row label="Help & support" />
-              <Row label="Sign out" />
+              <Row label="Sign out" onPress={() => signOut()} />
             </View>
           </View>
         ) : null}
@@ -235,9 +245,9 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-function Row({ label, value }: { label: string; value?: string }) {
+function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
   return (
-    <Pressable style={styles.row}>
+    <Pressable style={styles.row} onPress={onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
       {value ? <Text style={styles.rowValue}>{value}</Text> : <Text style={styles.rowChevron}>{'\u203A'}</Text>}
     </Pressable>
@@ -257,6 +267,8 @@ const styles = StyleSheet.create({
   cameraBadge: { position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.bg },
   name: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
   handle: { fontSize: 14, color: COLORS.muted, marginTop: 4 },
+  roleBadge: { marginTop: 10, backgroundColor: COLORS.ink, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
+  roleText: { fontSize: 11, letterSpacing: 1.5, color: COLORS.bg },
   segment: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginTop: 8, marginBottom: 22 },
   segItem: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
   segItemOn: { backgroundColor: COLORS.ink },

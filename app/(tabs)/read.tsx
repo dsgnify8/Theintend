@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 12 },
   catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderTopWidth: 1, borderTopColor: COLORS.line },
   catLabel: { fontSize: 16, color: COLORS.ink },
-  catLabelActive: { color: COLORS.accent, fontFamily: FONT_SERIF },
+  catLabelActive: { color: COLORS.accent, fontWeight: '700' },
   menuBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   menuCard: { position: 'absolute', top: 104, right: 20, backgroundColor: COLORS.bg, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 6, minWidth: 190, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 16 },
