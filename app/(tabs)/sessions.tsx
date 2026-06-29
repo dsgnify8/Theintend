@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { SESSION_CATEGORIES, type SessionClass, type Program } from '@/constants/sessions';
@@ -12,11 +11,13 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 const TABS = ['Classes', 'Programs'];
 
 export default function SessionsScreen() {
-  const { classes: CLASSES, programs: PROGRAMS } = useSessions();
   const [tab, setTab] = useState('Classes');
   const [filterOpen, setFilterOpen] = useState(false);
   const [cats, setCats] = useState<string[]>([]);
   const [maxHours, setMaxHours] = useState(4);
+  const [maxSessions, setMaxSessions] = useState(10);
+  const { classes: CLASSES, programs: PROGRAMS } = useSessions();
+  const isClasses = tab === 'Classes';
 
   const toggleCat = (c: string) =>
     setCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -24,17 +25,24 @@ export default function SessionsScreen() {
   const filteredClasses = CLASSES.filter(
     (c) => (cats.length === 0 || cats.includes(c.category)) && c.durationHours <= maxHours
   );
+  const filteredPrograms = PROGRAMS.filter(
+    (p) => (cats.length === 0 || cats.includes(p.category)) && p.sessions <= maxSessions
+  );
+
+  const clearAll = () => {
+    setCats([]);
+    setMaxHours(4);
+    setMaxSessions(10);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <Text style={styles.kicker}>THE INTEND</Text>
-          {tab === 'Classes' ? (
-            <Pressable style={styles.filterBtn} onPress={() => setFilterOpen(true)} hitSlop={10}>
-              <Ionicons name="options-outline" size={20} color={COLORS.ink} />
-            </Pressable>
-          ) : null}
+          <Pressable style={styles.filterBtn} onPress={() => setFilterOpen(true)} hitSlop={10}>
+            <Ionicons name="options-outline" size={20} color={COLORS.ink} />
+          </Pressable>
         </View>
 
         <Text style={styles.h1}>Sessions</Text>
@@ -51,7 +59,7 @@ export default function SessionsScreen() {
           })}
         </View>
 
-        {tab === 'Classes' ? (
+        {isClasses ? (
           filteredClasses.length > 0 ? (
             filteredClasses.map((c) => <ClassCard key={c.id} item={c} />)
           ) : (
@@ -59,17 +67,21 @@ export default function SessionsScreen() {
               <Text style={styles.noResultText}>No classes match these filters yet.</Text>
             </View>
           )
+        ) : filteredPrograms.length > 0 ? (
+          filteredPrograms.map((p) => <ProgramCard key={p.id} item={p} />)
         ) : (
-          PROGRAMS.map((p) => <ProgramCard key={p.id} item={p} />)
+          <View style={styles.noResult}>
+            <Text style={styles.noResultText}>No programs match these filters yet.</Text>
+          </View>
         )}
       </ScrollView>
 
-      <Modal visible={filterOpen} transparent animationType="fade" onRequestClose={() => setFilterOpen(false)}>
+      <Modal visible={filterOpen} transparent animationType="slide" onRequestClose={() => setFilterOpen(false)}>
         <View style={styles.modalRoot}>
           <Pressable style={styles.backdrop} onPress={() => setFilterOpen(false)} />
-          <BlurView intensity={60} tint="light" style={styles.sheet}>
+          <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Filter classes</Text>
+            <Text style={styles.sheetTitle}>Filter {isClasses ? 'classes' : 'programs'}</Text>
 
             <Text style={styles.filterLabel}>Categories</Text>
             <View style={styles.catWrap}>
@@ -83,27 +95,45 @@ export default function SessionsScreen() {
               })}
             </View>
 
-            <Text style={styles.filterLabel}>Duration · up to {maxHours}h</Text>
-            <Slider
-              minimumValue={1}
-              maximumValue={4}
-              step={0.5}
-              value={maxHours}
-              onValueChange={setMaxHours}
-              minimumTrackTintColor={COLORS.accent}
-              maximumTrackTintColor={COLORS.line}
-              thumbTintColor={COLORS.accent}
-            />
+            {isClasses ? (
+              <View>
+                <Text style={styles.filterLabel}>Duration · up to {maxHours}h</Text>
+                <Slider
+                  minimumValue={1}
+                  maximumValue={4}
+                  step={0.5}
+                  value={maxHours}
+                  onValueChange={setMaxHours}
+                  minimumTrackTintColor={COLORS.accent}
+                  maximumTrackTintColor={COLORS.line}
+                  thumbTintColor={COLORS.accent}
+                />
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.filterLabel}>Sessions · up to {maxSessions}</Text>
+                <Slider
+                  minimumValue={1}
+                  maximumValue={10}
+                  step={1}
+                  value={maxSessions}
+                  onValueChange={setMaxSessions}
+                  minimumTrackTintColor={COLORS.accent}
+                  maximumTrackTintColor={COLORS.line}
+                  thumbTintColor={COLORS.accent}
+                />
+              </View>
+            )}
 
             <View style={styles.sheetActions}>
-              <Pressable onPress={() => { setCats([]); setMaxHours(4); }}>
+              <Pressable onPress={clearAll}>
                 <Text style={styles.clearText}>Clear</Text>
               </Pressable>
               <Pressable style={styles.applyBtn} onPress={() => setFilterOpen(false)}>
                 <Text style={styles.applyText}>Show results</Text>
               </Pressable>
             </View>
-          </BlurView>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -141,6 +171,7 @@ function ProgramCard({ item }: { item: Program }) {
         <View style={styles.metaRow}>
           <Text style={styles.pill}>{item.weeks} weeks</Text>
           <Text style={styles.pill}>{item.sessions} sessions</Text>
+          {item.category ? <Text style={styles.pill}>{item.category}</Text> : null}
         </View>
         <Text style={styles.expert}>{item.expertName}</Text>
         <Text style={styles.going}>{item.price}</Text>
@@ -173,17 +204,17 @@ const styles = StyleSheet.create({
   noResult: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 24, alignItems: 'center' },
   noResultText: { fontSize: 14, color: COLORS.muted },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.25)' },
-  sheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 36, overflow: 'hidden' },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(43,38,34,0.2)', marginBottom: 16 },
-  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 18 },
-  filterLabel: { fontSize: 13, letterSpacing: 0.5, color: COLORS.muted, marginBottom: 12, marginTop: 8 },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
+  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 36, borderTopWidth: 1, borderColor: COLORS.line },
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
+  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 18 },
+  filterLabel: { fontSize: 13, letterSpacing: 0.5, color: COLORS.muted, marginBottom: 12, marginTop: 14 },
   catWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  catChip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, backgroundColor: 'rgba(255,255,255,0.5)' },
+  catChip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
   catChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   catText: { fontSize: 13, color: COLORS.ink },
   catTextOn: { color: COLORS.bg },
-  sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 },
+  sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 28 },
   clearText: { fontSize: 15, color: COLORS.muted },
   applyBtn: { backgroundColor: COLORS.accent, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
   applyText: { color: COLORS.bg, fontSize: 15 },

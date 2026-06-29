@@ -21,6 +21,7 @@ export type Program = {
   title: string;
   expertId: string;
   expertName: string;
+  category: string;
   weeks: number;
   sessions: number;
   cadence: string;
@@ -101,6 +102,7 @@ export const PROGRAMS: Program[] = [
     title: 'Nervous System Reset',
     expertId: 'irina-goldenberg',
     expertName: 'Irina Goldenberg',
+    category: 'Healing',
     weeks: 4,
     sessions: 4,
     cadence: 'Weekly, 60 min live',
@@ -115,6 +117,7 @@ export const PROGRAMS: Program[] = [
     title: 'Building Self-Worth',
     expertId: 'zahra-gozal',
     expertName: 'Zahra Gozal',
+    category: 'Mindset',
     weeks: 6,
     sessions: 6,
     cadence: 'Weekly, 60 min live',
@@ -129,6 +132,7 @@ export const PROGRAMS: Program[] = [
     title: 'Feminine Embodiment',
     expertId: 'alevtina-buzynarska',
     expertName: 'Alevtina Buzynarska',
+    category: 'Feminine',
     weeks: 8,
     sessions: 8,
     cadence: 'Weekly, 75 min live',

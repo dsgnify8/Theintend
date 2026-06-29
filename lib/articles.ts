@@ -141,6 +141,7 @@ export function useArticles(): State {
   useEffect(() => {
     const l = () => setState({ loading: false, articles: cache ?? [], error: null });
     listeners.add(l);
+    let timer: any;
     if (cache) {
       setState({ loading: false, articles: cache, error: null });
     } else {
@@ -154,9 +155,14 @@ export function useArticles(): State {
           inflight = null;
           setState({ loading: false, articles: FALLBACK_ARTICLES, error: String(e?.message ?? e) });
         });
+      // Safety net: if the network is slow, show fallback instead of spinning forever.
+      timer = setTimeout(() => {
+        setState((s) => (s.loading ? { loading: false, articles: cache ?? FALLBACK_ARTICLES, error: s.error } : s));
+      }, 8000);
     }
     return () => {
       listeners.delete(l);
+      if (timer) clearTimeout(timer);
     };
   }, []);
   return state;

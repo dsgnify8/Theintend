@@ -46,13 +46,16 @@ export function useExperts() {
   useEffect(() => {
     const l = () => setState({ experts: cache ?? FALLBACK, loading: false });
     listeners.add(l);
+    let timer: any;
     if (cache) {
       setState({ experts: cache, loading: false });
     } else {
       inflight = inflight ?? load();
       inflight.then((e) => { cache = e; emit(); }).catch(() => { cache = FALLBACK; emit(); });
+      // Safety net: never let the screen spin forever.
+      timer = setTimeout(() => { if (!cache) { cache = FALLBACK; emit(); } }, 6000);
     }
-    return () => { listeners.delete(l); };
+    return () => { listeners.delete(l); if (timer) clearTimeout(timer); };
   }, []);
 
   return { experts: state.experts, loading: state.loading };

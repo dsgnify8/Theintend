@@ -41,6 +41,8 @@ function programFromRow(r: any): Program {
     title: r.title,
     expertId: r.expert_id,
     expertName: r.expert_name,
+    // Fall back to the built-in category if a row predates the category column.
+    category: r.category ?? (FB_PROGRAMS.find((p) => p.id === r.id)?.category ?? ''),
     weeks: r.weeks ?? 0,
     sessions: r.sessions_count ?? 0,
     cadence: r.cadence ?? '',
@@ -63,7 +65,7 @@ export async function seedSessions() {
       id: p.id, kind: 'program', title: p.title, description: p.description,
       expert_id: p.expertId, expert_name: p.expertName, color: p.color,
       weeks: p.weeks, sessions_count: p.sessions, cadence: p.cadence, price: p.price,
-      requires_form: p.requiresForm, status: 'live', sort: 100 + i,
+      requires_form: p.requiresForm, category: p.category, status: 'live', sort: 100 + i,
     })),
   ];
   return supabase.from('sessions').upsert(rows, { onConflict: 'id' });
@@ -96,13 +98,15 @@ export function useSessions() {
   useEffect(() => {
     const l = () => setState({ classes: cache?.classes ?? FB_CLASSES, programs: cache?.programs ?? FB_PROGRAMS, loading: false });
     listeners.add(l);
+    let timer: any;
     if (cache) {
       setState({ classes: cache.classes, programs: cache.programs, loading: false });
     } else {
       inflight = inflight ?? load();
       inflight.then((d) => { cache = d; emit(); }).catch(() => { cache = { classes: FB_CLASSES, programs: FB_PROGRAMS }; emit(); });
+      timer = setTimeout(() => { if (!cache) { cache = { classes: FB_CLASSES, programs: FB_PROGRAMS }; emit(); } }, 6000);
     }
-    return () => { listeners.delete(l); };
+    return () => { listeners.delete(l); if (timer) clearTimeout(timer); };
   }, []);
 
   return state;
