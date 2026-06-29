@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { EXPERTS } from '@/constants/experts';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { createBooking } from '@/lib/bookings';
 
 const SESSION_TYPES = ['Online session', 'In person'];
 
@@ -59,7 +60,7 @@ export default function BookScreen() {
               and the team will confirm your time with you.
             </Text>
 
-            <Pressable style={styles.requestBtn} onPress={() => setRequested(true)}>
+            <Pressable style={styles.requestBtn} onPress={() => { createBooking({ refId: String(id), kind: 'service', title: expert ? `Consultation with ${expert.name}` : 'Consultation', when: type, expert: expert?.name, expertId: String(id) }); setRequested(true); }}>
               <Text style={styles.requestText}>Request this session</Text>
             </Pressable>
           </View>

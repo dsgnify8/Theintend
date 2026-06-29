@@ -8,6 +8,7 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
 import { useBookings, useLiked, useSaved, type Booking } from '@/lib/store';
+import { useHydrateBookings } from '@/lib/bookings';
 import { signOut, updateProfile, useAuth } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
 
@@ -31,6 +32,7 @@ export default function YouScreen() {
   const savedIds = useSaved();
   const likedIds = useLiked();
   const bookings = useBookings();
+  useHydrateBookings();
   const { articles } = useArticles();
   const saved = articles.filter((a) => savedIds.includes(a.id));
   const liked = articles.filter((a) => likedIds.includes(a.id));

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { useSessions } from '@/lib/sessions';
+import { useServices } from '@/lib/services';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function ExpertProfile() {
@@ -11,6 +12,7 @@ export default function ExpertProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { expert, loading } = useExpert(id);
   const { classes: CLASSES, programs: PROGRAMS } = useSessions();
+  const { services: ALL_SERVICES } = useServices();
 
   if (loading) {
     return (
@@ -32,10 +34,18 @@ export default function ExpertProfile() {
     );
   }
 
+  const services = ALL_SERVICES.filter((s) => s.expertId === expert.id);
   const classes = CLASSES.filter((c) => c.expertId === expert.id);
   const programs = PROGRAMS.filter((p) => p.expertId === expert.id);
   const firstName = expert.name.replace('Dr. ', '').split(' ')[0];
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
+
+  const svcMeta = (s: { durationMin: number | null; price: string }) => {
+    const parts: string[] = [];
+    if (s.durationMin) parts.push(`${s.durationMin} min`);
+    if (s.price) parts.push(s.price);
+    return parts.join(' · ');
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -58,7 +68,13 @@ export default function ExpertProfile() {
         <Text style={styles.body}>{expert.bio}</Text>
 
         <Text style={styles.sectionTitle}>What {firstName} offers</Text>
-        <OfferingRow icon="person-outline" title="1:1 consultation" meta="Online or in person" onPress={() => router.push(`/book/${expert.id}`)} />
+        {services.length > 0 ? (
+          services.map((s) => (
+            <OfferingRow key={s.id} icon="person-outline" title={s.name} meta={svcMeta(s)} onPress={() => router.push(`/book/${expert.id}`)} />
+          ))
+        ) : (
+          <OfferingRow icon="person-outline" title="1:1 consultation" meta="Online or in person" onPress={() => router.push(`/book/${expert.id}`)} />
+        )}
         {programs.map((p) => (
           <OfferingRow key={p.id} icon="ribbon-outline" title={p.title} meta={`${p.weeks} weeks · ${p.price}`} onPress={() => router.push(`/program/${p.id}`)} />
         ))}
@@ -74,7 +90,7 @@ export default function ExpertProfile() {
         ))}
 
         <Pressable style={styles.bookBtn} onPress={() => router.push(`/book/${expert.id}`)}>
-          <Text style={styles.bookText}>Book a consultation</Text>
+          <Text style={styles.bookText}>Book with {firstName}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -89,7 +105,7 @@ function OfferingRow({ icon, title, meta, onPress }: { icon: any; title: string;
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.offerTitle}>{title}</Text>
-        <Text style={styles.offerMeta}>{meta}</Text>
+        {meta ? <Text style={styles.offerMeta}>{meta}</Text> : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
     </Pressable>

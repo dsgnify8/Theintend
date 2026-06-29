@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { addBooking } from '@/lib/store';
+import { createBooking } from '@/lib/bookings';
 
 export default function ClassDetail() {
   const router = useRouter();
@@ -26,8 +26,9 @@ export default function ClassDetail() {
 
   const onRsvp = () => {
     setRsvped(true);
-    addBooking({
+    createBooking({
       refId: item.id,
+      expertId: item.expertId,
       kind: 'class',
       title: item.title,
       when: `${item.date} · ${item.time}`,

@@ -14,11 +14,7 @@ export default function AdminApprovals() {
   const [working, setWorking] = useState<string | null>(null);
 
   if (role !== 'admin') {
-    return (
-      <Wrap router={router}>
-        <View style={styles.center}><Text style={styles.muted}>Admins only.</Text></View>
-      </Wrap>
-    );
+    return <Wrap router={router}><View style={styles.center}><Text style={styles.muted}>Admins only.</Text></View></Wrap>;
   }
 
   const onApprove = async (s: Submission) => {
@@ -34,6 +30,8 @@ export default function AdminApprovals() {
     reload();
   };
 
+  const label = (k: string) => (k === 'profile' ? 'PROFILE CHANGE' : k === 'class' ? 'NEW CLASS' : k === 'program' ? 'NEW PROGRAM' : k.toUpperCase());
+
   return (
     <Wrap router={router}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -47,12 +45,26 @@ export default function AdminApprovals() {
         ) : (
           items.map((s) => (
             <View key={s.id} style={styles.card}>
-              <Text style={styles.kind}>{s.kind === 'profile' ? 'PROFILE CHANGE' : s.kind.toUpperCase()}</Text>
+              <Text style={styles.kind}>{label(s.kind)}</Text>
               <Text style={styles.expertId}>{s.expert_id}</Text>
-              {s.payload?.photo ? (
-                <Image source={{ uri: s.payload.photo }} style={styles.preview} resizeMode="cover" />
-              ) : null}
-              {s.payload?.bio ? <Text style={styles.bio}>{s.payload.bio}</Text> : null}
+
+              {s.kind === 'profile' ? (
+                <>
+                  {s.payload?.photo ? <Image source={{ uri: s.payload.photo }} style={styles.preview} resizeMode="cover" /> : null}
+                  {s.payload?.bio ? <Text style={styles.bio}>{s.payload.bio}</Text> : null}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.offerTitle}>{s.payload?.title}</Text>
+                  <Text style={styles.offerMeta}>
+                    {s.kind === 'class'
+                      ? `${s.payload?.date ?? ''} · ${s.payload?.durationHours ?? ''}h · ${s.payload?.category ?? ''}`
+                      : `${s.payload?.weeks ?? ''} weeks · ${s.payload?.price ?? ''}`}
+                  </Text>
+                  {s.payload?.description ? <Text style={styles.bio}>{s.payload.description}</Text> : null}
+                </>
+              )}
+
               <View style={styles.actions}>
                 <Pressable style={[styles.btn, styles.reject]} onPress={() => onReject(s)} disabled={working === s.id}>
                   <Text style={styles.rejectText}>Reject</Text>
@@ -96,6 +108,8 @@ const styles = StyleSheet.create({
   kind: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent },
   expertId: { fontSize: 13, color: COLORS.muted, marginTop: 4, marginBottom: 10 },
   preview: { width: 84, height: 84, borderRadius: 42, marginBottom: 12 },
+  offerTitle: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginBottom: 4 },
+  offerMeta: { fontSize: 13, color: COLORS.muted, marginBottom: 10 },
   bio: { fontSize: 14, lineHeight: 21, color: COLORS.ink, marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
   btn: { flex: 1, paddingVertical: 13, borderRadius: 999, alignItems: 'center' },

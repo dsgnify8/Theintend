@@ -6,6 +6,7 @@ import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
+import { useExpertBookings } from '@/lib/bookings';
 import { useSessions } from '@/lib/sessions';
 import type { Expert } from '@/constants/experts';
 
@@ -20,6 +21,7 @@ export default function ExpertPanel() {
   }, [user?.email]);
 
   const { classes: CLASSES, programs: PROGRAMS } = useSessions();
+  const { items: bookedWithYou } = useExpertBookings(expert?.id ?? undefined);
 
   if (role !== 'expert' && role !== 'admin') {
     return <Screen router={router}><View style={styles.center}><Text style={styles.muted}>This area is for experts.</Text></View></Screen>;
@@ -68,9 +70,21 @@ export default function ExpertPanel() {
         ))}
 
         <Text style={styles.sectionTitle}>Who's booked with you</Text>
-        <View style={styles.soon}>
-          <Text style={styles.soonText}>Booking records appear here once live bookings are connected (next sub-step).</Text>
-        </View>
+        {bookedWithYou.length === 0 ? (
+          <View style={styles.soon}>
+            <Text style={styles.soonText}>No bookings yet. When someone books you, they'll show here.</Text>
+          </View>
+        ) : (
+          bookedWithYou.map((b) => (
+            <View key={b.id} style={styles.row}>
+              <View style={styles.rowIcon}><Ionicons name="person-outline" size={18} color={COLORS.accent} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>{b.booker_name || b.booker_email || 'Someone'}</Text>
+                <Text style={styles.rowMeta}>{b.title} · {b.when_text}</Text>
+              </View>
+            </View>
+          ))
+        )}
 
         <Text style={styles.sectionTitle}>Manage</Text>
         <Pressable style={styles.row} onPress={() => router.push('/expert-edit')}>
@@ -81,14 +95,14 @@ export default function ExpertPanel() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
         </Pressable>
-        <View style={[styles.row, { opacity: 0.55 }]}>
+        <Pressable style={styles.row} onPress={() => router.push('/expert-offer-new')}>
           <View style={styles.rowIcon}><Ionicons name="add-circle-outline" size={18} color={COLORS.accent} /></View>
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle}>Add a class or program</Text>
             <Text style={styles.rowMeta}>Propose a new offering for approval</Text>
           </View>
-          <Text style={styles.soonTag}>Soon</Text>
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
       </ScrollView>
     </Screen>
   );

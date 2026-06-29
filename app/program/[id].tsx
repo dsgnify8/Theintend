@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { addBooking } from '@/lib/store';
+import { createBooking } from '@/lib/bookings';
 
 type Step = 'closed' | 'pay' | 'form' | 'done';
 
@@ -27,8 +27,9 @@ export default function ProgramDetail() {
   }
 
   const finalize = () => {
-    addBooking({
+    createBooking({
       refId: item.id,
+      expertId: item.expertId,
       kind: 'program',
       title: item.title,
       when: `${item.weeks} weeks · ${item.cadence}`,
