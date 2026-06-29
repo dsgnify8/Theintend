@@ -3,13 +3,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { CLASSES } from '@/constants/sessions';
+import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { addBooking } from '@/lib/store';
 
 export default function ClassDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { classes: CLASSES } = useSessions();
   const item = CLASSES.find((c) => c.id === id);
   const [rsvped, setRsvped] = useState(false);
 

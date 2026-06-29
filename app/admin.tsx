@@ -98,6 +98,13 @@ export default function Admin() {
           ))
         )}
 
+        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Review</Text>
+        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-approvals')}>
+          <Ionicons name="checkmark-done-outline" size={20} color={COLORS.accent} />
+          <Text style={[styles.soonText, { color: COLORS.ink }]}>Approvals queue</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
+
         <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Content</Text>
         <Pressable style={styles.soonCard} onPress={() => router.push('/admin-articles')}>
           <Ionicons name="document-text-outline" size={20} color={COLORS.accent} />

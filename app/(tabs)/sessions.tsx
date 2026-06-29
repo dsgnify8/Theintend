@@ -5,12 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
-import { CLASSES, PROGRAMS, SESSION_CATEGORIES, type SessionClass, type Program } from '@/constants/sessions';
+import { SESSION_CATEGORIES, type SessionClass, type Program } from '@/constants/sessions';
+import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const TABS = ['Classes', 'Programs'];
 
 export default function SessionsScreen() {
+  const { classes: CLASSES, programs: PROGRAMS } = useSessions();
   const [tab, setTab] = useState('Classes');
   const [filterOpen, setFilterOpen] = useState(false);
   const [cats, setCats] = useState<string[]>([]);

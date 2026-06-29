@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { PROGRAMS } from '@/constants/sessions';
+import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { addBooking } from '@/lib/store';
 
@@ -12,6 +12,7 @@ type Step = 'closed' | 'pay' | 'form' | 'done';
 export default function ProgramDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { programs: PROGRAMS } = useSessions();
   const item = PROGRAMS.find((p) => p.id === id);
   const [step, setStep] = useState<Step>('closed');
 

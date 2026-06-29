@@ -174,6 +174,7 @@ export default function YouScreen() {
 
             <View style={styles.accountWrap}>
               {role === 'admin' ? <Row label="Admin panel" onPress={() => router.push('/admin')} /> : null}
+              {role === 'expert' ? <Row label="Expert panel" onPress={() => router.push('/expert-panel')} /> : null}
               <Row label="Personal information" />
               <Row label="Notifications" />
               <Row label="Language" value="English" />

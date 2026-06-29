@@ -3,13 +3,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
-import { CLASSES, PROGRAMS } from '@/constants/sessions';
+import { useSessions } from '@/lib/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function ExpertProfile() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { expert, loading } = useExpert(id);
+  const { classes: CLASSES, programs: PROGRAMS } = useSessions();
 
   if (loading) {
     return (

@@ -19,6 +19,7 @@ export default function AdminExpertEdit() {
   const [title, setTitle] = useState('');
   const [blurb, setBlurb] = useState('');
   const [bio, setBio] = useState('');
+  const [accountEmail, setAccountEmail] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -30,6 +31,7 @@ export default function AdminExpertEdit() {
       setTitle(expert.title);
       setBlurb(expert.blurb);
       setBio(expert.bio);
+      setAccountEmail(expert.accountEmail ?? '');
       setPhoto(expert.photo);
       setFilled(true);
     }
@@ -74,7 +76,9 @@ export default function AdminExpertEdit() {
   const save = async () => {
     setBusy(true);
     setStatus(null);
-    const { error } = await updateExpert(expert.id, { name, title, blurb, bio, photo: photo ?? undefined });
+    const { error } = await updateExpert(expert.id, {
+      name, title, blurb, bio, photo: photo ?? undefined, account_email: accountEmail.trim().toLowerCase(),
+    });
     setStatus(error ? `Save failed: ${error.message}` : 'Saved. Changes are live across the app.');
     setBusy(false);
   };
@@ -92,9 +96,7 @@ export default function AdminExpertEdit() {
               ) : (
                 <Text style={styles.avatarText}>{initials}</Text>
               )}
-              {uploading ? (
-                <View style={styles.overlay}><ActivityIndicator color={COLORS.bg} /></View>
-              ) : null}
+              {uploading ? <View style={styles.overlay}><ActivityIndicator color={COLORS.bg} /></View> : null}
             </View>
             <Pressable style={styles.cameraBadge} onPress={pickPhoto} hitSlop={8}>
               <Ionicons name="camera" size={14} color={COLORS.bg} />
@@ -106,6 +108,7 @@ export default function AdminExpertEdit() {
           <Field label="Title" value={title} onChangeText={setTitle} />
           <Field label="Short blurb" value={blurb} onChangeText={setBlurb} multiline />
           <Field label="Bio / approach" value={bio} onChangeText={setBio} multiline tall />
+          <Field label="Linked account email (gives this person their expert panel)" value={accountEmail} onChangeText={setAccountEmail} autoCapitalize="none" keyboardType="email-address" />
 
           <Pressable style={styles.saveBtn} onPress={save} disabled={busy}>
             {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>Save changes</Text>}
@@ -117,7 +120,7 @@ export default function AdminExpertEdit() {
   );
 }
 
-function Field({ label, value, onChangeText, multiline, tall }: { label: string; value: string; onChangeText: (t: string) => void; multiline?: boolean; tall?: boolean }) {
+function Field({ label, value, onChangeText, multiline, tall, autoCapitalize, keyboardType }: { label: string; value: string; onChangeText: (t: string) => void; multiline?: boolean; tall?: boolean; autoCapitalize?: any; keyboardType?: any }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -125,6 +128,8 @@ function Field({ label, value, onChangeText, multiline, tall }: { label: string;
         value={value}
         onChangeText={onChangeText}
         multiline={multiline}
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
         style={[styles.input, multiline && styles.inputMulti, tall && styles.inputTall]}
         placeholderTextColor={COLORS.muted}
       />

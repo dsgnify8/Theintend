@@ -1,5 +1,6 @@
 // Experts loaded from Supabase, with the built-in list as a fallback so the app
 // always works. Admins can edit rows; edits broadcast to every open screen.
+// An expert row can be linked to a login via account_email.
 
 import { useEffect, useState } from 'react';
 import { decode } from 'base64-arraybuffer';
@@ -11,21 +12,26 @@ let inflight: Promise<Expert[]> | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
+function fromRow(r: any): Expert {
+  return {
+    id: r.id,
+    name: r.name,
+    title: r.title,
+    category: r.category,
+    blurb: r.blurb,
+    bio: r.bio,
+    faqs: r.faqs ?? [],
+    profileUrl: r.profile_url ?? '',
+    photo: r.photo ?? null,
+    accountEmail: r.account_email ?? null,
+  };
+}
+
 async function load(): Promise<Expert[]> {
   try {
     const { data, error } = await supabase.from('experts').select('*').order('sort', { ascending: true });
     if (error || !data || data.length === 0) return FALLBACK;
-    return data.map((r: any): Expert => ({
-      id: r.id,
-      name: r.name,
-      title: r.title,
-      category: r.category,
-      blurb: r.blurb,
-      bio: r.bio,
-      faqs: r.faqs ?? [],
-      profileUrl: r.profile_url ?? '',
-      photo: r.photo ?? null,
-    }));
+    return data.map(fromRow);
   } catch {
     return FALLBACK;
   }
@@ -44,19 +50,9 @@ export function useExperts() {
       setState({ experts: cache, loading: false });
     } else {
       inflight = inflight ?? load();
-      inflight
-        .then((e) => {
-          cache = e;
-          emit();
-        })
-        .catch(() => {
-          cache = FALLBACK;
-          emit();
-        });
+      inflight.then((e) => { cache = e; emit(); }).catch(() => { cache = FALLBACK; emit(); });
     }
-    return () => {
-      listeners.delete(l);
-    };
+    return () => { listeners.delete(l); };
   }, []);
 
   return { experts: state.experts, loading: state.loading };
@@ -67,6 +63,16 @@ export function useExpert(id?: string) {
   return { expert: experts.find((e) => e.id === id), loading };
 }
 
+export async function getExpertForEmail(email: string): Promise<Expert | null> {
+  try {
+    const { data } = await supabase.from('experts').select('*').ilike('account_email', email).limit(1);
+    const r = data?.[0];
+    return r ? fromRow(r) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function reloadExperts() {
   cache = await load();
   emit();
@@ -74,24 +80,14 @@ export async function reloadExperts() {
 
 export async function seedExperts() {
   const rows = FALLBACK.map((e, i) => ({
-    id: e.id,
-    name: e.name,
-    title: e.title,
-    category: e.category,
-    blurb: e.blurb,
-    bio: e.bio,
-    faqs: e.faqs,
-    profile_url: e.profileUrl,
-    photo: e.photo,
-    sort: i,
+    id: e.id, name: e.name, title: e.title, category: e.category, blurb: e.blurb,
+    bio: e.bio, faqs: e.faqs, profile_url: e.profileUrl, photo: e.photo, sort: i,
   }));
   const { error } = await supabase.from('experts').upsert(rows, { onConflict: 'id' });
   if (!error) await reloadExperts();
   return { error };
 }
 
-// Seeds the table from the built-in list only if it is currently empty,
-// so we never overwrite admin edits.
 export async function ensureSeeded() {
   try {
     const { data } = await supabase.from('experts').select('id').limit(1);
@@ -104,7 +100,7 @@ export async function ensureSeeded() {
 
 export async function updateExpert(
   id: string,
-  patch: Partial<{ bio: string; photo: string; title: string; blurb: string; name: string }>
+  patch: Partial<{ bio: string; photo: string; title: string; blurb: string; name: string; account_email: string }>
 ) {
   const { error } = await supabase.from('experts').update(patch).eq('id', id);
   if (!error) await reloadExperts();
