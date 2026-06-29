@@ -1,15 +1,25 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { EXPERTS } from '@/constants/experts';
+import { useExpert } from '@/lib/experts';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function ExpertProfile() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const expert = EXPERTS.find((e) => e.id === id);
+  const { expert, loading } = useExpert(id);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <BackBar onPress={() => router.back()} />
+        <View style={styles.loaderBox}><ActivityIndicator color={COLORS.accent} /></View>
+      </SafeAreaView>
+    );
+  }
 
   if (!expert) {
     return (
@@ -47,29 +57,12 @@ export default function ExpertProfile() {
         <Text style={styles.body}>{expert.bio}</Text>
 
         <Text style={styles.sectionTitle}>What {firstName} offers</Text>
-        <OfferingRow
-          icon="person-outline"
-          title="1:1 consultation"
-          meta="Online or in person"
-          onPress={() => router.push(`/book/${expert.id}`)}
-        />
+        <OfferingRow icon="person-outline" title="1:1 consultation" meta="Online or in person" onPress={() => router.push(`/book/${expert.id}`)} />
         {programs.map((p) => (
-          <OfferingRow
-            key={p.id}
-            icon="ribbon-outline"
-            title={p.title}
-            meta={`${p.weeks} weeks · ${p.price}`}
-            onPress={() => router.push(`/program/${p.id}`)}
-          />
+          <OfferingRow key={p.id} icon="ribbon-outline" title={p.title} meta={`${p.weeks} weeks · ${p.price}`} onPress={() => router.push(`/program/${p.id}`)} />
         ))}
         {classes.map((c) => (
-          <OfferingRow
-            key={c.id}
-            icon="videocam-outline"
-            title={c.title}
-            meta={`${c.date} · ${c.durationHours}h live`}
-            onPress={() => router.push(`/class/${c.id}`)}
-          />
+          <OfferingRow key={c.id} icon="videocam-outline" title={c.title} meta={`${c.date} · ${c.durationHours}h live`} onPress={() => router.push(`/class/${c.id}`)} />
         ))}
 
         <Text style={styles.sectionTitle}>Questions I work with</Text>
@@ -115,6 +108,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
+  loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   head: { alignItems: 'center', paddingVertical: 12 },
   avatar: { width: 110, height: 110, borderRadius: 55, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 16 },

@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
 import { useBookings, useLiked, useSaved, type Booking } from '@/lib/store';
-import { signOut, useAuth } from '@/lib/auth';
+import { signOut, updateProfile, useAuth } from '@/lib/auth';
+import { uploadAvatar } from '@/lib/upload';
 
 const VIEWS = ['Overview', 'Saved', 'Bookings'];
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -22,9 +24,10 @@ const NOTIFICATIONS = [
 
 export default function YouScreen() {
   const router = useRouter();
-  const { profile, role } = useAuth();
+  const { session, profile, role } = useAuth();
   const [view, setView] = useState('Overview');
   const [notifOpen, setNotifOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const savedIds = useSaved();
   const likedIds = useLiked();
   const bookings = useBookings();
@@ -32,9 +35,26 @@ export default function YouScreen() {
   const saved = articles.filter((a) => savedIds.includes(a.id));
   const liked = articles.filter((a) => likedIds.includes(a.id));
 
-  const displayName = profile?.full_name || 'there';
-  const email = profile?.email || '';
-  const initials = displayName === 'there' ? '·' : displayName.split(' ').map((p) => p[0]).slice(0, 2).join('');
+  const loggedIn = !!session;
+  const displayName = loggedIn ? (profile?.full_name || 'You') : 'Welcome';
+  const initials = loggedIn && profile?.full_name ? profile.full_name.split(' ').map((p) => p[0]).slice(0, 2).join('') : '·';
+
+  const pickAndUpload = async () => {
+    if (!loggedIn) {
+      router.push('/login');
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.6, base64: true });
+    if (res.canceled || !res.assets?.[0]?.base64) return;
+    setUploading(true);
+    try {
+      const url = await uploadAvatar(session.user.id, res.assets[0].base64);
+      await updateProfile({ avatar_url: url });
+    } catch (e) {
+      console.warn('avatar upload failed', e);
+    }
+    setUploading(false);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -50,19 +70,39 @@ export default function YouScreen() {
         <View style={styles.profile}>
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} resizeMode="cover" />
+              ) : (
+                <Text style={styles.avatarText}>{initials}</Text>
+              )}
+              {uploading ? (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator color={COLORS.bg} />
+                </View>
+              ) : null}
             </View>
-            <View style={styles.cameraBadge}>
+            <Pressable style={styles.cameraBadge} onPress={pickAndUpload} hitSlop={8}>
               <Ionicons name="camera" size={13} color={COLORS.bg} />
-            </View>
+            </Pressable>
           </View>
           <Text style={styles.name}>{displayName}</Text>
-          <Text style={styles.handle}>{email || 'Your space at The Intend'}</Text>
-          {role !== 'user' ? (
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{role.toUpperCase()}</Text>
-            </View>
-          ) : null}
+          {loggedIn ? (
+            <>
+              <Text style={styles.handle}>{profile?.email || 'Your space at The Intend'}</Text>
+              {role !== 'user' ? (
+                <View style={styles.roleBadge}>
+                  <Text style={styles.roleText}>{role.toUpperCase()}</Text>
+                </View>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Text style={styles.handle}>Sign in to sync your space across devices</Text>
+              <Pressable style={styles.signInBtn} onPress={() => router.push('/login')}>
+                <Text style={styles.signInText}>Sign in or create account</Text>
+              </Pressable>
+            </>
+          )}
         </View>
 
         <View style={styles.segment}>
@@ -133,11 +173,16 @@ export default function YouScreen() {
             </View>
 
             <View style={styles.accountWrap}>
+              {role === 'admin' ? <Row label="Admin panel" onPress={() => router.push('/admin')} /> : null}
               <Row label="Personal information" />
               <Row label="Notifications" />
               <Row label="Language" value="English" />
               <Row label="Help & support" />
-              <Row label="Sign out" onPress={() => signOut()} />
+              {loggedIn ? (
+                <Row label="Sign out" onPress={() => signOut()} />
+              ) : (
+                <Row label="Sign in" onPress={() => router.push('/login')} />
+              )}
             </View>
           </View>
         ) : null}
@@ -262,13 +307,17 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 48 },
   profile: { alignItems: 'center', paddingVertical: 12 },
   avatarWrap: { marginBottom: 14 },
-  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: '100%', height: '100%' },
   avatarText: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.accent },
+  uploadOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
   cameraBadge: { position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.bg },
   name: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
-  handle: { fontSize: 14, color: COLORS.muted, marginTop: 4 },
+  handle: { fontSize: 14, color: COLORS.muted, marginTop: 4, textAlign: 'center' },
   roleBadge: { marginTop: 10, backgroundColor: COLORS.ink, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
   roleText: { fontSize: 11, letterSpacing: 1.5, color: COLORS.bg },
+  signInBtn: { marginTop: 14, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
+  signInText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
   segment: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginTop: 8, marginBottom: 22 },
   segItem: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
   segItemOn: { backgroundColor: COLORS.ink },

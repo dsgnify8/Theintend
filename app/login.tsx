@@ -14,7 +14,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!loading && session) return <Redirect href="/(tabs)" />;
+  if (!loading && session) return <Redirect href="/(tabs)/you" />;
 
   const submit = async () => {
     setBusy(true);

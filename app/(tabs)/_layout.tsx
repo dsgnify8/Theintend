@@ -1,37 +1,10 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Redirect, Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { useAuth } from '@/lib/auth';
+import { COLORS } from '@/constants/brand';
 
+// During development the app opens straight to Home. Sign-in lives in the You tab.
+// Before launch we will gate this behind login again.
 export default function TabsLayout() {
-  const { session, loading } = useAuth();
-  const router = useRouter();
-  const [showEscape, setShowEscape] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowEscape(true), 2500);
-    return () => clearTimeout(t);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.splash}>
-        <Text style={styles.brand}>THE INTEND</Text>
-        <ActivityIndicator color={COLORS.accent} style={{ marginTop: 18 }} />
-        <Text style={styles.status}>Starting…</Text>
-        {showEscape ? (
-          <Pressable style={styles.btn} onPress={() => router.replace('/login')}>
-            <Text style={styles.btnText}>Continue to sign in</Text>
-          </Pressable>
-        ) : null}
-      </View>
-    );
-  }
-
-  if (!session) return <Redirect href="/login" />;
-
   return (
     <Tabs
       screenOptions={{
@@ -49,11 +22,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  splash: { flex: 1, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
-  brand: { fontFamily: FONT_SERIF, fontSize: 16, letterSpacing: 4, color: COLORS.ink },
-  status: { fontSize: 13, color: COLORS.muted, marginTop: 12 },
-  btn: { marginTop: 28, paddingVertical: 14, paddingHorizontal: 26, borderRadius: 999, backgroundColor: COLORS.accent },
-  btnText: { color: COLORS.bg, fontSize: 15 },
-});

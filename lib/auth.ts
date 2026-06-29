@@ -51,7 +51,6 @@ async function init() {
 }
 
 init();
-// Safety net: never let the gate hang on the spinner.
 setTimeout(finishInit, 4000);
 
 supabase.auth.onAuthStateChange(async (_event, s) => {
@@ -67,15 +66,25 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signUp(email: string, password: string, fullName: string) {
-  return supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: fullName } },
-  });
+  return supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
 }
 
 export async function signOut() {
   await supabase.auth.signOut();
+}
+
+export async function refreshProfile() {
+  if (session?.user) {
+    await loadProfile(session.user.id);
+    emit();
+  }
+}
+
+export async function updateProfile(patch: Partial<Profile>) {
+  if (!session?.user) return { error: { message: 'Not signed in' } };
+  const { error } = await supabase.from('profiles').update(patch).eq('id', session.user.id);
+  if (!error) await refreshProfile();
+  return { error };
 }
 
 export function useAuth() {
