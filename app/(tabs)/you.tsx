@@ -62,10 +62,18 @@ export default function YouScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.topTitle}>You</Text>
-        <Pressable onPress={() => setNotifOpen(true)} hitSlop={10}>
-          <Ionicons name="notifications-outline" size={23} color={COLORS.ink} />
-          <View style={styles.bellDot} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
+          <Pressable onPress={() => setNotifOpen(true)} hitSlop={10}>
+            <Ionicons name="notifications-outline" size={23} color={COLORS.ink} />
+            <View style={styles.bellDot} />
+          </Pressable>
+          <Pressable
+            onPress={async () => { if (loggedIn) { await signOut(); } router.push('/login'); }}
+            hitSlop={10}
+          >
+            <Ionicons name={loggedIn ? 'log-out-outline' : 'log-in-outline'} size={23} color={COLORS.ink} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

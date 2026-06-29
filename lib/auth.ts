@@ -30,8 +30,18 @@ function finishInit() {
 
 async function loadProfile(userId: string) {
   try {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    profile = (data as Profile) ?? null;
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (data) {
+      profile = data as Profile;
+      return;
+    }
+    // No profile row yet. Create one from the auth user so the account works.
+    const { data: u } = await supabase.auth.getUser();
+    const email = u?.user?.email ?? null;
+    const full_name = (u?.user?.user_metadata as any)?.full_name ?? null;
+    await supabase.from('profiles').upsert({ id: userId, email, full_name }, { onConflict: 'id' });
+    const { data: again } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    profile = (again as Profile) ?? null;
   } catch {
     profile = null;
   }
