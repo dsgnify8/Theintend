@@ -7,7 +7,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { type Article, type Block } from '@/constants/articles';
 import { useArticles } from '@/lib/articles';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { isLiked, isSaved, setProgress, toggleLiked, toggleSaved, useLiked, useSaved } from '@/lib/store';
+import { isLiked, isSaved, recordRead, setProgress, toggleLiked, toggleSaved, useLiked, useSaved } from '@/lib/store';
 
 export default function ArticleReader() {
   const router = useRouter();
@@ -21,6 +21,10 @@ export default function ArticleReader() {
   useEffect(() => {
     if (article) setProgress(article.id, 0);
   }, [article?.id]);
+
+  useEffect(() => {
+    if (id) recordRead(id);
+  }, [id]);
 
   if (loading) {
     return (

@@ -12,6 +12,7 @@ export type SessionClass = {
   date: string;
   time: string;
   going: number;
+  link?: string;
   color: string;
   description: string;
 };

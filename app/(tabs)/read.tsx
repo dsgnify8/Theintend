@@ -128,6 +128,7 @@ export default function LibraryScreen() {
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)} />
         <View style={styles.menuCard}>
           <MenuRow icon="musical-notes-outline" label="Sounds" onPress={() => go('/sounds')} />
+          <MenuRow icon="leaf-outline" label="Breathwork" onPress={() => go('/breathwork')} />
           <MenuRow icon="document-text-outline" label="Workbooks" tag="Soon" onPress={() => go('/workbooks')} />
           <MenuRow icon="create-outline" label="Journaling" tag="Soon" onPress={() => go('/journaling')} />
         </View>

@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FramedImage } from '@/components/FramedImage';
 import { useRouter } from 'expo-router';
 import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
+import { FramedImage } from '@/components/FramedImage';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const ALL = 'All';
@@ -47,38 +46,37 @@ export default function ExpertsScreen() {
         {loading ? (
           <View style={styles.loader}><ActivityIndicator color={COLORS.accent} /></View>
         ) : (
-          visible.map((e) => <HeroCard key={e.id} expert={e} />)
+          <View style={styles.list}>
+            {visible.map((e, i) => (
+              <ExpertCard key={e.id} expert={e} reverse={i % 2 === 1} />
+            ))}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function HeroCard({ expert }: { expert: Expert }) {
+function ExpertCard({ expert, reverse }: { expert: Expert; reverse: boolean }) {
   const router = useRouter();
   return (
-    <Pressable style={styles.hero} onPress={() => router.push(`/expert/${expert.id}`)}>
-      <View style={styles.heroImageWrap}>
+    <Pressable
+      style={[styles.card, reverse && styles.cardReverse]}
+      onPress={() => router.push(`/expert/${expert.id}`)}
+    >
+      <View style={styles.photoWrap}>
         {expert.photo ? (
-          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} />
+          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={18} />
         ) : (
-          <View style={[styles.heroImage, styles.heroFallback]}>
-            <Text style={styles.heroInitials}>{initials(expert.name)}</Text>
-          </View>
+          <View style={styles.photoFallback}><Text style={styles.photoInitials}>{initials(expert.name)}</Text></View>
         )}
-        <LinearGradient
-          colors={['transparent', 'rgba(43,38,34,0.08)', 'rgba(43,38,34,0.86)']}
-          style={styles.heroGradient}
-        />
-        <View style={styles.heroNameWrap}>
-          <Text style={styles.heroCategory}>{expert.category.toUpperCase()}</Text>
-          <Text style={styles.heroName}>{expert.name}</Text>
-        </View>
       </View>
-      <View style={styles.heroBody}>
-        <Text style={styles.heroTitle}>{expert.title.toUpperCase()}</Text>
-        <Text style={styles.heroBlurb}>{expert.blurb}</Text>
-        <View style={styles.heroBtn}><Text style={styles.heroBtnText}>See profile</Text></View>
+      <View style={[styles.body, reverse && styles.bodyReverse]}>
+        <Text style={styles.cat}>{expert.category.toUpperCase()}</Text>
+        <Text style={styles.name}>{expert.name}</Text>
+        <Text style={styles.role}>{expert.title.toUpperCase()}</Text>
+        <Text style={styles.blurb} numberOfLines={3}>{expert.blurb}</Text>
+        <Text style={styles.link}>See profile {'\u203A'}</Text>
       </View>
     </Pressable>
   );
@@ -96,18 +94,26 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: COLORS.ink },
   chipTextOn: { color: COLORS.bg },
   loader: { paddingVertical: 60, alignItems: 'center' },
-  hero: { backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', marginTop: 18, marginBottom: 20 },
-  heroImageWrap: { height: 300, width: '100%', position: 'relative', backgroundColor: COLORS.accentSoft },
-  heroImage: { width: '100%', height: '100%' },
-  heroFallback: { alignItems: 'center', justifyContent: 'center' },
-  heroInitials: { fontFamily: FONT_SERIF, fontSize: 64, color: COLORS.accent },
-  heroGradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 180 },
-  heroNameWrap: { position: 'absolute', left: 22, right: 22, bottom: 18 },
-  heroCategory: { fontSize: 11, letterSpacing: 2, color: COLORS.bg, opacity: 0.9, marginBottom: 6 },
-  heroName: { fontFamily: FONT_SERIF, fontSize: 32, lineHeight: 36, color: '#FFFFFF' },
-  heroBody: { padding: 22 },
-  heroTitle: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 10 },
-  heroBlurb: { fontSize: 15, lineHeight: 23, color: COLORS.ink, opacity: 0.9 },
-  heroBtn: { alignSelf: 'flex-start', marginTop: 18, paddingVertical: 11, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
-  heroBtnText: { fontSize: 14, letterSpacing: 0.5, color: COLORS.bg },
+
+  list: { marginTop: 18, gap: 16 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    padding: 14,
+  },
+  cardReverse: { flexDirection: 'row-reverse' },
+  photoWrap: { width: 116, height: 142, borderRadius: 18, overflow: 'hidden', backgroundColor: COLORS.accentSoft },
+  photoFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  photoInitials: { fontFamily: FONT_SERIF, fontSize: 38, color: COLORS.accent },
+  body: { flex: 1, paddingLeft: 16, paddingRight: 4 },
+  bodyReverse: { paddingLeft: 4, paddingRight: 16 },
+  cat: { fontSize: 10, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 5 },
+  name: { fontFamily: FONT_SERIF, fontSize: 21, lineHeight: 25, color: COLORS.ink },
+  role: { fontSize: 10, letterSpacing: 1, color: COLORS.muted, marginTop: 4, marginBottom: 7 },
+  blurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.8 },
+  link: { fontSize: 13, color: COLORS.accent, marginTop: 10 },
 });

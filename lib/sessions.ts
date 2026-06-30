@@ -30,6 +30,7 @@ function classFromRow(r: any): SessionClass {
     date: r.date ?? '',
     time: r.time ?? '',
     going: r.going ?? 0,
+    link: r.link ?? '',
     color: r.color ?? '#5C4632',
     description: r.description ?? '',
   };

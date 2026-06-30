@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,7 +11,8 @@ export default function ClassDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { classes: CLASSES } = useSessions();
-  const item = CLASSES.find((c) => c.id === id);
+  const { classes } = useSessions();
+  const item = classes.find((c) => c.id === id);
   const [rsvped, setRsvped] = useState(false);
 
   if (!item) {
@@ -33,6 +34,7 @@ export default function ClassDetail() {
       title: item.title,
       when: `${item.date} · ${item.time}`,
       expert: item.expertName,
+      link: item.link,
     });
   };
 
@@ -71,9 +73,17 @@ export default function ClassDetail() {
         </View>
 
         {rsvped ? (
-          <Text style={styles.confirm}>
-            You are on the list. The join link appears under Bookings in You before it starts.
-          </Text>
+          <View>
+            <Text style={styles.confirm}>
+              You are on the list.{item.link ? ' Your join link is below, and saved to this booking under You.' : ' The join link will appear here before it starts.'}
+            </Text>
+            {item.link ? (
+              <Pressable style={styles.joinBtn} onPress={() => Linking.openURL(item.link!)}>
+                <Ionicons name="videocam" size={16} color={COLORS.bg} />
+                <Text style={styles.joinText}>Open join link</Text>
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
 
         <Text style={styles.sectionTitle}>About this session</Text>
@@ -125,5 +135,7 @@ const styles = StyleSheet.create({
   expertRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
   expertName: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   expertTitle: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
+  joinBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 12, backgroundColor: COLORS.accent, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999 },
+  joinText: { color: COLORS.bg, fontSize: 14 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
 });

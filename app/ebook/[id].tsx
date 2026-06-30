@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -6,6 +6,7 @@ import { WebView } from 'react-native-webview';
 import { Asset } from 'expo-asset';
 import { LIBRARY } from '@/constants/library';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { recordBookOpen, saveBookScroll, getBookScroll } from '@/lib/store';
 
 export default function EbookReader() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,12 +15,18 @@ export default function EbookReader() {
   const mod = (item as any)?.pdf ?? (item as any)?.html;
   const [uri, setUri] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const startY = useRef(0);
+
+  useEffect(() => {
+    if (id && item) recordBookOpen(id, item.title);
+  }, [id]);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         if (!mod) { setErr('This book is not available yet.'); return; }
+        startY.current = getBookScroll(id);
         const asset = Asset.fromModule(mod);
         await asset.downloadAsync();
         if (active) setUri(asset.localUri ?? asset.uri);
@@ -29,6 +36,24 @@ export default function EbookReader() {
     })();
     return () => { active = false; };
   }, [mod]);
+
+  // Restore the saved position, then report scroll changes back to the app.
+  const injected = `
+    (function() {
+      try {
+        var SAVED = ${startY.current || 0};
+        window.scrollTo(0, SAVED);
+        var t;
+        window.addEventListener('scroll', function() {
+          clearTimeout(t);
+          t = setTimeout(function() {
+            try { window.ReactNativeWebView.postMessage(String(Math.round(window.scrollY || (document.documentElement && document.documentElement.scrollTop) || 0))); } catch (e) {}
+          }, 300);
+        }, { passive: true });
+      } catch (e) {}
+      true;
+    })();
+  `;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -49,6 +74,8 @@ export default function EbookReader() {
           allowFileAccessFromFileURLs
           allowUniversalAccessFromFileURLs
           allowingReadAccessToURL={uri}
+          injectedJavaScript={injected}
+          onMessage={(e) => saveBookScroll(id, Number(e.nativeEvent.data) || 0)}
           startInLoadingState
           renderLoading={() => (<View style={styles.center}><ActivityIndicator color={COLORS.accent} /></View>)}
         />
@@ -70,3 +97,4 @@ const styles = StyleSheet.create({
   loading: { fontSize: 14, color: COLORS.muted, marginTop: 12 },
   errText: { fontSize: 15, color: COLORS.muted, paddingHorizontal: 32, textAlign: 'center' },
 });
+

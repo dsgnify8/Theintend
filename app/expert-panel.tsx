@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
 import { useExpertBookings } from '@/lib/bookings';
 import { FramedImage } from '@/components/FramedImage';
+import { CalendarConnect } from '@/components/CalendarConnect';
 import type { Expert } from '@/constants/experts';
 
 const DAY_LABELS: Record<string, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
@@ -117,6 +118,10 @@ export default function ExpertPanel() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
         </Pressable>
+
+        {/* CALENDAR */}
+        <Text style={styles.sectionTitle}>Calendar</Text>
+        <CalendarConnect expertId={expert.id} />
 
         {/* PROFILE & OFFERINGS — separate area */}
         <Text style={styles.sectionTitle}>Profile & offerings</Text>

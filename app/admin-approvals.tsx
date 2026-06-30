@@ -62,6 +62,21 @@ export default function AdminApprovals() {
                       : `${s.payload?.weeks ?? ''} weeks · ${s.payload?.price ?? ''}`}
                   </Text>
                   {s.payload?.description ? <Text style={styles.bio}>{s.payload.description}</Text> : null}
+                  {s.payload?.link ? <Text style={styles.offerMeta}>Link: {s.payload.link}</Text> : null}
+                  {s.payload?.notes ? <Text style={styles.bio}>Notes: {s.payload.notes}</Text> : null}
+                  {Array.isArray(s.payload?.signup_form) && s.payload.signup_form.length ? (
+                    <View style={{ marginBottom: 12 }}>
+                      <Text style={styles.offerMeta}>Sign-up form</Text>
+                      {s.payload.signup_form.map((q: any, i: number) => (
+                        <View key={i} style={{ marginBottom: 6 }}>
+                          <Text style={{ fontSize: 14, color: COLORS.ink }}>{i + 1}. {q.text} <Text style={{ color: COLORS.muted }}>({typeLabel(q.type)})</Text></Text>
+                          {q.type === 'choice' && Array.isArray(q.options) ? (
+                            <Text style={{ fontSize: 13, color: COLORS.muted, marginLeft: 12 }}>{q.options.join(', ')}</Text>
+                          ) : null}
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
                 </>
               )}
 
@@ -79,6 +94,10 @@ export default function AdminApprovals() {
       </ScrollView>
     </Wrap>
   );
+}
+
+function typeLabel(t: string) {
+  return t === 'short' ? 'Short text' : t === 'long' ? 'Long text' : t === 'choice' ? 'Multiple choice' : t === 'yesno' ? 'Yes / No' : t;
 }
 
 function Wrap({ children, router }: { children: any; router: any }) {

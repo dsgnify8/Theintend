@@ -103,6 +103,7 @@ export async function approveSubmission(s: Submission) {
       going: 0,
       duration_hours: Number(p.durationHours ?? 1),
       category: p.category ?? 'Breathwork',
+      link: p.link ?? '',
       status: 'live',
       sort: 50,
     });

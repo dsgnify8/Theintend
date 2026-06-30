@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
-import { useBookings, useLiked, useSaved, type Booking } from '@/lib/store';
+import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone, type Booking } from '@/lib/store';
 import { useHydrateBookings } from '@/lib/bookings';
 import { signOut, updateProfile, useAuth } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
@@ -32,6 +32,9 @@ export default function YouScreen() {
   const [uploading, setUploading] = useState(false);
   const savedIds = useSaved();
   const likedIds = useLiked();
+  const reads = useReads();
+  const worksheetsDone = useWorksheetsDone();
+  const streakInfo = useReadStreak();
   const bookings = useBookings();
   useHydrateBookings();
   const { articles } = useArticles();
@@ -129,21 +132,22 @@ export default function YouScreen() {
 
         {view === 'Overview' ? (
           <View>
+            <MoodInsightCard />
             <View style={styles.streakCard}>
               <View style={styles.ringWrap}>
                 <View style={styles.ringOuter}>
                   <View style={styles.ringInner}>
-                    <Text style={styles.ringNum}>{STREAK}</Text>
+                    <Text style={styles.ringNum}>{streakInfo.streak}</Text>
                     <Text style={styles.ringUnit}>DAYS</Text>
                   </View>
                 </View>
               </View>
-              <Text style={styles.streakHeadline}>You{'\u2019'}re on a {STREAK}-day streak</Text>
-              <Text style={styles.streakSubline}>Keep it going{'\u2009\u00B7\u2009'}Your record is {RECORD} days</Text>
+              <Text style={styles.streakHeadline}>You{'\u2019'}re on a {streakInfo.streak}-day streak</Text>
+              <Text style={styles.streakSubline}>Keep it going{'\u2009\u00B7\u2009'}Your record is {streakInfo.record} days</Text>
               <View style={styles.weekRow}>
                 {WEEK.map((d, i) => {
-                  const on = i < STREAK;
-                  const today = i === STREAK;
+                  const on = streakInfo.week[i];
+                  const today = i === streakInfo.todayIndex;
                   return (
                     <View key={i} style={styles.dayCol}>
                       <View style={[styles.dayCircle, on && styles.dayCircleOn, today && styles.dayCircleToday]}>
@@ -160,10 +164,10 @@ export default function YouScreen() {
             </View>
 
             <View style={styles.statGrid}>
-              <Stat label="Articles read" value="12" />
+              <Stat label="Articles read" value={String(reads.length)} />
               <Stat label="Sessions" value={String(bookings.length)} />
               <Stat label="Saved reads" value={String(savedIds.length)} />
-              <Stat label="Likes" value={String(likedIds.length)} />
+              <Stat label="Worksheets" value={String(worksheetsDone.length)} />
             </View>
             <Text style={styles.sampleNote}>Saved, likes and sessions are live. The rest fills in once tracking is connected.</Text>
 
@@ -178,28 +182,11 @@ export default function YouScreen() {
               <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
             </Pressable>
 
-            <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>Achievements</Text>
-              <Pressable onPress={() => router.push('/progress')}>
-                <Text style={styles.seeAll}>See all</Text>
-              </Pressable>
-            </View>
-            <View style={styles.badgeRow}>
-              {ACHIEVEMENTS.slice(0, 4).map((a) => (
-                <View key={a.id} style={styles.badgeMini}>
-                  <View style={[styles.badgeCircle, !a.unlocked && styles.badgeLocked]}>
-                    <Ionicons name={a.icon as any} size={20} color={a.unlocked ? COLORS.accent : COLORS.muted} />
-                  </View>
-                </View>
-              ))}
-            </View>
-
             <View style={styles.accountWrap}>
               {role === 'admin' ? <Row label="Admin panel" onPress={() => router.push('/admin')} /> : null}
-              {role === 'expert' ? <Row label="Expert panel" onPress={() => router.push('/expert-panel')} /> : null}
-              <Row label="Personal information" />
+              {(role === 'expert' || role === 'admin') ? <Row label="Expert panel" onPress={() => router.push('/expert-panel')} /> : null}
+              <Row label="Personal information" onPress={() => router.push('/personal-info')} />
               <Row label="Notifications" />
-              <Row label="Language" value="English" />
               <Row label="Help & support" />
               {loggedIn ? (
                 <Row label="Sign out" onPress={async () => { await signOut(); router.push('/login'); }} />
@@ -290,6 +277,48 @@ function SavedRow({ a, onPress }: { a: { id: string; title: string; category: st
   );
 }
 
+function MoodInsightCard() {
+  const router = useRouter();
+  const { ready, mood, recoKind } = useMoodInsight(3, 14);
+  const { articles } = useArticles();
+  if (!ready || !mood) return null;
+  const r = MOOD_RECO[mood];
+  const moodLabel = (MOODS.find((m) => m.key === mood)?.label ?? mood).toLowerCase();
+
+  let reco: { lead: string; title: string; subtitle: string; onPress: () => void } | null = null;
+  if (recoKind === 'expert') {
+    const e = EXPERTS.find((x) => x.id === r.expertId);
+    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+  } else if (recoKind === 'sound') {
+    const sd = SOUNDS.find((x) => x.id === r.soundId);
+    if (sd) reco = { lead: 'A sound to settle into', title: sd.title, subtitle: sd.purpose, onPress: () => router.push(`/sound/${sd.id}`) };
+  } else {
+    const a = pickArticleForMood(mood, articles);
+    if (a) reco = { lead: 'A read that might land', title: a.title, subtitle: `${a.readMinutes ?? 5} min read`, onPress: () => router.push(`/article/${a.id}`) };
+  }
+  if (!reco) {
+    const e = EXPERTS.find((x) => x.id === r.expertId);
+    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+  }
+
+  return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightEyebrow}>A GENTLE NOTE</Text>
+      <Text style={styles.insightText}>We{'\u2019'}ve noticed you{'\u2019'}ve been feeling {moodLabel} lately.</Text>
+      {reco ? (
+        <Pressable style={styles.insightReco} onPress={reco.onPress}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.insightRecoLead}>{reco.lead}</Text>
+            <Text style={styles.insightRecoTitle} numberOfLines={2}>{reco.title}</Text>
+            <Text style={styles.insightRecoSub} numberOfLines={1}>{reco.subtitle}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
   return (
     <Pressable style={styles.bookingRow} onPress={onPress}>
@@ -300,6 +329,11 @@ function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
         <Text style={styles.bookingTitle}>{b.title}</Text>
         <Text style={styles.bookingMeta}>{b.when}</Text>
         <Text style={styles.bookingMeta}>with {b.expert}</Text>
+        {b.link ? (
+          <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6} style={{ marginTop: 6 }}>
+            <Text style={styles.bookingLink}>Open join link</Text>
+          </Pressable>
+        ) : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
     </Pressable>
@@ -325,6 +359,13 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
+  insightCard: { backgroundColor: COLORS.accentSoft, borderRadius: 20, padding: 18, marginBottom: 16 },
+  insightEyebrow: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },
+  insightText: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 26, color: COLORS.ink, marginBottom: 14 },
+  insightReco: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14 },
+  insightRecoLead: { fontSize: 11, letterSpacing: 0.5, color: COLORS.muted, marginBottom: 4 },
+  insightRecoTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  insightRecoSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
   topTitle: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
   bellDot: { position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.accent },
@@ -395,6 +436,7 @@ const styles = StyleSheet.create({
   bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  bookingLink: { fontSize: 13, color: COLORS.accent },
   empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginTop: 10 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
   cta: { marginTop: 12, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.accent },

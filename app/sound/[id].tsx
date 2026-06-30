@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SOUNDS } from '@/constants/sounds';
+import { recordListen } from '@/lib/store';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function SoundPlayer() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const sound = SOUNDS.find((s) => s.id === id);
+  useEffect(() => { if (id) recordListen(id); }, [id]);
   const [playing, setPlaying] = useState(false);
   const [liked, setLiked] = useState(false);
   const [downloaded, setDownloaded] = useState(false);

@@ -11,7 +11,7 @@ import { updateExpert, uploadExpertImage, useExpert } from '@/lib/experts';
 export default function AdminExpertEdit() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { expert, loading } = useExpert(id);
 
   const [filled, setFilled] = useState(false);
@@ -113,6 +113,20 @@ export default function AdminExpertEdit() {
           <Field label="Short blurb" value={blurb} onChangeText={setBlurb} multiline />
           <Field label="Bio / approach" value={bio} onChangeText={setBio} multiline tall />
           <Field label="Linked account email (gives this person their expert panel)" value={accountEmail} onChangeText={setAccountEmail} autoCapitalize="none" keyboardType="email-address" />
+          {user?.email && expert ? (
+            <Pressable
+              onPress={async () => {
+                const mine = user.email!.toLowerCase();
+                setAccountEmail(mine);
+                const { error } = await updateExpert(expert.id, { account_email: mine });
+                setStatus(error ? `Link failed: ${error.message}` : 'Linked to your account. Open the Expert panel from the You tab.');
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, marginBottom: 4 }}
+            >
+              <Ionicons name="person-circle-outline" size={16} color={COLORS.accent} />
+              <Text style={{ fontSize: 13, color: COLORS.accent }}>Use my account email ({user.email})</Text>
+            </Pressable>
+          ) : null}
 
           <Pressable style={styles.saveBtn} onPress={save} disabled={busy}>
             {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>Save changes</Text>}
