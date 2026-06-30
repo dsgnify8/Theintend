@@ -27,6 +27,7 @@ function fromRow(r: any): Expert {
     photoScale: r.photo_scale ?? 1,
     photoX: r.photo_x ?? 0,
     photoY: r.photo_y ?? 0,
+    availability: r.availability ?? null,
   };
 }
 
@@ -106,7 +107,7 @@ export async function ensureSeeded() {
 
 export async function updateExpert(
   id: string,
-  patch: Partial<{ bio: string; photo: string; title: string; blurb: string; name: string; account_email: string; photo_scale: number; photo_x: number; photo_y: number }>
+  patch: Partial<{ bio: string; photo: string; title: string; blurb: string; name: string; account_email: string; photo_scale: number; photo_x: number; photo_y: number; availability: any }>
 ) {
   const { error } = await supabase.from('experts').update(patch).eq('id', id);
   if (!error) await reloadExperts();

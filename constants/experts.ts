@@ -16,6 +16,7 @@ export type Expert = {
   photoScale?: number;
   photoX?: number;
   photoY?: number;
+  availability?: any;
 };
 
 export const EXPERTS: Expert[] = [
