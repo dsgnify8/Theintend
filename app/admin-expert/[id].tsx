@@ -103,6 +103,10 @@ export default function AdminExpertEdit() {
             </Pressable>
           </View>
           <Text style={styles.changePhoto} onPress={pickPhoto}>Change photo</Text>
+          <Pressable style={styles.frameBtn} onPress={() => router.push(`/admin-expert-frame/${expert.id}`)}>
+            <Ionicons name="crop-outline" size={16} color={COLORS.ink} />
+            <Text style={styles.frameBtnText}>Adjust framing</Text>
+          </Pressable>
 
           <Field label="Name" value={name} onChangeText={setName} />
           <Field label="Title" value={title} onChangeText={setTitle} />
@@ -154,6 +158,8 @@ const styles = StyleSheet.create({
   muted: { fontSize: 15, color: COLORS.muted },
   content: { paddingHorizontal: 20, paddingBottom: 60 },
   head: { alignSelf: 'center', marginTop: 8 },
+  frameBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 6, marginTop: 10, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
+  frameBtnText: { fontSize: 14, color: COLORS.ink },
   avatar: { width: 110, height: 110, borderRadius: 55, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
   avatarText: { fontFamily: FONT_SERIF, fontSize: 34, color: COLORS.accent },

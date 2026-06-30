@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
+import { FramedImage } from '@/components/FramedImage';
 import { useSessions } from '@/lib/sessions';
 import { useServices } from '@/lib/services';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
@@ -55,7 +56,7 @@ export default function ExpertProfile() {
         <View style={styles.head}>
           <View style={styles.avatar}>
             {expert.photo ? (
-              <Image source={{ uri: expert.photo }} style={styles.avatarImg} resizeMode="cover" />
+              <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={55} />
             ) : (
               <Text style={styles.avatarText}>{initials}</Text>
             )}

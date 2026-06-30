@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FramedImage } from '@/components/FramedImage';
 import { useRouter } from 'expo-router';
 import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
@@ -59,7 +60,7 @@ function HeroCard({ expert }: { expert: Expert }) {
     <Pressable style={styles.hero} onPress={() => router.push(`/expert/${expert.id}`)}>
       <View style={styles.heroImageWrap}>
         {expert.photo ? (
-          <Image source={{ uri: expert.photo }} style={styles.heroImage} resizeMode="cover" />
+          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} />
         ) : (
           <View style={[styles.heroImage, styles.heroFallback]}>
             <Text style={styles.heroInitials}>{initials(expert.name)}</Text>

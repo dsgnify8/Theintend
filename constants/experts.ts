@@ -13,6 +13,9 @@ export type Expert = {
   faqs: string[];
   profileUrl: string;
   photo: string | null;
+  photoScale?: number;
+  photoX?: number;
+  photoY?: number;
 };
 
 export const EXPERTS: Expert[] = [

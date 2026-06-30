@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, ImageBackground, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, ImageBackground, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -183,9 +183,13 @@ function TitleCard({ item }: { item: LibraryItem }) {
   const router = useRouter();
   return (
     <Pressable style={styles.cardWrap} onPress={() => router.push(item.pdf || item.html ? `/ebook/${item.id}` : `/title/${item.id}`)}>
-      <View style={[styles.bookCover, { backgroundColor: item.color }]}>
-        <Ionicons name={item.type === 'Audiobook' ? 'headset-outline' : 'book-outline'} size={22} color="rgba(255,255,255,0.9)" />
-      </View>
+      {item.cover ? (
+        <Image source={item.cover} style={styles.bookCoverImg} resizeMode="cover" />
+      ) : (
+        <View style={[styles.bookCover, { backgroundColor: item.color }]}>
+          <Ionicons name={item.type === 'Audiobook' ? 'headset-outline' : 'book-outline'} size={22} color="rgba(255,255,255,0.9)" />
+        </View>
+      )}
       <Text style={styles.bookTitle}>{item.title}</Text>
       <Text style={styles.bookAuthor}>{item.author}</Text>
       <Text style={styles.bookLen}>{item.length}</Text>
@@ -218,6 +222,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   cardWrap: { width: '48%', marginBottom: 22 },
   bookCover: { height: 170, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  bookCoverImg: { height: 170, width: '100%', borderRadius: 16, backgroundColor: COLORS.accentSoft },
   bookTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 21, color: COLORS.ink, marginTop: 10 },
   bookAuthor: { fontSize: 13, color: COLORS.muted, marginTop: 4 },
   bookLen: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
@@ -230,7 +235,7 @@ const styles = StyleSheet.create({
   sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
   sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 12 },
   catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderTopWidth: 1, borderTopColor: COLORS.line },
-  catLabel: { fontSize: 16, color: COLORS.ink },
+  catLabel: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   catLabelActive: { color: COLORS.accent, fontWeight: '700' },
   menuBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   menuCard: { position: 'absolute', top: 104, right: 20, backgroundColor: COLORS.bg, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 6, minWidth: 190, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
