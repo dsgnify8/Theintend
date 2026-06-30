@@ -190,10 +190,11 @@ export default function YouScreen() {
               <Row label="Language" value="English" />
               <Row label="Help & support" />
               {loggedIn ? (
-                <Row label="Sign out" onPress={() => signOut()} />
+                <Row label="Sign out" onPress={async () => { await signOut(); router.push('/login'); }} />
               ) : (
                 <Row label="Sign in" onPress={() => router.push('/login')} />
               )}
+              <Row label="Debug (temporary)" onPress={() => router.push('/debug')} />
             </View>
           </View>
         ) : null}

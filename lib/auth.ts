@@ -1,8 +1,8 @@
-// Auth + profile store. Any screen can call useAuth() to read the current
-// session, the person's profile, and their role (user / expert / admin).
+// Auth + profile store. Any screen calls useAuth() for the current session,
+// the person's profile, and their role (user / expert / admin).
 
 import { useEffect, useState } from 'react';
-import { supabase } from './supabase';
+import { supabase, restoreSession, clearStoredSession } from './supabase';
 
 export type Role = 'user' | 'expert' | 'admin';
 export type Profile = {
@@ -28,6 +28,9 @@ function finishInit() {
   }
 }
 
+const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+  Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(undefined as any), ms))]);
+
 async function loadProfile(userId: string) {
   try {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -35,7 +38,7 @@ async function loadProfile(userId: string) {
       profile = data as Profile;
       return;
     }
-    // No profile row yet. Create one from the auth user so the account works.
+    // No profile row yet — create one from the auth user so the account works.
     const { data: u } = await supabase.auth.getUser();
     const email = u?.user?.email ?? null;
     const full_name = (u?.user?.user_metadata as any)?.full_name ?? null;
@@ -49,9 +52,11 @@ async function loadProfile(userId: string) {
 
 async function init() {
   try {
+    // Restore a previously saved login, guarded so a slow restore can't hang us.
+    await withTimeout(restoreSession(), 5000);
     const { data } = await supabase.auth.getSession();
     session = data.session;
-    if (session?.user) await loadProfile(session.user.id);
+    if (session?.user) await withTimeout(loadProfile(session.user.id), 5000);
   } catch {
     session = null;
   } finally {
@@ -61,26 +66,39 @@ async function init() {
 }
 
 init();
-setTimeout(finishInit, 4000);
+setTimeout(finishInit, 6000); // hard safety: never spin forever
 
 supabase.auth.onAuthStateChange(async (_event, s) => {
   session = s;
-  if (s?.user) await loadProfile(s.user.id);
+  if (s?.user) await withTimeout(loadProfile(s.user.id), 5000);
   else profile = null;
   finishInit();
   emit();
 });
 
 export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password });
+  return supabase.auth.signInWithPassword({ email: email.trim(), password });
 }
 
 export async function signUp(email: string, password: string, fullName: string) {
-  return supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+  return supabase.auth.signUp({
+    email: email.trim(),
+    password,
+    options: { data: { full_name: fullName } },
+  });
 }
 
 export async function signOut() {
-  await supabase.auth.signOut();
+  // Clear locally and immediately so the UI updates even if the network is slow.
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    /* ignore */
+  }
+  await clearStoredSession();
+  session = null;
+  profile = null;
+  emit();
 }
 
 export async function refreshProfile() {
