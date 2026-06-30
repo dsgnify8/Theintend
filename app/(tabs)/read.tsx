@@ -182,7 +182,7 @@ function ArticleCover({ article }: { article: Article }) {
 function TitleCard({ item }: { item: LibraryItem }) {
   const router = useRouter();
   return (
-    <Pressable style={styles.cardWrap} onPress={() => router.push(`/title/${item.id}`)}>
+    <Pressable style={styles.cardWrap} onPress={() => router.push(item.pdf || item.html ? `/ebook/${item.id}` : `/title/${item.id}`)}>
       <View style={[styles.bookCover, { backgroundColor: item.color }]}>
         <Ionicons name={item.type === 'Audiobook' ? 'headset-outline' : 'book-outline'} size={22} color="rgba(255,255,255,0.9)" />
       </View>

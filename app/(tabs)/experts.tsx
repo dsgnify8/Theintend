@@ -8,7 +8,6 @@ import { useExperts } from '@/lib/experts';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const ALL = 'All';
-
 function initials(name: string) {
   return name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
 }
@@ -25,9 +24,6 @@ export default function ExpertsScreen() {
     () => (active === ALL ? experts : experts.filter((e) => e.category === active)),
     [active, experts]
   );
-
-  const hero = visible[0];
-  const rest = visible.slice(1);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -48,17 +44,9 @@ export default function ExpertsScreen() {
         </ScrollView>
 
         {loading ? (
-          <View style={styles.loader}>
-            <ActivityIndicator color={COLORS.accent} />
-          </View>
+          <View style={styles.loader}><ActivityIndicator color={COLORS.accent} /></View>
         ) : (
-          <>
-            {hero ? <HeroCard expert={hero} /> : null}
-            {rest.length > 0 ? <Text style={styles.moreLabel}>More experts</Text> : null}
-            {rest.map((e) => (
-              <ExpertRow key={e.id} expert={e} />
-            ))}
-          </>
+          visible.map((e) => <HeroCard key={e.id} expert={e} />)
         )}
       </ScrollView>
     </SafeAreaView>
@@ -89,31 +77,8 @@ function HeroCard({ expert }: { expert: Expert }) {
       <View style={styles.heroBody}>
         <Text style={styles.heroTitle}>{expert.title.toUpperCase()}</Text>
         <Text style={styles.heroBlurb}>{expert.blurb}</Text>
-        <View style={styles.heroBtn}>
-          <Text style={styles.heroBtnText}>See profile</Text>
-        </View>
+        <View style={styles.heroBtn}><Text style={styles.heroBtnText}>See profile</Text></View>
       </View>
-    </Pressable>
-  );
-}
-
-function ExpertRow({ expert }: { expert: Expert }) {
-  const router = useRouter();
-  return (
-    <Pressable style={styles.row} onPress={() => router.push(`/expert/${expert.id}`)}>
-      <View style={styles.thumb}>
-        {expert.photo ? (
-          <Image source={{ uri: expert.photo }} style={styles.thumbImg} resizeMode="cover" />
-        ) : (
-          <Text style={styles.thumbText}>{initials(expert.name)}</Text>
-        )}
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={styles.rowName}>{expert.name}</Text>
-        <Text style={styles.rowTitle}>{expert.title.toUpperCase()}</Text>
-        <Text style={styles.rowBlurb} numberOfLines={2}>{expert.blurb}</Text>
-      </View>
-      <Text style={styles.rowChevron}>{'\u203A'}</Text>
     </Pressable>
   );
 }
@@ -130,14 +95,12 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: COLORS.ink },
   chipTextOn: { color: COLORS.bg },
   loader: { paddingVertical: 60, alignItems: 'center' },
-
-  // Hero card
-  hero: { backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', marginTop: 18, marginBottom: 26 },
-  heroImageWrap: { height: 340, width: '100%', position: 'relative', backgroundColor: COLORS.accentSoft },
+  hero: { backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', marginTop: 18, marginBottom: 20 },
+  heroImageWrap: { height: 300, width: '100%', position: 'relative', backgroundColor: COLORS.accentSoft },
   heroImage: { width: '100%', height: '100%' },
   heroFallback: { alignItems: 'center', justifyContent: 'center' },
   heroInitials: { fontFamily: FONT_SERIF, fontSize: 64, color: COLORS.accent },
-  heroGradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 200 },
+  heroGradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 180 },
   heroNameWrap: { position: 'absolute', left: 22, right: 22, bottom: 18 },
   heroCategory: { fontSize: 11, letterSpacing: 2, color: COLORS.bg, opacity: 0.9, marginBottom: 6 },
   heroName: { fontFamily: FONT_SERIF, fontSize: 32, lineHeight: 36, color: '#FFFFFF' },
@@ -146,17 +109,4 @@ const styles = StyleSheet.create({
   heroBlurb: { fontSize: 15, lineHeight: 23, color: COLORS.ink, opacity: 0.9 },
   heroBtn: { alignSelf: 'flex-start', marginTop: 18, paddingVertical: 11, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
   heroBtnText: { fontSize: 14, letterSpacing: 0.5, color: COLORS.bg },
-
-  moreLabel: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 14 },
-
-  // Compact rows
-  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 12 },
-  thumb: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 14 },
-  thumbImg: { width: '100%', height: '100%' },
-  thumbText: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.accent },
-  rowBody: { flex: 1 },
-  rowName: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
-  rowTitle: { fontSize: 10, letterSpacing: 1.2, color: COLORS.muted, marginTop: 3, marginBottom: 5 },
-  rowBlurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.75 },
-  rowChevron: { fontSize: 24, color: COLORS.muted, marginLeft: 8 },
 });
