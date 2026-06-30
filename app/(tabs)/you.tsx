@@ -13,8 +13,9 @@ import { signOut, updateProfile, useAuth } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
 
 const VIEWS = ['Overview', 'Saved', 'Bookings'];
-const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const STREAK = 4;
+const RECORD = 5;
 
 const NOTIFICATIONS = [
   { icon: 'videocam', title: 'Session reminder', body: 'Breath & the Nervous System starts soon.', time: '2h' },
@@ -129,18 +130,29 @@ export default function YouScreen() {
         {view === 'Overview' ? (
           <View>
             <View style={styles.streakCard}>
-              <View style={styles.streakTop}>
-                <View style={styles.streakBadge}>
-                  <Text style={styles.streakNum}>{STREAK}</Text>
+              <View style={styles.ringWrap}>
+                <View style={styles.ringOuter}>
+                  <View style={styles.ringInner}>
+                    <Text style={styles.ringNum}>{STREAK}</Text>
+                    <Text style={styles.ringUnit}>DAYS</Text>
+                  </View>
                 </View>
-                <Text style={styles.streakLabel}>DAY STREAK</Text>
               </View>
+              <Text style={styles.streakHeadline}>You{'\u2019'}re on a {STREAK}-day streak</Text>
+              <Text style={styles.streakSubline}>Keep it going{'\u2009\u00B7\u2009'}Your record is {RECORD} days</Text>
               <View style={styles.weekRow}>
                 {WEEK.map((d, i) => {
                   const on = i < STREAK;
+                  const today = i === STREAK;
                   return (
-                    <View key={i} style={[styles.dot, on && styles.dotOn]}>
-                      <Text style={[styles.dotText, on && styles.dotTextOn]}>{d}</Text>
+                    <View key={i} style={styles.dayCol}>
+                      <View style={[styles.dayCircle, on && styles.dayCircleOn, today && styles.dayCircleToday]}>
+                        {on ? (
+                          <Text style={styles.dayCheck}>{'\u2713'}</Text>
+                        ) : (
+                          <Text style={[styles.dayLetter, today && styles.dayLetterToday]}>{d}</Text>
+                        )}
+                      </View>
                     </View>
                   );
                 })}
@@ -341,6 +353,20 @@ const styles = StyleSheet.create({
   streakNum: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.bg },
   streakLabel: { fontSize: 13, letterSpacing: 1.5, color: COLORS.muted },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  ringWrap: { alignItems: 'center', marginBottom: 16 },
+  ringOuter: { width: 156, height: 156, borderRadius: 78, borderWidth: 12, borderColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  ringInner: { width: 112, height: 112, borderRadius: 56, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
+  ringNum: { fontFamily: FONT_SERIF, fontSize: 50, lineHeight: 54, color: COLORS.bg },
+  ringUnit: { fontSize: 11, letterSpacing: 3, color: COLORS.bg, opacity: 0.85, marginTop: 2 },
+  streakHeadline: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, textAlign: 'center' },
+  streakSubline: { fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, marginBottom: 20 },
+  dayCol: { alignItems: 'center', flex: 1 },
+  dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: COLORS.line, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
+  dayCircleOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  dayCircleToday: { borderColor: COLORS.accent, borderWidth: 2 },
+  dayCheck: { color: COLORS.bg, fontSize: 15 },
+  dayLetter: { fontSize: 13, color: COLORS.muted },
+  dayLetterToday: { color: COLORS.accent, fontWeight: '600' },
   dot: { width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
   dotOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   dotText: { fontSize: 13, color: COLORS.muted },

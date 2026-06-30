@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
@@ -8,25 +9,25 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const ALL = 'All';
 
+function initials(name: string) {
+  return name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
+}
+
 export default function ExpertsScreen() {
-  const router = useRouter();
   const [active, setActive] = useState<string>(ALL);
   const { experts, loading } = useExperts();
 
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(experts.map((e) => e.category)));
-    return [ALL, ...unique];
-  }, [experts]);
-
+  const categories = useMemo(
+    () => [ALL, ...Array.from(new Set(experts.map((e) => e.category)))],
+    [experts]
+  );
   const visible = useMemo(
     () => (active === ALL ? experts : experts.filter((e) => e.category === active)),
     [active, experts]
   );
 
-  const questions = useMemo(
-    () => experts.flatMap((e) => e.faqs.slice(0, 1).map((q) => ({ q, name: e.name, id: e.id }))),
-    [experts]
-  );
+  const hero = visible[0];
+  const rest = visible.slice(1);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -52,17 +53,10 @@ export default function ExpertsScreen() {
           </View>
         ) : (
           <>
-            {visible.map((e) => (
-              <ExpertCard key={e.id} expert={e} />
-            ))}
-
-            <Text style={styles.section}>Questions people bring</Text>
-            <Text style={styles.sectionSub}>Tap a question to meet the expert who works with it.</Text>
-            {questions.map((item, i) => (
-              <Pressable key={i} style={styles.qRow} onPress={() => router.push(`/expert/${item.id}`)}>
-                <Text style={styles.qText}>{'\u201C' + item.q + '\u201D'}</Text>
-                <Text style={styles.qName}>{item.name}</Text>
-              </Pressable>
+            {hero ? <HeroCard expert={hero} /> : null}
+            {rest.length > 0 ? <Text style={styles.moreLabel}>More experts</Text> : null}
+            {rest.map((e) => (
+              <ExpertRow key={e.id} expert={e} />
             ))}
           </>
         )}
@@ -71,25 +65,55 @@ export default function ExpertsScreen() {
   );
 }
 
-function ExpertCard({ expert }: { expert: Expert }) {
+function HeroCard({ expert }: { expert: Expert }) {
   const router = useRouter();
-  const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
-
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/expert/${expert.id}`)}>
-      <View style={styles.avatar}>
+    <Pressable style={styles.hero} onPress={() => router.push(`/expert/${expert.id}`)}>
+      <View style={styles.heroImageWrap}>
         {expert.photo ? (
-          <Image source={{ uri: expert.photo }} style={styles.avatarImg} resizeMode="cover" />
+          <Image source={{ uri: expert.photo }} style={styles.heroImage} resizeMode="cover" />
         ) : (
-          <Text style={styles.avatarText}>{initials}</Text>
+          <View style={[styles.heroImage, styles.heroFallback]}>
+            <Text style={styles.heroInitials}>{initials(expert.name)}</Text>
+          </View>
+        )}
+        <LinearGradient
+          colors={['transparent', 'rgba(43,38,34,0.08)', 'rgba(43,38,34,0.86)']}
+          style={styles.heroGradient}
+        />
+        <View style={styles.heroNameWrap}>
+          <Text style={styles.heroCategory}>{expert.category.toUpperCase()}</Text>
+          <Text style={styles.heroName}>{expert.name}</Text>
+        </View>
+      </View>
+      <View style={styles.heroBody}>
+        <Text style={styles.heroTitle}>{expert.title.toUpperCase()}</Text>
+        <Text style={styles.heroBlurb}>{expert.blurb}</Text>
+        <View style={styles.heroBtn}>
+          <Text style={styles.heroBtnText}>See profile</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function ExpertRow({ expert }: { expert: Expert }) {
+  const router = useRouter();
+  return (
+    <Pressable style={styles.row} onPress={() => router.push(`/expert/${expert.id}`)}>
+      <View style={styles.thumb}>
+        {expert.photo ? (
+          <Image source={{ uri: expert.photo }} style={styles.thumbImg} resizeMode="cover" />
+        ) : (
+          <Text style={styles.thumbText}>{initials(expert.name)}</Text>
         )}
       </View>
-      <Text style={styles.name}>{expert.name}</Text>
-      <Text style={styles.title}>{expert.title.toUpperCase()}</Text>
-      <Text style={styles.blurb}>{expert.blurb}</Text>
-      <View style={styles.profileBtn}>
-        <Text style={styles.profileBtnText}>See Profile</Text>
+      <View style={styles.rowBody}>
+        <Text style={styles.rowName}>{expert.name}</Text>
+        <Text style={styles.rowTitle}>{expert.title.toUpperCase()}</Text>
+        <Text style={styles.rowBlurb} numberOfLines={2}>{expert.blurb}</Text>
       </View>
+      <Text style={styles.rowChevron}>{'\u203A'}</Text>
     </Pressable>
   );
 }
@@ -106,18 +130,33 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: COLORS.ink },
   chipTextOn: { color: COLORS.bg },
   loader: { paddingVertical: 60, alignItems: 'center' },
-  card: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 28, paddingHorizontal: 22, marginTop: 16, alignItems: 'center' },
-  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 16 },
-  avatarImg: { width: '100%', height: '100%' },
-  avatarText: { fontFamily: FONT_SERIF, fontSize: 28, color: COLORS.accent },
-  name: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, textAlign: 'center' },
-  title: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, textAlign: 'center', marginTop: 8, marginBottom: 14 },
-  blurb: { fontSize: 15, lineHeight: 23, color: COLORS.ink, textAlign: 'center', opacity: 0.85 },
-  profileBtn: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999, borderWidth: 1, borderColor: COLORS.ink },
-  profileBtnText: { fontSize: 14, letterSpacing: 0.5, color: COLORS.ink },
-  section: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginTop: 34, marginBottom: 6 },
-  sectionSub: { fontSize: 14, color: COLORS.muted, marginBottom: 14 },
-  qRow: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
-  qText: { fontFamily: FONT_SERIF, fontStyle: 'italic', fontSize: 15, lineHeight: 22, color: COLORS.ink },
-  qName: { fontSize: 12, letterSpacing: 1, color: COLORS.accent, marginTop: 8, textTransform: 'uppercase' },
+
+  // Hero card
+  hero: { backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', marginTop: 18, marginBottom: 26 },
+  heroImageWrap: { height: 340, width: '100%', position: 'relative', backgroundColor: COLORS.accentSoft },
+  heroImage: { width: '100%', height: '100%' },
+  heroFallback: { alignItems: 'center', justifyContent: 'center' },
+  heroInitials: { fontFamily: FONT_SERIF, fontSize: 64, color: COLORS.accent },
+  heroGradient: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 200 },
+  heroNameWrap: { position: 'absolute', left: 22, right: 22, bottom: 18 },
+  heroCategory: { fontSize: 11, letterSpacing: 2, color: COLORS.bg, opacity: 0.9, marginBottom: 6 },
+  heroName: { fontFamily: FONT_SERIF, fontSize: 32, lineHeight: 36, color: '#FFFFFF' },
+  heroBody: { padding: 22 },
+  heroTitle: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 10 },
+  heroBlurb: { fontSize: 15, lineHeight: 23, color: COLORS.ink, opacity: 0.9 },
+  heroBtn: { alignSelf: 'flex-start', marginTop: 18, paddingVertical: 11, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
+  heroBtnText: { fontSize: 14, letterSpacing: 0.5, color: COLORS.bg },
+
+  moreLabel: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 14 },
+
+  // Compact rows
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 12 },
+  thumb: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 14 },
+  thumbImg: { width: '100%', height: '100%' },
+  thumbText: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.accent },
+  rowBody: { flex: 1 },
+  rowName: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
+  rowTitle: { fontSize: 10, letterSpacing: 1.2, color: COLORS.muted, marginTop: 3, marginBottom: 5 },
+  rowBlurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.75 },
+  rowChevron: { fontSize: 24, color: COLORS.muted, marginLeft: 8 },
 });
