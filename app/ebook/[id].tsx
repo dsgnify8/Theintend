@@ -16,6 +16,7 @@ export default function EbookReader() {
   const [uri, setUri] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const startY = useRef(0);
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     if (id && item) recordBookOpen(id, item.title);
@@ -37,18 +38,31 @@ export default function EbookReader() {
     return () => { active = false; };
   }, [mod]);
 
+  useEffect(() => {
+    if (uri && startY.current > 40) {
+      setShowHint(true);
+      const h = setTimeout(() => setShowHint(false), 2600);
+      return () => clearTimeout(h);
+    }
+  }, [uri]);
+
   // Restore the saved position, then report scroll changes back to the app.
   const injected = `
     (function() {
       try {
         var SAVED = ${startY.current || 0};
-        window.scrollTo(0, SAVED);
+        function restore() { try { window.scrollTo(0, SAVED); } catch (e) {} }
+        restore();
+        window.addEventListener('load', restore);
+        setTimeout(restore, 120);
+        setTimeout(restore, 400);
+        setTimeout(restore, 900);
         var t;
         window.addEventListener('scroll', function() {
           clearTimeout(t);
           t = setTimeout(function() {
             try { window.ReactNativeWebView.postMessage(String(Math.round(window.scrollY || (document.documentElement && document.documentElement.scrollTop) || 0))); } catch (e) {}
-          }, 300);
+          }, 250);
         }, { passive: true });
       } catch (e) {}
       true;
@@ -63,6 +77,9 @@ export default function EbookReader() {
         <Text style={styles.title} numberOfLines={1}>{item?.title ?? 'Reading'}</Text>
         <View style={styles.spacer} />
       </View>
+      {showHint ? (
+        <View style={styles.hintPill}><Text style={styles.hintText}>Continuing where you left off</Text></View>
+      ) : null}
       {err ? (
         <View style={styles.center}><Text style={styles.errText}>{err}</Text></View>
       ) : uri ? (
@@ -89,6 +106,8 @@ export default function EbookReader() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  hintPill: { alignSelf: 'center', backgroundColor: COLORS.ink, paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999, marginTop: 10 },
+  hintText: { color: COLORS.bg, fontSize: 12 },
   back: { fontSize: 16, color: COLORS.ink, width: 48 },
   title: { flex: 1, textAlign: 'center', fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   spacer: { width: 48 },

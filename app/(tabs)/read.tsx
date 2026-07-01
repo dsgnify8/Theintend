@@ -10,8 +10,8 @@ import { useArticles } from '@/lib/articles';
 import { LIBRARY, type LibraryItem } from '@/constants/library';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
-const FORMATS = ['Articles', 'E-books', 'Books', 'Audiobooks'];
-const TYPE_FOR: Record<string, string> = { 'E-books': 'E-book', 'Books': 'Book', 'Audiobooks': 'Audiobook' };
+const FORMATS = ['Articles', 'E-books', 'Books'];
+const TYPE_FOR: Record<string, string> = { 'E-books': 'E-book', 'Books': 'Book' };
 
 const CAT_COLOR: Record<string, string> = {
   Wellbeing: '#5C6B73',
@@ -129,8 +129,8 @@ export default function LibraryScreen() {
         <View style={styles.menuCard}>
           <MenuRow icon="musical-notes-outline" label="Sounds" onPress={() => go('/sounds')} />
           <MenuRow icon="leaf-outline" label="Breathwork" onPress={() => go('/breathwork')} />
-          <MenuRow icon="document-text-outline" label="Workbooks" tag="Soon" onPress={() => go('/workbooks')} />
-          <MenuRow icon="create-outline" label="Journaling" tag="Soon" onPress={() => go('/journaling')} />
+          <MenuRow icon="document-text-outline" label="Workbooks" onPress={() => go('/worksheets')} />
+          <MenuRow icon="create-outline" label="Journaling" onPress={() => go('/journaling')} />
         </View>
       </Modal>
     </SafeAreaView>

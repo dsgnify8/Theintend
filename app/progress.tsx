@@ -4,20 +4,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { ACHIEVEMENTS } from '@/constants/achievements';
+import { ACHIEVEMENTS, type Achievement } from '@/constants/achievements';
 import { useArticles } from '@/lib/articles';
 import { SOUNDS } from '@/constants/sounds';
+import { getCategory } from '@/constants/journal';
+import { getWorksheet } from '@/constants/worksheets';
 import { useMyBookings } from '@/lib/bookings';
 import { useReads, useListens, useReadStreak } from '@/lib/store';
+import { useAllJournalEntries } from '@/lib/journal';
+import { useAllWorksheetEntries } from '@/lib/worksheets';
 
 const TABS = ['Overview', 'Achievements'];
 const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtShort(iso: string) {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MON[d.getMonth()]}`;
+}
 
 type Detail =
   | { key: 'read'; title: string }
   | { key: 'listen'; title: string }
   | { key: 'session'; title: string }
   | { key: 'program'; title: string }
+  | { key: 'journal'; title: string }
+  | { key: 'worksheet'; title: string }
   | null;
 
 export default function ProgressScreen() {
@@ -30,6 +41,8 @@ export default function ProgressScreen() {
   const listens = useListens();
   const streakInfo = useReadStreak();
   const { items: bookings } = useMyBookings();
+  const journalEntries = useAllJournalEntries();
+  const worksheetEntries = useAllWorksheetEntries();
 
   const readItems = useMemo(
     () => reads.map((r) => ({ id: r.id, title: articles.find((a) => a.id === r.id)?.title ?? 'Article', t: r.t })).reverse(),
@@ -41,6 +54,16 @@ export default function ProgressScreen() {
   );
   const sessions = useMemo(() => bookings.filter((b) => b.kind === 'class' || b.kind === 'service'), [bookings]);
   const programs = useMemo(() => bookings.filter((b) => b.kind === 'program'), [bookings]);
+
+  const stats: Record<string, number> = {
+    reads: reads.length,
+    journals: journalEntries.length,
+    worksheets: worksheetEntries.length,
+    streak: streakInfo.streak,
+    sessions: sessions.length,
+    listens: listens.length,
+  };
+  const isUnlocked = (a: Achievement) => (a.req ? stats[a.req.metric] >= a.req.count : !!a.unlocked);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -71,7 +94,7 @@ export default function ProgressScreen() {
                 <View style={styles.streakBadge}><Text style={styles.streakNum}>{streakInfo.streak}</Text></View>
                 <View>
                   <Text style={styles.streakLabel}>DAY STREAK</Text>
-                  <Text style={styles.streakHint}>Read an article each day to keep it going</Text>
+                  <Text style={styles.streakHint}>Read or reflect each day to keep it going</Text>
                 </View>
               </View>
               <View style={styles.weekRow}>
@@ -88,6 +111,8 @@ export default function ProgressScreen() {
 
             <View style={styles.statGrid}>
               <StatCard icon="book-outline" value={String(readItems.length)} label="Articles read" onPress={() => setDetail({ key: 'read', title: 'Articles read' })} />
+              <StatCard icon="create-outline" value={String(journalEntries.length)} label="Journal entries" onPress={() => setDetail({ key: 'journal', title: 'Journal entries' })} />
+              <StatCard icon="clipboard-outline" value={String(worksheetEntries.length)} label="Worksheets" onPress={() => setDetail({ key: 'worksheet', title: 'Worksheets saved' })} />
               <StatCard icon="musical-notes-outline" value={String(listenItems.length)} label="Listened" onPress={() => setDetail({ key: 'listen', title: 'Listened' })} />
               <StatCard icon="calendar-outline" value={String(sessions.length)} label="Sessions" onPress={() => setDetail({ key: 'session', title: 'Sessions' })} />
               <StatCard icon="ribbon-outline" value={String(programs.length)} label="Programs" onPress={() => setDetail({ key: 'program', title: 'Programs' })} />
@@ -96,15 +121,19 @@ export default function ProgressScreen() {
           </View>
         ) : (
           <View style={styles.badgeGrid}>
-            {ACHIEVEMENTS.map((a) => (
-              <View key={a.id} style={styles.badge}>
-                <View style={[styles.badgeCircle, !a.unlocked && styles.badgeLocked]}>
-                  <Ionicons name={a.icon as any} size={26} color={a.unlocked ? COLORS.accent : COLORS.muted} />
+            {ACHIEVEMENTS.map((a) => {
+              const unlocked = isUnlocked(a);
+              const cur = a.req ? Math.min(stats[a.req.metric], a.req.count) : 0;
+              return (
+                <View key={a.id} style={styles.badge}>
+                  <View style={[styles.badgeCircle, !unlocked && styles.badgeLocked]}>
+                    <Ionicons name={a.icon as any} size={26} color={unlocked ? COLORS.accent : COLORS.muted} />
+                  </View>
+                  <Text style={styles.badgeTitle}>{a.title}</Text>
+                  <Text style={styles.badgeState}>{unlocked ? 'Unlocked' : a.req ? `${cur} / ${a.req.count}` : 'Locked'}</Text>
                 </View>
-                <Text style={styles.badgeTitle}>{a.title}</Text>
-                <Text style={styles.badgeState}>{a.unlocked ? 'Unlocked' : 'Locked'}</Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -122,6 +151,26 @@ export default function ProgressScreen() {
                     <Pressable key={i} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/article/${r.id}`); }}>
                       <Ionicons name="book-outline" size={18} color={COLORS.accent} />
                       <Text style={styles.itemTitle} numberOfLines={1}>{r.title}</Text>
+                      <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
+                    </Pressable>
+                  )))}
+
+              {detail?.key === 'journal' && (journalEntries.length === 0
+                ? <Empty text="No journal entries yet." />
+                : journalEntries.map((e) => (
+                    <Pressable key={e.id} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/journaling/entry/${e.id}`); }}>
+                      <Ionicons name="create-outline" size={18} color={COLORS.accent} />
+                      <Text style={styles.itemTitle} numberOfLines={1}>{getCategory(e.categoryId)?.title ?? 'Journal'} · {fmtShort(e.createdAt)}</Text>
+                      <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
+                    </Pressable>
+                  )))}
+
+              {detail?.key === 'worksheet' && (worksheetEntries.length === 0
+                ? <Empty text="No worksheets saved yet." />
+                : worksheetEntries.map((e) => (
+                    <Pressable key={e.id} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/worksheet/${e.worksheetId}?entry=${e.id}`); }}>
+                      <Ionicons name="clipboard-outline" size={18} color={COLORS.accent} />
+                      <Text style={styles.itemTitle} numberOfLines={1}>{getWorksheet(e.worksheetId)?.title ?? 'Worksheet'} · {fmtShort(e.createdAt)}</Text>
                       <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                     </Pressable>
                   )))}
@@ -213,7 +262,6 @@ const styles = StyleSheet.create({
   badgeLocked: { backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.line },
   badgeTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, textAlign: 'center' },
   badgeState: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
-
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
   sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 34 },

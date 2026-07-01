@@ -8,7 +8,6 @@ import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
 import { useExpertBookings } from '@/lib/bookings';
 import { FramedImage } from '@/components/FramedImage';
-import { CalendarConnect } from '@/components/CalendarConnect';
 import type { Expert } from '@/constants/experts';
 
 const DAY_LABELS: Record<string, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
@@ -119,17 +118,12 @@ export default function ExpertPanel() {
           <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
         </Pressable>
 
-        {/* CALENDAR */}
-        <Text style={styles.sectionTitle}>Calendar</Text>
-        <CalendarConnect expertId={expert.id} />
-
         {/* PROFILE & OFFERINGS — separate area */}
         <Text style={styles.sectionTitle}>Profile & offerings</Text>
         <ActionRow icon="create-outline" title="Edit profile & photo" meta="Update your bio, photo and details" onPress={() => router.push('/expert-edit')} />
         <ActionRow icon="add-circle-outline" title="Propose a class or program" meta="Submit a new offering for approval" onPress={() => router.push('/expert-offer-new')} />
-        {role === 'admin' ? (
-          <ActionRow icon="crop-outline" title="Adjust photo framing" meta="Reposition how your photo sits on the card" onPress={() => router.push(`/admin-expert-frame/${expert.id}`)} />
-        ) : null}
+        <Text style={styles.sectionTitle}>Payouts</Text>
+        <ActionRow icon="cash-outline" title="Payouts & analytics" meta="See how your page is doing and add your bank details" onPress={() => router.push('/expert-payouts')} />
       </ScrollView>
     </Screen>
   );

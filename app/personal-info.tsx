@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -24,6 +24,7 @@ export default function PersonalInfo() {
   const [passMsg, setPassMsg] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
   const [savingPass, setSavingPass] = useState(false);
+  const [passOpen, setPassOpen] = useState(false);
 
   useEffect(() => { setName(profile?.full_name ?? ''); }, [profile?.full_name]);
   useEffect(() => { AsyncStorage.getItem(LANG_KEY).then((v) => { if (v) setLang(v); }); }, []);
@@ -47,7 +48,7 @@ export default function PersonalInfo() {
     setSavingPass(true);
     const { error } = await supabase.auth.updateUser({ password: pass1 });
     if (error) setPassMsg(error.message);
-    else { setPassMsg('Password updated.'); setPass1(''); setPass2(''); }
+    else { setPassMsg('Password updated.'); setPass1(''); setPass2(''); setPassOpen(false); }
     setSavingPass(false);
   };
 
@@ -93,15 +94,29 @@ export default function PersonalInfo() {
             })}
           </View>
 
-          <Text style={[styles.label, { marginTop: 28 }]}>Change password</Text>
-          <TextInput style={styles.input} value={pass1} onChangeText={setPass1} placeholder="New password" placeholderTextColor={COLORS.muted} secureTextEntry autoCapitalize="none" />
-          <TextInput style={styles.input} value={pass2} onChangeText={setPass2} placeholder="Confirm new password" placeholderTextColor={COLORS.muted} secureTextEntry autoCapitalize="none" />
-          <Pressable style={[styles.btn, savingPass && styles.btnOff]} onPress={changePassword} disabled={savingPass}>
-            {savingPass ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Update password</Text>}
+          <Pressable style={styles.pwRow} onPress={() => { setPassMsg(null); setPass1(''); setPass2(''); setPassOpen(true); }}>
+            <Text style={styles.pwRowText}>Change password</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </Pressable>
-          {passMsg ? <Text style={styles.msg}>{passMsg}</Text> : null}
+          {passMsg && !passOpen ? <Text style={styles.msg}>{passMsg}</Text> : null}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal visible={passOpen} transparent animationType="fade" onRequestClose={() => setPassOpen(false)}>
+        <View style={styles.pwRoot}>
+          <Pressable style={styles.pwBackdrop} onPress={() => setPassOpen(false)} />
+          <View style={styles.pwCard}>
+            <Text style={styles.pwTitle}>Change password</Text>
+            <TextInput style={styles.input} value={pass1} onChangeText={setPass1} placeholder="New password" placeholderTextColor={COLORS.muted} secureTextEntry autoCapitalize="none" />
+            <TextInput style={styles.input} value={pass2} onChangeText={setPass2} placeholder="Confirm new password" placeholderTextColor={COLORS.muted} secureTextEntry autoCapitalize="none" />
+            {passMsg ? <Text style={styles.msg}>{passMsg}</Text> : null}
+            <Pressable style={[styles.btn, savingPass && styles.btnOff]} onPress={changePassword} disabled={savingPass}>
+              {savingPass ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Update password</Text>}
+            </Pressable>
+            <Pressable onPress={() => setPassOpen(false)} hitSlop={8}><Text style={styles.pwCancel}>Cancel</Text></Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -138,5 +153,13 @@ const styles = StyleSheet.create({
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 15 },
   msg: { fontSize: 13, color: COLORS.accent, marginTop: 8 },
+  pwRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginTop: 28 },
+  pwRowText: { fontSize: 15, color: COLORS.ink },
+  pwRoot: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
+  pwBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
+  pwCard: { width: '100%', backgroundColor: COLORS.bg, borderRadius: 22, padding: 22 },
+  pwTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 14 },
+  pwCancel: { fontSize: 14, color: COLORS.muted, textAlign: 'center', marginTop: 14 },
 });
+
 

@@ -116,6 +116,12 @@ export default function Admin() {
           <Text style={[styles.soonText, { color: COLORS.ink }]}>Edit experts (photo & bio)</Text>
           <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
         </Pressable>
+        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Payouts</Text>
+        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-payouts')}>
+          <Ionicons name="cash-outline" size={20} color={COLORS.accent} />
+          <Text style={[styles.soonText, { color: COLORS.ink }]}>Expert payouts & splits</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

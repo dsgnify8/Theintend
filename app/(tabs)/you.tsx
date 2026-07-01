@@ -12,6 +12,7 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
 import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone, type Booking } from '@/lib/store';
+import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings } from '@/lib/bookings';
 import { signOut, updateProfile, useAuth } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
@@ -37,6 +38,7 @@ export default function YouScreen() {
   const savedIds = useSaved();
   const likedIds = useLiked();
   const reads = useReads();
+  const journalEntries = useAllJournalEntries();
   const worksheetsDone = useWorksheetsDone();
   const streakInfo = useReadStreak();
   const bookings = useBookings();
@@ -170,7 +172,7 @@ export default function YouScreen() {
             <View style={styles.statGrid}>
               <Stat label="Articles read" value={String(reads.length)} />
               <Stat label="Sessions" value={String(bookings.length)} />
-              <Stat label="Saved reads" value={String(savedIds.length)} />
+              <Stat label="Journals" value={String(journalEntries.length)} />
               <Stat label="Worksheets" value={String(worksheetsDone.length)} />
             </View>
             <Text style={styles.sampleNote}>Saved, likes and sessions are live. The rest fills in once tracking is connected.</Text>
@@ -197,7 +199,6 @@ export default function YouScreen() {
               ) : (
                 <Row label="Sign in" onPress={() => router.push('/login')} />
               )}
-              <Row label="Debug (temporary)" onPress={() => router.push('/debug')} />
             </View>
           </View>
         ) : null}
@@ -283,12 +284,12 @@ function SavedRow({ a, onPress }: { a: { id: string; title: string; category: st
 
 function MoodInsightCard() {
   const router = useRouter();
-  const { ready, mood, recoKind } = useMoodInsight(3, 14);
+  const { ready, level, keyword, recoKind } = useMoodInsight(3, 14);
   const { articles } = useArticles();
-  if (!ready || !mood) return null;
-  const r = MOOD_RECO[mood];
+  if (!ready || !level) return null;
+  const r = MOOD_RECO[level];
   if (!r) return null;
-  const moodLabel = (MOODS.find((m) => m.key === mood)?.label ?? mood).toLowerCase();
+  const moodLabel = (keyword ?? level).toLowerCase();
 
   let reco: { lead: string; title: string; subtitle: string; onPress: () => void } | null = null;
   if (recoKind === 'expert') {
@@ -298,7 +299,7 @@ function MoodInsightCard() {
     const sd = SOUNDS.find((x) => x.id === r.soundId);
     if (sd) reco = { lead: 'A sound to settle into', title: sd.title, subtitle: sd.purpose, onPress: () => router.push(`/sound/${sd.id}`) };
   } else {
-    const a = pickArticleForMood(mood, articles);
+    const a = pickArticleForMood(level, articles);
     if (a) reco = { lead: 'A read that might land', title: a.title, subtitle: `${a.readMinutes ?? 5} min read`, onPress: () => router.push(`/article/${a.id}`) };
   }
   if (!reco) {

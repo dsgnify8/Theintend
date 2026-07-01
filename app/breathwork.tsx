@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -14,12 +14,10 @@ export default function BreathworkScreen() {
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
         <Text style={styles.backText}>Library</Text>
       </Pressable>
-
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>THE INTEND</Text>
         <Text style={styles.h1}>Breathwork</Text>
         <Text style={styles.sub}>Short, guided breathing sessions to calm the body and steady the mind.</Text>
-
         <View style={styles.grid}>
           {BREATH_PROGRAMS.map((p) => (
             <ProgramCard key={p.id} program={p} />
@@ -34,10 +32,19 @@ function ProgramCard({ program }: { program: BreathProgram }) {
   const router = useRouter();
   return (
     <Pressable style={styles.cardWrap} onPress={() => router.push(`/breath/${program.id}`)}>
-      <View style={[styles.card, { backgroundColor: program.color }]}>
-        <Ionicons name="leaf-outline" size={22} color="rgba(255,255,255,0.9)" />
-        <Text style={styles.cardDuration}>{program.duration}</Text>
-      </View>
+      <ImageBackground
+        source={program.cover}
+        style={[styles.card, { backgroundColor: program.color }]}
+        imageStyle={styles.cardImg}
+        resizeMode="cover"
+      >
+        <View style={styles.leafChip}>
+          <Ionicons name="leaf-outline" size={16} color={COLORS.ink} />
+        </View>
+        <View style={styles.durPill}>
+          <Text style={styles.cardDuration}>{program.duration}</Text>
+        </View>
+      </ImageBackground>
       <Text style={styles.cardTitle}>{program.title}</Text>
       <Text style={styles.cardSub}>{program.subtitle}</Text>
     </Pressable>
@@ -54,8 +61,11 @@ const styles = StyleSheet.create({
   sub: { fontSize: 15, lineHeight: 22, color: COLORS.muted, marginTop: 8, marginBottom: 18 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: 8 },
   cardWrap: { width: '48%', marginBottom: 22 },
-  card: { height: 130, borderRadius: 18, padding: 14, justifyContent: 'space-between' },
-  cardDuration: { fontSize: 12, color: 'rgba(255,255,255,0.9)' },
+  card: { height: 130, borderRadius: 18, padding: 12, justifyContent: 'space-between', alignItems: 'flex-start', overflow: 'hidden' },
+  cardImg: { borderRadius: 18 },
+  leafChip: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
+  durPill: { backgroundColor: 'rgba(255,255,255,0.55)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
+  cardDuration: { fontSize: 12, color: COLORS.ink },
   cardTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink, marginTop: 10 },
   cardSub: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 4 },
 });

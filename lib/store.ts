@@ -25,12 +25,14 @@ let worksheetsDone: string[] = [];
 let listens: { id: string; t: number }[] = [];
 let lastRead: { id: string; title: string; t: number } | null = null;
 let bookScroll: Record<string, number> = {};
+let journalDays: number[] = [];
 
 const READS_KEY = 'intend.reads.v1';
 const WORK_KEY = 'intend.worksheets.v1';
 const LISTEN_KEY = 'intend.listens.v1';
 const LASTREAD_KEY = 'intend.lastread.v1';
 const SCROLL_KEY = 'intend.bookscroll.v1';
+const JOURNAL_KEY = 'intend.journaldays.v1';
 
 const listeners = new Set<() => void>();
 function emit() { listeners.forEach((l) => l()); }
@@ -48,6 +50,8 @@ function emit() { listeners.forEach((l) => l()); }
     if (lr) lastRead = JSON.parse(lr);
     const bs = await AsyncStorage.getItem(SCROLL_KEY);
     if (bs) bookScroll = JSON.parse(bs);
+    const jd = await AsyncStorage.getItem(JOURNAL_KEY);
+    if (jd) journalDays = JSON.parse(jd);
   } catch {}
   emit();
 })();
@@ -107,6 +111,15 @@ export function recordListen(id: string) {
   emit();
 }
 
+export function recordJournalDay() {
+  const today = dayKey(Date.now());
+  if (journalDays.some((t) => dayKey(t) === today)) return;
+  journalDays = [...journalDays, Date.now()];
+  AsyncStorage.setItem(JOURNAL_KEY, JSON.stringify(journalDays)).catch(() => {});
+  emit();
+}
+export const useJournalDays = () => useStore(() => [...journalDays]);
+
 function useStore<T>(getter: () => T): T {
   const [v, setV] = useState<T>(getter);
   useEffect(() => {
@@ -148,7 +161,7 @@ export const useLastRead = () => useStore(() => lastRead);
 export function useReadStreak() {
   return useStore(() => {
     const oneDay = 86400000;
-    const days = new Set(reads.map((r) => dayKey(r.t)));
+    const days = new Set([...reads.map((r) => dayKey(r.t)), ...journalDays.map((t) => dayKey(t))]);
 
     let streak = 0;
     let cursor = Date.now();

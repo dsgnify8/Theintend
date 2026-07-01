@@ -75,7 +75,7 @@ function ExpertCard({ expert, reverse }: { expert: Expert; reverse: boolean }) {
         <Text style={styles.cat}>{expert.category.toUpperCase()}</Text>
         <Text style={styles.name}>{expert.name}</Text>
         <Text style={styles.role}>{expert.title.toUpperCase()}</Text>
-        <Text style={styles.blurb} numberOfLines={3}>{expert.blurb}</Text>
+        <Text style={styles.blurb} numberOfLines={4}>{expert.blurb}</Text>
         <Text style={styles.link}>See profile {'\u203A'}</Text>
       </View>
     </Pressable>
@@ -95,22 +95,23 @@ const styles = StyleSheet.create({
   chipTextOn: { color: COLORS.bg },
   loader: { paddingVertical: 60, alignItems: 'center' },
 
-  list: { marginTop: 18, gap: 16 },
+  list: { marginTop: 18, gap: 18 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: 22,
+    backgroundColor: 'rgba(92,70,50,0.06)',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.line,
-    padding: 14,
+    borderColor: 'rgba(92,70,50,0.12)',
+    paddingVertical: 18,
+    paddingHorizontal: 10,
   },
   cardReverse: { flexDirection: 'row-reverse' },
-  photoWrap: { width: 116, height: 142, borderRadius: 18, overflow: 'hidden', backgroundColor: COLORS.accentSoft },
+  photoWrap: { width: 116, height: 156, borderRadius: 18, overflow: 'hidden', backgroundColor: COLORS.accentSoft },
   photoFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   photoInitials: { fontFamily: FONT_SERIF, fontSize: 38, color: COLORS.accent },
-  body: { flex: 1, paddingLeft: 16, paddingRight: 4 },
-  bodyReverse: { paddingLeft: 4, paddingRight: 16 },
+  body: { flex: 1, paddingLeft: 18, paddingRight: 8 },
+  bodyReverse: { paddingLeft: 8, paddingRight: 18 },
   cat: { fontSize: 10, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 5 },
   name: { fontFamily: FONT_SERIF, fontSize: 21, lineHeight: 25, color: COLORS.ink },
   role: { fontSize: 10, letterSpacing: 1, color: COLORS.muted, marginTop: 4, marginBottom: 7 },
