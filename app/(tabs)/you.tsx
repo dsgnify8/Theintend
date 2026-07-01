@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMoodInsight, pickArticleForMood } from '@/lib/mood';
+import { MOOD_RECO, MOODS } from '@/constants/mood';
+import { EXPERTS } from '@/constants/experts';
+import { SOUNDS } from '@/constants/sounds';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -283,6 +287,7 @@ function MoodInsightCard() {
   const { articles } = useArticles();
   if (!ready || !mood) return null;
   const r = MOOD_RECO[mood];
+  if (!r) return null;
   const moodLabel = (MOODS.find((m) => m.key === mood)?.label ?? mood).toLowerCase();
 
   let reco: { lead: string; title: string; subtitle: string; onPress: () => void } | null = null;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { MOODS } from '@/constants/mood';
@@ -37,6 +37,14 @@ export default function HomeScreen() {
       if (i >= 0) { setMoodIdx(i); setMoodSaved(true); }
     }
   }, [todayMood]);
+  const moodTimer = useRef<any>(null);
+  useEffect(() => () => { if (moodTimer.current) clearTimeout(moodTimer.current); }, []);
+  // Save whatever the scale settles on for 5 seconds (lets them adjust first).
+  const scheduleMoodSave = (i: number) => {
+    setMoodSaved(false);
+    if (moodTimer.current) clearTimeout(moodTimer.current);
+    moodTimer.current = setTimeout(() => { setMoodToday(MOODS[i].key); setMoodSaved(true); }, 5000);
+  };
   const bookings = useBookings();
   const { map, lastReadId } = useProgress();
   const { articles } = useArticles();
@@ -69,14 +77,12 @@ export default function HomeScreen() {
             value={moodIdx}
             minimumTrackTintColor={COLORS.accent}
             maximumTrackTintColor={COLORS.line}
-            thumbTintColor={COLORS.accent}
-            onValueChange={(v) => setMoodIdx(Math.round(v))}
-            onSlidingComplete={(v) => { const i = Math.round(v); setMoodIdx(i); setMoodSaved(true); setMoodToday(MOODS[i].key); }}
+            thumbTintColor={moodSaved ? COLORS.ink : COLORS.accent}
+            onValueChange={(v) => { const i = Math.round(v); setMoodIdx(i); scheduleMoodSave(i); }}
           />
           <View style={styles.moodLabels}>
             {MOODS.map((m) => (<Text key={m.key} style={styles.moodTick}>{m.label}</Text>))}
           </View>
-          <Text style={styles.moodHint}>{moodSaved ? 'Saved \u2014 one check-in a day.' : 'Drag to check in.'}</Text>
         </View>
 
         <Text style={styles.label}>UPCOMING SESSION</Text>

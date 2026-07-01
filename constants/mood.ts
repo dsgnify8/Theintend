@@ -1,23 +1,23 @@
 // The mood scale and how each mood maps to a recommendation.
 // Everything here is safe to edit in plain language.
 
-export type MoodKey = 'heavy' | 'lost' | 'numb' | 'calm' | 'happy';
+export type MoodKey = 'heavy' | 'stressed' | 'numb' | 'calm' | 'happy';
 
 export type Mood = { key: MoodKey; label: string; color: string };
 
 // Order = left to right on the scale (dragging right = feeling lighter).
 export const MOODS: Mood[] = [
-  { key: 'heavy', label: 'Heavy', color: '#5C6B73' },
-  { key: 'lost',  label: 'Lost',  color: '#7E6A82' },
-  { key: 'numb',  label: 'Numb',  color: '#8C8278' },
-  { key: 'calm',  label: 'Calm',  color: '#6F7A6B' },
-  { key: 'happy', label: 'Happy', color: '#C9A35B' },
+  { key: 'heavy',    label: 'Heavy',    color: '#5C6B73' },
+  { key: 'stressed', label: 'Stressed', color: '#9E6F58' },
+  { key: 'numb',     label: 'Numb',     color: '#8C8278' },
+  { key: 'calm',     label: 'Calm',     color: '#6F7A6B' },
+  { key: 'happy',    label: 'Happy',    color: '#C9A35B' },
 ];
 
 export type MoodReco = {
-  note: string;            // fills "We've noticed you've been feeling ___ lately."
-  expertId: string;        // who we suggest
-  soundId: string;         // which sound we suggest
+  note: string;
+  expertId: string;
+  soundId: string;
   articleCategories: string[];
   articleKeywords: string[];
 };
@@ -38,12 +38,12 @@ export const MOOD_RECO: Record<MoodKey, MoodReco> = {
     articleCategories: ['Mental Health', 'Healing'],
     articleKeywords: ['joy', 'gratitude', 'energy', 'vitality', 'momentum', 'bright', 'alive'],
   },
-  lost: {
-    note: 'lost',
-    expertId: 'ekaterina-murray',
-    soundId: 'clear-mind',
-    articleCategories: ['Mental Health', 'Healing'],
-    articleKeywords: ['lost', 'freeze', 'stuck', 'direction', 'purpose', 'identity', 'meaning', 'clarity'],
+  stressed: {
+    note: 'stressed',
+    expertId: 'omar-chtioui',
+    soundId: 'steady-breath',
+    articleCategories: ['Breathwork', 'Mental Health', 'Healing'],
+    articleKeywords: ['stress', 'stressed', 'overwhelm', 'tense', 'anxious', 'anxiety', 'pressure', 'worry', 'burnout'],
   },
   heavy: {
     note: 'heavy',
@@ -54,9 +54,9 @@ export const MOOD_RECO: Record<MoodKey, MoodReco> = {
   },
   numb: {
     note: 'numb',
-    expertId: 'omar-chtioui',
-    soundId: 'steady-breath',
-    articleCategories: ['Healing', 'Breathwork', 'Mental Health'],
+    expertId: 'ekaterina-murray',
+    soundId: 'clear-mind',
+    articleCategories: ['Healing', 'Mental Health'],
     articleKeywords: ['numb', 'disconnect', 'reconnect', 'feeling', 'body', 'shutdown', 'freeze', 'present'],
   },
 };
