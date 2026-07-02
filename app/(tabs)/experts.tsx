@@ -75,7 +75,7 @@ function ExpertCard({ expert, reverse }: { expert: Expert; reverse: boolean }) {
         <Text style={styles.cat}>{expert.category.toUpperCase()}</Text>
         <Text style={styles.name}>{expert.name}</Text>
         <Text style={styles.role}>{expert.title.toUpperCase()}</Text>
-        <Text style={styles.blurb} numberOfLines={4}>{expert.blurb}</Text>
+        <Text style={styles.blurb}>{expert.blurb}</Text>
         <Text style={styles.link}>See profile {'\u203A'}</Text>
       </View>
     </Pressable>
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   body: { flex: 1, paddingLeft: 18, paddingRight: 8 },
   bodyReverse: { paddingLeft: 8, paddingRight: 18 },
   cat: { fontSize: 10, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 5 },
-  name: { fontFamily: FONT_SERIF, fontSize: 21, lineHeight: 25, color: COLORS.ink },
+  name: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 23, color: COLORS.ink },
   role: { fontSize: 10, letterSpacing: 1, color: COLORS.muted, marginTop: 4, marginBottom: 7 },
-  blurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.8 },
+  blurb: { fontSize: 13.5, lineHeight: 20, color: COLORS.ink },
   link: { fontSize: 13, color: COLORS.accent, marginTop: 10 },
 });

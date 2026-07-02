@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { BREATH_PROGRAMS } from '@/constants/breathwork';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
@@ -19,9 +20,43 @@ export default function BreathPlayer() {
 
   const [pi, setPi] = useState(0);
   const [running, setRunning] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [remaining, setRemaining] = useState(program?.pattern[0]?.secs ?? 0);
   const [elapsed, setElapsed] = useState(0);
   const scale = useRef(new Animated.Value(0.55)).current;
+
+  // Breathing cues: a soft tone as each phase begins. Holds get their own quiet tone.
+  const sounds = useRef<{ inhale?: Audio.Sound; hold?: Audio.Sound; exhale?: Audio.Sound }>({});
+  const mutedRef = useRef(muted);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, shouldDuckAndroid: true });
+        const inh = await Audio.Sound.createAsync(require('../../assets/sounds/breathe-in.wav'));
+        const hld = await Audio.Sound.createAsync(require('../../assets/sounds/hold.wav'));
+        const exh = await Audio.Sound.createAsync(require('../../assets/sounds/breathe-out.wav'));
+        if (!alive) { inh.sound.unloadAsync(); hld.sound.unloadAsync(); exh.sound.unloadAsync(); return; }
+        sounds.current = { inhale: inh.sound, hold: hld.sound, exhale: exh.sound };
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+      const s = sounds.current;
+      s.inhale?.unloadAsync();
+      s.hold?.unloadAsync();
+      s.exhale?.unloadAsync();
+    };
+  }, []);
+
+  const playCue = (label: string) => {
+    if (mutedRef.current) return;
+    const s = sounds.current;
+    const snd = label === 'Breathe in' ? s.inhale : label === 'Breathe out' ? s.exhale : s.hold;
+    snd?.replayAsync().catch(() => {});
+  };
 
   // Total session timer
   useEffect(() => {
@@ -35,6 +70,7 @@ export default function BreathPlayer() {
     if (!program || !running) return;
     const phase = program.pattern[pi];
     setRemaining(phase.secs);
+    playCue(phase.label);
     Animated.timing(scale, {
       toValue: phase.target,
       duration: phase.secs * 1000,
@@ -90,6 +126,9 @@ export default function BreathPlayer() {
           <Ionicons name={running ? 'pause' : 'play'} size={22} color={COLORS.bg} />
           <Text style={styles.ctrlText}>{running ? 'Pause' : 'Resume'}</Text>
         </Pressable>
+        <Pressable style={styles.muteBtn} onPress={() => setMuted((m) => !m)} hitSlop={8}>
+          <Ionicons name={muted ? 'volume-mute-outline' : 'volume-medium-outline'} size={22} color={COLORS.ink} />
+        </Pressable>
       </View>
       <Text style={styles.note}>{program.description}</Text>
     </SafeAreaView>
@@ -112,8 +151,9 @@ const styles = StyleSheet.create({
   cue: { position: 'absolute', alignItems: 'center' },
   cueLabel: { fontFamily: FONT_SERIF, fontSize: 24, color: '#FFFFFF' },
   cueCount: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 4 },
-  controls: { alignItems: 'center', marginBottom: 14 },
+  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 14 },
   ctrlBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.accent, paddingVertical: 14, paddingHorizontal: 30, borderRadius: 999 },
   ctrlText: { color: COLORS.bg, fontSize: 15 },
+  muteBtn: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.card },
   note: { fontSize: 13, lineHeight: 20, color: COLORS.muted, textAlign: 'center', paddingHorizontal: 32, marginBottom: 16 },
 });

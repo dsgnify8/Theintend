@@ -40,7 +40,7 @@ export const EXPERTS: Expert[] = [
     name: 'Scheherazade Hasan',
     title: 'Wealth Coach',
     category: 'Wealth',
-    blurb: `Focusing on the intersection of financial strategy and human behavior. Scheherazade helps people understand what is driving their relationship with money and build practical systems that support their present life and long-term goals.`,
+    blurb: `Scheherazade helps people understand what is driving their relationship with money and build practical systems that support their present life and long-term goals.`,
     bio: `A wealth coach who helps people make confident, values-aligned decisions with their money, without shame or rigid rules. Her work sits at the intersection of practical financial strategy and human behavior. A former financial advisor and portfolio manager, she helps clients understand what really drives their money stress and build simple systems that support both their present life and future goals.`,
     faqs: [
       `What's the smartest next step with my money?`,
@@ -55,7 +55,7 @@ export const EXPERTS: Expert[] = [
     name: 'Ekaterina Murray',
     title: 'Neuropsychology & Identity Specialist',
     category: 'Identity',
-    blurb: `With a focus on how the brain shapes identity, behavior, and decision-making. Ekaterina works with people navigating significant life transitions, helping them rebuild a stable sense of self and reconnect with their own direction.`,
+    blurb: `Ekaterina works with people navigating significant life transitions, helping them rebuild a stable sense of self and reconnect with their own direction.`,
     bio: `Ekaterina's foundation is in neuropsychology and neurocoaching, examining how the brain shapes how we perceive ourselves and make decisions. Over hundreds of sessions with people in major life transitions, she developed a precise ability to find where someone has lost connection with their sense of self, and what is needed to rebuild it. Her work is especially relevant during identity disruption, major decisions, and transitions where the psychological foundation needs rebuilding.`,
     faqs: [
       `I'm having difficulty making important choices despite understanding the situation logically.`,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { signIn, signUp, useAuth } from '@/lib/auth';
@@ -90,7 +91,7 @@ export default function Login() {
             <Input label="Name" value={name} onChangeText={setName} placeholder="Your name" />
           ) : null}
           <Input label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
-          <Input label="Password" value={password} onChangeText={setPassword} placeholder="At least 6 characters" secureTextEntry autoCapitalize="none" />
+          <PasswordInput value={password} onChangeText={setPassword} />
 
           {error ? (
             <View style={styles.errorBox}>
@@ -128,6 +129,29 @@ function Input(props: any) {
   );
 }
 
+function PasswordInput({ value, onChangeText }: { value: string; onChangeText: (t: string) => void }) {
+  const [show, setShow] = useState(false);
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>Password</Text>
+      <View style={styles.pwWrap}>
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder="At least 6 characters"
+          placeholderTextColor={COLORS.muted}
+          secureTextEntry={!show}
+          autoCapitalize="none"
+          style={styles.pwInput}
+        />
+        <Pressable onPress={() => setShow((v) => !v)} hitSlop={10} style={styles.eyeBtn}>
+          <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color={COLORS.muted} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   flex: { flex: 1 },
@@ -149,4 +173,7 @@ const styles = StyleSheet.create({
   btnText: { color: COLORS.bg, fontSize: 16, letterSpacing: 0.5 },
   toggle: { marginTop: 20, alignItems: 'center' },
   toggleText: { fontSize: 14, color: COLORS.accent },
+  pwWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingRight: 10 },
+  pwInput: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: COLORS.ink },
+  eyeBtn: { padding: 6 },
 });

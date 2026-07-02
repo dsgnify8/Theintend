@@ -14,6 +14,7 @@ export type SessionClass = {
   going: number;
   link?: string;
   color: string;
+  banner: any;
   description: string;
 };
 
@@ -29,6 +30,7 @@ export type Program = {
   price: string;
   requiresForm: boolean;
   color: string;
+  banner: any;
   description: string;
 };
 
@@ -47,6 +49,7 @@ export const CLASSES: SessionClass[] = [
     time: '6:00 PM – 7:00 PM GST',
     going: 312,
     color: '#5C4632',
+    banner: require('../assets/images/banners/breath-nervous-system.png'),
     description:
       'A live session on using the breath to settle an activated nervous system. Leave with simple practices you can return to whenever the body feels stuck in overdrive.',
   },
@@ -62,6 +65,7 @@ export const CLASSES: SessionClass[] = [
     time: '5:00 PM – 6:30 PM GST',
     going: 198,
     color: '#7C6F62',
+    banner: require('../assets/images/banners/money-without-stress.png'),
     description:
       'Understand what really drives your money stress and learn a calmer, clearer way to make financial decisions that fit your life.',
   },
@@ -77,6 +81,7 @@ export const CLASSES: SessionClass[] = [
     time: '4:00 PM – 6:00 PM GST',
     going: 256,
     color: '#6F7A6B',
+    banner: require('../assets/images/banners/reconnect-with-yourself.png'),
     description:
       'A grounded session for anyone in a life transition who has lost touch with their sense of self, with practical ways to rebuild inner stability.',
   },
@@ -92,6 +97,7 @@ export const CLASSES: SessionClass[] = [
     time: '7:00 PM – 8:00 PM GST',
     going: 174,
     color: '#8A6A58',
+    banner: require('../assets/images/banners/coming-home-to-body.png'),
     description:
       'A gentle live practice for women who feel disconnected within, guiding the body back to sensation, rest and feeling.',
   },
@@ -110,6 +116,7 @@ export const PROGRAMS: Program[] = [
     price: 'AED 1,200',
     requiresForm: false,
     color: '#6F7A6B',
+    banner: require('../assets/images/banners/nervous-system-reset.png'),
     description:
       'A four week journey to release stored tension, restore proper breathing, and bring the nervous system back to a regulated baseline.',
   },
@@ -125,6 +132,7 @@ export const PROGRAMS: Program[] = [
     price: 'AED 1,800',
     requiresForm: true,
     color: '#8A6A58',
+    banner: require('../assets/images/banners/building-self-worth.png'),
     description:
       'A six week program working with the body, not just the mind, to rebuild inner structure and self-trust.',
   },
@@ -140,6 +148,7 @@ export const PROGRAMS: Program[] = [
     price: 'AED 2,400',
     requiresForm: true,
     color: '#7E6A82',
+    banner: require('../assets/images/banners/feminine-embodiment.png'),
     description:
       'An eight week container using somatic and energy-based practice to shift the patterns that keep women feeling flat or disconnected.',
   },

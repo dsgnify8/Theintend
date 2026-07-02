@@ -38,6 +38,7 @@ function ProgramCard({ program }: { program: BreathProgram }) {
         imageStyle={styles.cardImg}
         resizeMode="cover"
       >
+        <View style={styles.scrim} pointerEvents="none" />
         <View style={styles.leafChip}>
           <Ionicons name="leaf-outline" size={16} color={COLORS.ink} />
         </View>
@@ -63,8 +64,9 @@ const styles = StyleSheet.create({
   cardWrap: { width: '48%', marginBottom: 22 },
   card: { height: 130, borderRadius: 18, padding: 12, justifyContent: 'space-between', alignItems: 'flex-start', overflow: 'hidden' },
   cardImg: { borderRadius: 18 },
-  leafChip: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center' },
-  durPill: { backgroundColor: 'rgba(255,255,255,0.55)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
+  scrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18, backgroundColor: 'rgba(43,38,34,0.28)' },
+  leafChip: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  durPill: { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
   cardDuration: { fontSize: 12, color: COLORS.ink },
   cardTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink, marginTop: 10 },
   cardSub: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 4 },

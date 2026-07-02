@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ImageBackground, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -48,9 +48,10 @@ export default function ProgramDetail() {
       <Stack.Screen options={{ headerShown: false }} />
       <BackBar onPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.cover, { backgroundColor: item.color }]}>
+        <ImageBackground source={item.banner} style={[styles.cover, { backgroundColor: item.color }]} imageStyle={styles.coverImg} resizeMode="cover">
+          <View style={styles.coverScrim} pointerEvents="none" />
           <Text style={styles.coverTitle}>{item.title}</Text>
-        </View>
+        </ImageBackground>
 
         <View style={styles.metaRow}>
           <Text style={styles.pill}>{item.weeks} weeks</Text>
@@ -164,8 +165,10 @@ const styles = StyleSheet.create({
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
-  cover: { height: 180, borderRadius: 20, padding: 20, justifyContent: 'flex-end', marginBottom: 18 },
+  cover: { height: 180, borderRadius: 20, padding: 20, justifyContent: 'flex-end', marginBottom: 18, overflow: 'hidden' },
   coverTitle: { fontFamily: FONT_SERIF, fontSize: 30, lineHeight: 34, color: '#FFFFFF' },
+  coverImg: { borderRadius: 20 },
+  coverScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 20, backgroundColor: 'rgba(43,38,34,0.32)' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   pill: { fontSize: 12, color: COLORS.ink, backgroundColor: COLORS.accentSoft, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden' },
   title: { fontFamily: FONT_SERIF, fontSize: 26, lineHeight: 32, color: COLORS.ink },
