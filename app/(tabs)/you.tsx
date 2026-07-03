@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMoodInsight, pickArticleForMood } from '@/lib/mood';
 import { MOOD_RECO, MOODS } from '@/constants/mood';
@@ -11,29 +11,22 @@ import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
-import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone, type Booking } from '@/lib/store';
+import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone, useUpcomingBookings, type Booking } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings } from '@/lib/bookings';
-import { signOut, updateProfile, useAuth } from '@/lib/auth';
+import { useMyPackages } from '@/lib/packages';
+import { signOut, updateProfile, useAuth, deleteAccount } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
 
-const VIEWS = ['Overview', 'Saved', 'Bookings'];
+const VIEWS = ['Overview', 'Bookings', 'Saved'];
 const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const STREAK = 4;
 const RECORD = 5;
-
-const NOTIFICATIONS = [
-  { icon: 'videocam', title: 'Session reminder', body: 'Breath & the Nervous System starts soon.', time: '2h' },
-  { icon: 'book', title: 'Continue reading', body: 'Pick up where you left off in your last article.', time: '5h' },
-  { icon: 'flame', title: 'Keep your streak', body: "You're on a 4-day streak. Don't lose it today.", time: '1d' },
-  { icon: 'sparkles', title: 'New from your expert', body: 'Omar Chtioui just added a new program.', time: '2d' },
-];
 
 export default function YouScreen() {
   const router = useRouter();
   const { session, profile, role } = useAuth();
   const [view, setView] = useState('Overview');
-  const [notifOpen, setNotifOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const savedIds = useSaved();
   const likedIds = useLiked();
@@ -42,6 +35,7 @@ export default function YouScreen() {
   const worksheetsDone = useWorksheetsDone();
   const streakInfo = useReadStreak();
   const bookings = useBookings();
+  const upcoming = useUpcomingBookings();
   useHydrateBookings();
   const { articles } = useArticles();
   const saved = articles.filter((a) => savedIds.includes(a.id));
@@ -68,15 +62,39 @@ export default function YouScreen() {
     setUploading(false);
   };
 
+  const removePhoto = async () => {
+    await updateProfile({ avatar_url: null });
+  };
+
+  const photoOptions = () => {
+    if (!loggedIn) { router.push('/login'); return; }
+    if (profile?.avatar_url) {
+      Alert.alert('Profile photo', undefined, [
+        { text: 'Choose new photo', onPress: pickAndUpload },
+        { text: 'Remove photo', style: 'destructive', onPress: removePhoto },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    } else {
+      pickAndUpload();
+    }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete account',
+      'This permanently deletes your account and everything saved to it. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => { await deleteAccount(); router.replace('/login'); } },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.topTitle}>You</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-          <Pressable onPress={() => setNotifOpen(true)} hitSlop={10}>
-            <Ionicons name="notifications-outline" size={23} color={COLORS.ink} />
-            <View style={styles.bellDot} />
-          </Pressable>
           <Pressable
             onPress={async () => { if (loggedIn) { await signOut(); } router.push('/login'); }}
             hitSlop={10}
@@ -88,6 +106,7 @@ export default function YouScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profile}>
+          {loggedIn ? (
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
               {profile?.avatar_url ? (
@@ -101,10 +120,11 @@ export default function YouScreen() {
                 </View>
               ) : null}
             </View>
-            <Pressable style={styles.cameraBadge} onPress={pickAndUpload} hitSlop={8}>
+            <Pressable style={styles.cameraBadge} onPress={photoOptions} hitSlop={8}>
               <Ionicons name="camera" size={13} color={COLORS.bg} />
             </Pressable>
           </View>
+          ) : null}
           <Text style={styles.name}>{displayName}</Text>
           {loggedIn ? (
             <>
@@ -117,13 +137,23 @@ export default function YouScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.handle}>Sign in to sync your space across devices</Text>
+              <Text style={styles.handle}>Sign in to create and save your account</Text>
               <Pressable style={styles.signInBtn} onPress={() => router.push('/login')}>
                 <Text style={styles.signInText}>Sign in or create account</Text>
               </Pressable>
             </>
           )}
         </View>
+
+        {role === 'admin' ? (
+          <Pressable style={styles.panelLink} onPress={() => router.push('/admin')} hitSlop={8}>
+            <Text style={styles.panelLinkText}>Admin panel {'\u203A'}</Text>
+          </Pressable>
+        ) : role === 'expert' ? (
+          <Pressable style={styles.panelLink} onPress={() => router.push('/expert-panel')} hitSlop={8}>
+            <Text style={styles.panelLinkText}>Expert panel {'\u203A'}</Text>
+          </Pressable>
+        ) : null}
 
         <View style={styles.segment}>
           {VIEWS.map((v) => {
@@ -189,16 +219,14 @@ export default function YouScreen() {
             </Pressable>
 
             <View style={styles.accountWrap}>
-              {role === 'admin' ? <Row label="Admin panel" onPress={() => router.push('/admin')} /> : null}
-              {(role === 'expert' || role === 'admin') ? <Row label="Expert panel" onPress={() => router.push('/expert-panel')} /> : null}
-              <Row label="Personal information" onPress={() => router.push('/personal-info')} />
-              <Row label="Notifications" />
-              <Row label="Help & support" />
+              {loggedIn ? <Row label="Personal information" onPress={() => router.push('/personal-info')} /> : null}
+              <Row label="Help & support" onPress={() => router.push('/help-support')} />
               {loggedIn ? (
                 <Row label="Sign out" onPress={async () => { await signOut(); router.push('/login'); }} />
               ) : (
                 <Row label="Sign in" onPress={() => router.push('/login')} />
               )}
+              {loggedIn ? <Row label="Delete account" onPress={confirmDelete} /> : null}
             </View>
           </View>
         ) : null}
@@ -223,11 +251,12 @@ export default function YouScreen() {
 
         {view === 'Bookings' ? (
           <View>
+            <PackagesBlock />
             <Text style={styles.sectionTitle}>Upcoming sessions</Text>
-            {bookings.length === 0 ? (
+            {upcoming.length === 0 ? (
               <Empty text="No upcoming sessions yet." />
             ) : (
-              bookings.map((b) => <BookingRow key={b.refId} b={b} onPress={() => router.push(b.kind === 'program' ? `/program/${b.refId}` : `/class/${b.refId}`)} />)
+              upcoming.map((b) => <BookingRow key={`${b.refId}-${b.when}`} b={b} onPress={() => router.push({ pathname: '/booking-info', params: { title: b.title, when: b.when, expert: b.expert ?? '', link: b.link ?? '' } })} />)
             )}
             <Pressable style={styles.cta} onPress={() => router.navigate('/sessions')}>
               <Text style={styles.ctaText}>Browse sessions</Text>
@@ -239,28 +268,36 @@ export default function YouScreen() {
         ) : null}
       </ScrollView>
 
-      <Modal visible={notifOpen} transparent animationType="slide" onRequestClose={() => setNotifOpen(false)}>
-        <View style={styles.modalRoot}>
-          <Pressable style={styles.backdrop} onPress={() => setNotifOpen(false)} />
-          <View style={styles.sheet}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Notifications</Text>
-            {NOTIFICATIONS.map((n, i) => (
-              <View key={i} style={styles.notifRow}>
-                <View style={styles.notifIcon}>
-                  <Ionicons name={n.icon as any} size={18} color={COLORS.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.notifTitle}>{n.title}</Text>
-                  <Text style={styles.notifBody}>{n.body}</Text>
-                </View>
-                <Text style={styles.notifTime}>{n.time}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
+  );
+}
+
+function PackagesBlock() {
+  const router = useRouter();
+  const { items } = useMyPackages();
+  const active = items.filter((p) => p.total - p.used > 0);
+  if (active.length === 0) return null;
+  return (
+    <View style={{ marginBottom: 26 }}>
+      <Text style={styles.sectionTitle}>Your packages</Text>
+      {active.map((p) => {
+        const remaining = Math.max(p.total - p.used, 0);
+        return (
+          <View key={p.id} style={styles.pkgCard}>
+            <Text style={styles.pkgTitle}>{p.title}</Text>
+            <View style={styles.pkgDots}>
+              {Array.from({ length: p.total }).map((_, i) => (
+                <View key={i} style={[styles.pkgDot, i < p.used ? styles.pkgDotUsed : styles.pkgDotOpen]} />
+              ))}
+            </View>
+            <Text style={styles.pkgCount}>{remaining} of {p.total} sessions remaining</Text>
+            <Pressable style={styles.pkgBtn} onPress={() => router.push(`/book/${p.expert_id}?service=${p.service_id}&pkg=${p.id}`)}>
+              <Text style={styles.pkgBtnText}>Book next session</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -336,9 +373,13 @@ function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
         <Text style={styles.bookingMeta}>{b.when}</Text>
         <Text style={styles.bookingMeta}>with {b.expert}</Text>
         {b.link ? (
-          <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6} style={{ marginTop: 6 }}>
-            <Text style={styles.bookingLink}>Open join link</Text>
-          </Pressable>
+          /^https?:\/\//i.test(b.link) ? (
+            <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6} style={{ marginTop: 6 }}>
+              <Text style={styles.bookingLink}>Open join link</Text>
+            </Pressable>
+          ) : (
+            <Text style={[styles.bookingMeta, { marginTop: 6 }]}>Location: {b.link}</Text>
+          )
         ) : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
@@ -390,6 +431,8 @@ const styles = StyleSheet.create({
   signInBtn: { marginTop: 14, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
   signInText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
   segment: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginTop: 8, marginBottom: 22 },
+  panelLink: { alignSelf: 'center', paddingVertical: 8, marginBottom: 8 },
+  panelLinkText: { color: COLORS.accent, fontSize: 14, letterSpacing: 0.3 },
   segItem: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
   segItemOn: { backgroundColor: COLORS.ink },
   segText: { fontSize: 14, color: COLORS.ink },
@@ -445,6 +488,15 @@ const styles = StyleSheet.create({
   bookingLink: { fontSize: 13, color: COLORS.accent },
   empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginTop: 10 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
+  pkgCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginTop: 10 },
+  pkgTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  pkgDots: { flexDirection: 'row', gap: 6, marginTop: 14 },
+  pkgDot: { flex: 1, height: 7, borderRadius: 4 },
+  pkgDotUsed: { backgroundColor: COLORS.line },
+  pkgDotOpen: { backgroundColor: COLORS.accent },
+  pkgCount: { fontSize: 13, color: COLORS.ink, marginTop: 10 },
+  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  pkgBtnText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
   cta: { marginTop: 12, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.accent },
   ctaText: { color: COLORS.bg, fontSize: 14 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 8 },

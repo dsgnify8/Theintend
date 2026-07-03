@@ -9,7 +9,8 @@ import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF, USER } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
-import { useBookings, useProgress } from '@/lib/store';
+import { useBookings, useProgress, useUpcomingBookings } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
 
 function greeting() {
   const h = new Date().getHours();
@@ -43,6 +44,9 @@ function Face({ level, active, color }: { level: number; active: boolean; color:
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { session, profile } = useAuth();
+  const loggedIn = !!session;
+  const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : null;
   const todayMood = useTodayMood();
   const [faceIdx, setFaceIdx] = useState<number | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -88,11 +92,10 @@ export default function HomeScreen() {
     scheduleFade();
   };
 
-  const bookings = useBookings();
   const { map, lastReadId } = useProgress();
   const { articles } = useArticles();
 
-  const upcoming = bookings[0] ?? null;
+  const upcoming = useUpcomingBookings()[0] ?? null;
   const reading = lastReadId ? articles.find((a) => a.id === lastReadId) : null;
   const pct = lastReadId ? Math.round((map[lastReadId] ?? 0) * 100) : 0;
 
@@ -101,8 +104,14 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>THE INTEND</Text>
         <Text style={styles.greeting}>
-          {greeting()}, {USER.name}.
+          {greeting()}{firstName ? `, ${firstName}` : ''}.
         </Text>
+        {!loggedIn ? (
+          <Pressable style={styles.signinPrompt} onPress={() => router.push('/login')}>
+            <Text style={styles.signinPromptText}>Sign in or create an account to track your journey</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.accent} />
+          </Pressable>
+        ) : null}
 
         <View style={styles.moodCard}>
           <Text style={styles.moodQ}>How are you today?</Text>
@@ -226,6 +235,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 10 },
   greeting: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink, marginBottom: 26 },
+  signinPrompt: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -14, marginBottom: 24 },
+  signinPromptText: { fontSize: 14, color: COLORS.accent },
   moodCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
   moodQ: { fontSize: 12, letterSpacing: 1.5, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 14 },
   facesRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },

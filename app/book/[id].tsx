@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { getCalendarBusy, createCalendarEvent } from '@/lib/calendar';
 import { createBooking, useExpertBookings } from '@/lib/bookings';
+import { useService } from '@/lib/services';
+import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
+import { payWithTabby, priceToMajorString } from '@/lib/tabby';
+import { TabbyLogo } from '@/components/TabbyLogo';
+import { createPackage, consumePackageSession, getPackage } from '@/lib/packages';
 import { useAuth } from '@/lib/auth';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
@@ -46,10 +51,30 @@ function parseSlot(s: string): Date | null {
   return new Date(year, mon, day, hr, 0, 0, 0);
 }
 
+// One-line summary for the chosen offering shown at the top of the booking screen.
+function svcHeaderMeta(s: any) {
+  const parts: string[] = [];
+  const loc = s.location ? ` (${s.location})` : '';
+  const mode = s.online && s.inPerson ? `Online or in person${loc}` : s.online ? 'Online' : s.inPerson ? `In person${loc}` : 'Online';
+  parts.push(mode);
+  if (s.kind === 'package' && s.sessionsTotal) parts.push(`${s.sessionsTotal} sessions`);
+  if (s.durationMin) parts.push(`${s.durationMin} min`);
+  if (s.price) parts.push(/free/i.test(s.price) ? 'Free' : s.price);
+  return parts.join(' \u00B7 ');
+}
+
 export default function BookScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, service: serviceId, pkg } = useLocalSearchParams<{ id: string; service?: string; pkg?: string }>();
   const { expert, loading } = useExpert(String(id));
+  const { service: svc } = useService(serviceId ? String(serviceId) : undefined);
+  const { service: linkedPkg } = useService(svc?.packageId ? String(svc.packageId) : undefined);
+  const isFree = !!svc && (svc.price ?? '').replace(/[^0-9]/g, '') === '';
+
+  const requireAuth = () => {
+    if (!user) { router.push('/login'); return false; }
+    return true;
+  };
   const { items: bookings } = useExpertBookings(String(id));
   const { user } = useAuth();
 
@@ -60,6 +85,23 @@ export default function BookScreen() {
   const [saving, setSaving] = useState(false);
   const [requested, setRequested] = useState(false);
   const [chosenLabel, setChosenLabel] = useState('');
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [pkgTotal, setPkgTotal] = useState<number | null>(null);
+  const [wasRequest, setWasRequest] = useState(false);
+  const [payChoiceOpen, setPayChoiceOpen] = useState(false);
+
+  const isPackageContinue = !!pkg;
+  const isPackagePurchase = !!svc && svc.kind === 'package' && !pkg;
+
+  // Which session modes this offering allows. Online-only offerings show one option.
+  const typeOptions = svc
+    ? ([svc.online ? 'Online session' : null, svc.inPerson ? (svc.location ? `In person, ${svc.location}` : 'In person') : null].filter(Boolean) as string[])
+    : SESSION_TYPES;
+
+  // Keep the selected type valid for the loaded offering.
+  useEffect(() => {
+    if (typeOptions.length && !typeOptions.includes(type)) setType(typeOptions[0]);
+  }, [svc?.id]);
 
   // Pull this expert's Google busy times for the booking window.
   useEffect(() => {
@@ -117,31 +159,75 @@ export default function BookScreen() {
 
   useEffect(() => { if (dayIdx >= days.length) { setDayIdx(0); setHour(null); } }, [days.length, dayIdx]);
 
-  const confirm = async () => {
+  const bookingTitle = () => {
+    if (svc && svc.kind === 'package') return `${svc.durationMin ?? 90} minute session with ${expert?.name ?? ''}`;
+    return `${svc ? svc.name : type} with ${expert?.name ?? ''}`;
+  };
+
+  const finalizeBooking = async () => {
     if (!expert || hour == null || !days[dayIdx]) return;
     const slot = new Date(days[dayIdx].date); slot.setHours(hour, 0, 0, 0);
     const label = formatSlot(slot);
     setSaving(true);
+
+    // Package accounting: buying creates the package; continuing consumes one credit.
+    if (isPackagePurchase && svc) {
+      const total = svc.sessionsTotal ?? 5;
+      const newId = await createPackage({
+        expertId: String(id), serviceId: svc.id,
+        title: svc.name + ' with ' + expert.name,
+        expertName: expert.name, total,
+      });
+      if (newId) { const used = await consumePackageSession(newId); setPkgTotal(total); setRemaining(total - (used ?? 1)); }
+    } else if (isPackageContinue && pkg) {
+      const before = await getPackage(String(pkg));
+      const used = await consumePackageSession(String(pkg));
+      const total = before?.total ?? 5;
+      setPkgTotal(total); setRemaining(Math.max(total - (used ?? total), 0));
+    }
+
     await createBooking({
       refId: String(id), kind: 'service',
-      title: `${type} with ${expert.name}`,
+      title: bookingTitle(),
       when: label, expert: expert.name, expertId: String(id),
     });
     const startIso = slot.toISOString();
-    const endIso = new Date(slot.getTime() + 3600000).toISOString();
+    const endIso = new Date(slot.getTime() + (svc?.durationMin ? svc.durationMin : 60) * 60000).toISOString();
     createCalendarEvent({
       expertId: String(id),
-      summary: `${type} with ${expert.name} · The Intend`,
+      summary: `${bookingTitle()} \u00B7 The Intend`,
       description: 'Booked through The Intend.',
       startIso, endIso,
       attendeeEmail: user?.email ?? undefined,
     }).catch(() => {});
     setChosenLabel(label);
+    setWasRequest(false);
     setRequested(true);
     setSaving(false);
   };
 
+  const startPayment = async () => {
+    if (!expert || hour == null || !days[dayIdx]) return;
+    const amount = svc ? priceToMinorUnits(svc.price) : 0;
+    if (amount <= 0) { finalizeBooking(); return; }
+    setSaving(true);
+    const res = await payWithSheet({ amount, label: `${svc?.name ?? 'Session'} with ${expert.name}` });
+    setSaving(false);
+    if (res.ok) { finalizeBooking(); }
+    else if (res.error && res.error !== 'canceled') { Alert.alert('Payment', res.error); }
+  };
+
+  const startTabby = async () => {
+    if (!expert || hour == null || !days[dayIdx] || !svc) return;
+    setSaving(true);
+    const res = await payWithTabby({ amount: priceToMajorString(svc.price), label: `${svc.name} with ${expert.name}` });
+    setSaving(false);
+    if (res.ok) { finalizeBooking(); }
+    else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
+  };
+
   const active = days[dayIdx];
+  const pickLabel = isPackageContinue ? 'Pick a time' : (svc?.kind === 'package' ? 'Choose your first session time' : 'Pick a time');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -156,12 +242,36 @@ export default function BookScreen() {
         <Text style={styles.h1}>{expert ? expert.name : 'The Intend'}</Text>
         {expert ? <Text style={styles.sub}>{expert.title}</Text> : null}
 
+        {svc ? (
+          <View style={styles.offerCard}>
+            <Text style={styles.offerName}>{svc.name}</Text>
+            <Text style={styles.offerMetaLine}>{isPackageContinue ? 'SESSION FROM YOUR PACKAGE' : svcHeaderMeta(svc)}</Text>
+            {svc.description ? <Text style={styles.offerDesc}>{svc.description}</Text> : null}
+          </View>
+        ) : null}
+
+        {!requested && svc && svc.kind !== 'package' && linkedPkg ? (
+          <Pressable style={styles.pkgLink} onPress={() => router.replace(`/book/${id}?service=${linkedPkg.id}`)}>
+            <Ionicons name="albums-outline" size={18} color={COLORS.accent} />
+            <Text style={styles.pkgLinkText}>Or get the {linkedPkg.sessionsTotal} session package for {linkedPkg.price}</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
+          </Pressable>
+        ) : null}
+
         {requested ? (
           <View style={styles.successCard}>
             <Ionicons name="checkmark-circle" size={32} color={COLORS.accent} />
-            <Text style={styles.successTitle}>Session requested</Text>
+            <Text style={styles.successTitle}>{wasRequest ? 'Session requested' : 'Session booked'}</Text>
             <Text style={styles.successText}>{chosenLabel}</Text>
-            <Text style={styles.successSub}>The team will confirm and arrange payment. You'll see it under Upcoming sessions.</Text>
+            <Text style={styles.successSub}>{wasRequest ? 'The team will confirm and arrange payment. You will see it under Upcoming sessions.' : 'The expert will send you a link before your session. You will find it under Upcoming sessions.'}</Text>
+            {remaining != null && pkgTotal != null ? (
+              <Text style={styles.remainingLine}>{remaining} of {pkgTotal} sessions remaining in your package</Text>
+            ) : null}
+            {remaining != null ? (
+              <Pressable style={styles.viewPkgBtn} onPress={() => router.replace('/my-packages')}>
+                <Text style={styles.viewPkgText}>View my package</Text>
+              </Pressable>
+            ) : null}
             <Pressable style={styles.doneBtn} onPress={() => router.back()}>
               <Text style={styles.doneText}>Done</Text>
             </Pressable>
@@ -170,7 +280,7 @@ export default function BookScreen() {
           <View>
             <Text style={styles.label}>Session type</Text>
             <View style={styles.typeRow}>
-              {SESSION_TYPES.map((t) => {
+              {typeOptions.map((t) => {
                 const on = t === type;
                 return (
                   <Pressable key={t} onPress={() => setType(t)} style={[styles.type, on && styles.typeOn]}>
@@ -180,16 +290,16 @@ export default function BookScreen() {
               })}
             </View>
 
-            <Text style={styles.label}>Pick a time</Text>
+            <Text style={styles.label}>{pickLabel}</Text>
             {loading ? (
               <View style={styles.loaderBox}><ActivityIndicator color={COLORS.accent} /></View>
             ) : days.length === 0 ? (
               <>
                 <Text style={styles.note}>No open times in the next two weeks. Send a request and the team will find a time with you.</Text>
                 <Pressable style={[styles.requestBtn, saving && styles.btnOff]} disabled={saving} onPress={async () => {
-                  if (!expert) return; setSaving(true);
-                  await createBooking({ refId: String(id), kind: 'service', title: `${type} with ${expert.name}`, when: 'Time to be confirmed', expert: expert.name, expertId: String(id) });
-                  setChosenLabel('Time to be confirmed'); setRequested(true); setSaving(false);
+                  if (!requireAuth() || !expert) return; setSaving(true);
+                  await createBooking({ refId: String(id), kind: 'service', title: bookingTitle(), when: 'Time to be confirmed', expert: expert.name, expertId: String(id) });
+                  setChosenLabel('Time to be confirmed'); setWasRequest(true); setRequested(true); setSaving(false);
                 }}>
                   {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.requestText}>Send a request</Text>}
                 </Pressable>
@@ -222,14 +332,35 @@ export default function BookScreen() {
 
                 <Text style={styles.tzNote}>Times shown in {tzName()}. Busy times from the expert's Google Calendar are hidden.</Text>
 
-                <Pressable style={[styles.requestBtn, (hour == null || saving) && styles.btnOff]} disabled={hour == null || saving} onPress={confirm}>
-                  {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.requestText}>Confirm booking</Text>}
+                <Pressable style={[styles.requestBtn, hour == null && styles.btnOff]} disabled={hour == null} onPress={() => { if (!requireAuth()) return; (isPackageContinue || isFree) ? finalizeBooking() : setPayChoiceOpen(true); }}>
+                  <Text style={styles.requestText}>{isPackageContinue ? 'Book next session' : 'Book'}</Text>
                 </Pressable>
               </>
             )}
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={payChoiceOpen} transparent animationType="slide" onRequestClose={() => setPayChoiceOpen(false)}>
+        <View style={styles.payRoot}>
+          <Pressable style={styles.payBackdrop} onPress={() => setPayChoiceOpen(false)} />
+          <View style={styles.paySheet}>
+            <View style={styles.payHandle} />
+            <Text style={styles.payTitle}>How would you like to pay?</Text>
+            <Pressable style={styles.payOption} onPress={() => { setPayChoiceOpen(false); startPayment(); }}>
+              <Ionicons name="card-outline" size={20} color={COLORS.ink} />
+              <Text style={styles.payOptionText}>Card, Apple Pay or Link</Text>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+            </Pressable>
+            <Pressable style={styles.payOption} onPress={() => { setPayChoiceOpen(false); startTabby(); }}>
+              <Text style={styles.payOptionText}>Pay in 4 with</Text>
+              <TabbyLogo height={18} />
+              <View style={{ flex: 1 }} />
+              <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -242,6 +373,12 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginTop: 6, marginBottom: 10 },
   h1: { fontFamily: FONT_SERIF, fontSize: 28, color: COLORS.ink },
   sub: { fontSize: 13, letterSpacing: 1, color: COLORS.muted, marginTop: 6, marginBottom: 8, textTransform: 'uppercase' },
+  offerCard: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 16 },
+  offerName: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
+  offerMetaLine: { fontSize: 12, letterSpacing: 0.5, color: COLORS.accent, marginTop: 4, textTransform: 'uppercase' },
+  offerDesc: { fontSize: 14, lineHeight: 21, color: COLORS.ink, opacity: 0.85, marginTop: 10 },
+  pkgLink: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.accentSoft, borderRadius: 14, padding: 14, marginTop: 12 },
+  pkgLinkText: { flex: 1, fontSize: 13, color: COLORS.ink },
   label: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginTop: 26, marginBottom: 12 },
   typeRow: { flexDirection: 'row', gap: 10 },
   type: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
@@ -266,11 +403,22 @@ const styles = StyleSheet.create({
   requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
   btnOff: { opacity: 0.5 },
   requestText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
+  tabbyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, marginTop: 4 },
+  tabbyLinkText: { color: COLORS.ink, fontSize: 14 },
+  payRoot: { flex: 1, justifyContent: 'flex-end' },
+  payBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
+  paySheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 40 },
+  payHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 18 },
+  payTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 16 },
+  payOption: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 18, paddingHorizontal: 16, marginBottom: 12 },
+  payOptionText: { fontSize: 15, color: COLORS.ink },
   successCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 24, marginTop: 28, alignItems: 'center' },
   successTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 12, marginBottom: 8 },
   successText: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.accent, textAlign: 'center' },
   successSub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, textAlign: 'center', marginTop: 8 },
   doneBtn: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999, borderWidth: 1, borderColor: COLORS.ink },
+  remainingLine: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, textAlign: 'center', marginTop: 14 },
+  viewPkgBtn: { marginTop: 16, paddingVertical: 12, paddingHorizontal: 28, borderRadius: 999, backgroundColor: COLORS.accent },
+  viewPkgText: { fontSize: 14, color: COLORS.bg, letterSpacing: 0.5 },
   doneText: { fontSize: 14, color: COLORS.ink },
 });
-

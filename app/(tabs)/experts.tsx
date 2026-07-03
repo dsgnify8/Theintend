@@ -47,8 +47,8 @@ export default function ExpertsScreen() {
           <View style={styles.loader}><ActivityIndicator color={COLORS.accent} /></View>
         ) : (
           <View style={styles.list}>
-            {visible.map((e, i) => (
-              <ExpertCard key={e.id} expert={e} reverse={i % 2 === 1} />
+            {visible.map((e) => (
+              <ExpertCard key={e.id} expert={e} />
             ))}
           </View>
         )}
@@ -57,31 +57,29 @@ export default function ExpertsScreen() {
   );
 }
 
-function ExpertCard({ expert, reverse }: { expert: Expert; reverse: boolean }) {
+function ExpertCard({ expert }: { expert: Expert }) {
   const router = useRouter();
   return (
-    <Pressable
-      style={[styles.card, reverse && styles.cardReverse]}
-      onPress={() => router.push(`/expert/${expert.id}`)}
-    >
+    <Pressable style={styles.card} onPress={() => router.push(`/expert/${expert.id}`)}>
       <View style={styles.photoWrap}>
         {expert.photo ? (
-          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={18} />
+          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={0} />
         ) : (
           <View style={styles.photoFallback}><Text style={styles.photoInitials}>{initials(expert.name)}</Text></View>
         )}
       </View>
-      <View style={[styles.body, reverse && styles.bodyReverse]}>
+      <View style={styles.body}>
         <Text style={styles.cat}>{expert.category.toUpperCase()}</Text>
-        <Text style={styles.name}>{expert.name}</Text>
-        <Text style={styles.role}>{expert.title.toUpperCase()}</Text>
-        <Text style={styles.blurb}>{expert.blurb}</Text>
+        <Text style={styles.name} numberOfLines={2}>{expert.name}</Text>
+        <Text style={styles.role} numberOfLines={1}>{expert.title.toUpperCase()}</Text>
+        <Text style={styles.blurb} numberOfLines={3}>{expert.blurb}</Text>
         <Text style={styles.link}>See profile {'\u203A'}</Text>
       </View>
     </Pressable>
   );
 }
 
+const CARD_H = 184;
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
@@ -95,26 +93,23 @@ const styles = StyleSheet.create({
   chipTextOn: { color: COLORS.bg },
   loader: { paddingVertical: 60, alignItems: 'center' },
 
-  list: { marginTop: 18, gap: 18 },
+  list: { marginTop: 18, gap: 14 },
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(92,70,50,0.06)',
-    borderRadius: 24,
+    height: CARD_H,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(92,70,50,0.12)',
-    paddingVertical: 18,
-    paddingHorizontal: 10,
+    borderColor: COLORS.line,
+    overflow: 'hidden',
   },
-  cardReverse: { flexDirection: 'row-reverse' },
-  photoWrap: { width: 116, height: 156, borderRadius: 18, overflow: 'hidden', backgroundColor: COLORS.accentSoft },
-  photoFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  photoWrap: { width: 120, height: CARD_H, backgroundColor: COLORS.accentSoft },
+  photoFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   photoInitials: { fontFamily: FONT_SERIF, fontSize: 38, color: COLORS.accent },
-  body: { flex: 1, paddingLeft: 18, paddingRight: 8 },
-  bodyReverse: { paddingLeft: 8, paddingRight: 18 },
+  body: { flex: 1, paddingVertical: 16, paddingHorizontal: 16, justifyContent: 'center' },
   cat: { fontSize: 10, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 5 },
   name: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 23, color: COLORS.ink },
-  role: { fontSize: 10, letterSpacing: 1, color: COLORS.muted, marginTop: 4, marginBottom: 7 },
-  blurb: { fontSize: 13.5, lineHeight: 20, color: COLORS.ink },
+  role: { fontSize: 10, letterSpacing: 1, color: COLORS.muted, marginTop: 4, marginBottom: 8 },
+  blurb: { fontSize: 13, lineHeight: 18, color: COLORS.ink, fontWeight: '300' },
   link: { fontSize: 13, color: COLORS.accent, marginTop: 10 },
 });

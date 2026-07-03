@@ -7,7 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type Booking = {
   refId: string;
-  kind: 'class' | 'program';
+  kind: 'class' | 'program' | 'service';
+  expertId?: string | null;
   title: string;
   when: string;
   expert: string;
@@ -82,7 +83,7 @@ export function setProgress(id: string, pct: number) {
 export function getProgress(id: string) { return progressMap[id] ?? 0; }
 
 export function addBooking(b: Booking) {
-  if (!bookings.some((x) => x.refId === b.refId)) {
+  if (!bookings.some((x) => x.refId === b.refId && x.when === b.when)) {
     bookings = [...bookings, b];
     emit();
   }
@@ -135,6 +136,30 @@ export const useSaved = () => useStore(() => [...savedIds]);
 export const useLiked = () => useStore(() => [...likedIds]);
 export const useProgress = () => useStore(() => ({ map: { ...progressMap }, lastReadId }));
 export const useBookings = () => useStore(() => [...bookings]);
+
+const MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function bookingTime(b: Booking): number | null {
+  const m = (b.when || '').match(/(\d{1,2}) (\w{3}) (\d{4}), (\d{1,2}):(\d{2}) (AM|PM)/);
+  if (!m) return null;
+  const mon = MON3.indexOf(m[2]);
+  if (mon < 0) return null;
+  let hr = parseInt(m[4], 10) % 12;
+  if (m[6] === 'PM') hr += 12;
+  return new Date(parseInt(m[3], 10), mon, parseInt(m[1], 10), hr, parseInt(m[5], 10)).getTime();
+}
+// Bookings that are still ahead of us, soonest first. Undated (class/program) go last.
+export const useUpcomingBookings = () => useStore(() => {
+  const now = Date.now();
+  const withT = bookings.map((b) => ({ b, t: bookingTime(b) }));
+  const kept = withT.filter((x) => x.t == null || x.t >= now - 3600000);
+  kept.sort((a, c) => {
+    if (a.t == null && c.t == null) return 0;
+    if (a.t == null) return 1;
+    if (c.t == null) return -1;
+    return a.t - c.t;
+  });
+  return kept.map((x) => x.b);
+});
 export const useReads = () => useStore(() => [...reads]);
 export const useWorksheetsDone = () => useStore(() => [...worksheetsDone]);
 export const useListens = () => useStore(() => [...listens]);

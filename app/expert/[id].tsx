@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
+import { EXPERTS } from '@/constants/experts';
 import { FramedImage } from '@/components/FramedImage';
 import { useSessions } from '@/lib/sessions';
 import { useServices } from '@/lib/services';
@@ -47,14 +48,27 @@ export default function ExpertProfile() {
   const services = ALL_SERVICES.filter((s) => s.expertId === expert.id);
   const classes = CLASSES.filter((c) => c.expertId === expert.id);
   const programs = PROGRAMS.filter((p) => p.expertId === expert.id);
+  const singleServices = services.filter((s: any) => s.kind !== 'package');
+  const packageServices = services.filter((s: any) => s.kind === 'package');
   const firstName = expert.name.replace('Dr. ', '').split(' ')[0];
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
 
   // "Where I can help" keywords come from the expert's focus areas + category.
-  const helpTags = Array.from(
-    new Set([...expert.title.split('·').map((t) => t.trim()), expert.category].filter(Boolean))
-  );
+  const kw = EXPERTS.find((e) => e.id === expert.id)?.keywords;
+  const helpTags = (kw && kw.length > 0)
+    ? kw
+    : Array.from(new Set([...expert.title.split('·').map((t) => t.trim()), expert.category].filter(Boolean)));
 
+  const offerMeta = (s: any) => {
+    const parts: string[] = [];
+    const loc = s.location ? ` (${s.location})` : '';
+    const mode = s.online && s.inPerson ? `Online or in person${loc}` : s.online ? 'Online' : s.inPerson ? `In person${loc}` : '';
+    if (s.kind === 'package' && s.sessionsTotal) parts.push(`${s.sessionsTotal} sessions`);
+    if (s.tagline) parts.push(s.tagline);
+    if (s.kind !== 'package' && s.durationMin) parts.push(`${s.durationMin} min`);
+    if (s.price) parts.push(/free/i.test(s.price) ? 'Free' : s.price);
+    return (mode ? mode + ' · ' : '') + parts.join(' · ');
+  };
   const svcMeta = (s: { durationMin: number | null; price: string }) => {
     const parts: string[] = [];
     if (s.durationMin) parts.push(`${s.durationMin} min`);
@@ -118,26 +132,23 @@ export default function ExpertProfile() {
         <Text style={styles.sectionTitle}>Approach</Text>
         <Text style={styles.body}>{expert.bio}</Text>
 
-        {programs.length > 0 ? (
-          <>
-            <Text style={styles.sectionTitle}>Programs</Text>
-            {programs.map((p) => (
-              <OfferingRow key={p.id} icon="ribbon-outline" title={p.title} meta={`${p.weeks} weeks · ${p.price}`} onPress={() => router.push(`/program/${p.id}`)} />
-            ))}
-          </>
-        ) : null}
-
         <Text style={styles.sectionTitle}>Sessions</Text>
-        {services.length > 0 ? (
-          services.map((s) => (
-            <OfferingRow key={s.id} icon="person-outline" title={s.name} meta={svcMeta(s)} onPress={() => router.push(`/book/${expert.id}`)} />
+        {singleServices.length > 0 ? (
+          singleServices.map((s) => (
+            <OfferingRow key={s.id} icon="person-outline" title={s.name} meta={offerMeta(s)} onPress={() => router.push(`/book/${expert.id}?service=${s.id}`)} />
           ))
         ) : (
           <OfferingRow icon="person-outline" title="1:1 consultation" meta="Online or in person" onPress={() => router.push(`/book/${expert.id}`)} />
         )}
-        {classes.map((c) => (
-          <OfferingRow key={c.id} icon="videocam-outline" title={c.title} meta={`${c.date} · ${c.durationHours}h live`} onPress={() => router.push(`/class/${c.id}`)} />
-        ))}
+
+        {packageServices.length > 0 ? (
+          <>
+            <Text style={styles.sectionTitle}>Programs</Text>
+            {packageServices.map((s) => (
+              <OfferingRow key={s.id} icon="albums-outline" title={s.name} meta={offerMeta(s)} onPress={() => router.push(`/book/${expert.id}?service=${s.id}`)} />
+            ))}
+          </>
+        ) : null}
 
         <Text style={styles.sectionTitle}>Client Questions</Text>
         {expert.faqs.map((q, i) => (
@@ -147,7 +158,7 @@ export default function ExpertProfile() {
           </View>
         ))}
 
-        <Pressable style={styles.bookBtn} onPress={() => router.push(`/book/${expert.id}`)}>
+        <Pressable style={styles.bookBtn} onPress={() => router.push(services[0] ? `/book/${expert.id}?service=${services[0].id}` : `/book/${expert.id}`)}>
           <Text style={styles.bookText}>Book with {firstName}</Text>
         </Pressable>
       </ScrollView>

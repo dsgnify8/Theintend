@@ -8,9 +8,11 @@ import { useRouter } from 'expo-router';
 import { type Article } from '@/constants/articles';
 import { useArticles } from '@/lib/articles';
 import { LIBRARY, type LibraryItem } from '@/constants/library';
+import { WORKSHEETS } from '@/constants/worksheets';
+import { useDraft } from '@/lib/worksheets';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
-const FORMATS = ['Articles', 'E-books', 'Books'];
+const FORMATS = ['Articles', 'E-books', 'Books', 'Workbooks'];
 const TYPE_FOR: Record<string, string> = { 'E-books': 'E-book', 'Books': 'Book' };
 
 const CAT_COLOR: Record<string, string> = {
@@ -86,6 +88,12 @@ export default function LibraryScreen() {
               ))}
             </View>
           )
+        ) : format === 'Workbooks' ? (
+          <View style={{ marginTop: 8 }}>
+            {WORKSHEETS.map((w) => (
+              <WorkbookCard key={w.id} item={w} />
+            ))}
+          </View>
         ) : (
           <View>
             <Text style={styles.shelfTitle}>Top reads</Text>
@@ -129,7 +137,6 @@ export default function LibraryScreen() {
         <View style={styles.menuCard}>
           <MenuRow icon="musical-notes-outline" label="Sounds" onPress={() => go('/sounds')} />
           <MenuRow icon="leaf-outline" label="Breathwork" onPress={() => go('/breathwork')} />
-          <MenuRow icon="document-text-outline" label="Workbooks" onPress={() => go('/worksheets')} />
           <MenuRow icon="create-outline" label="Journaling" onPress={() => go('/journaling')} />
         </View>
       </Modal>
@@ -198,6 +205,27 @@ function TitleCard({ item }: { item: LibraryItem }) {
   );
 }
 
+function WorkbookCard({ item }: { item: any }) {
+  const router = useRouter();
+  const draft = useDraft(item.id);
+  const inProgress = !!draft && Object.values(draft.answers).some((v: any) => (v ?? '').trim().length > 0);
+  return (
+    <Pressable style={styles.wbCard} onPress={() => router.push(`/worksheet/${item.id}`)}>
+      <View style={styles.wbTop}>
+        <View style={styles.wbBadge}><Ionicons name="compass-outline" size={20} color={COLORS.bg} /></View>
+        {inProgress ? <View style={styles.wbPill}><Text style={styles.wbPillText}>In progress</Text></View> : null}
+      </View>
+      <Text style={styles.wbTitle}>{item.title}</Text>
+      <Text style={styles.wbSub}>{item.subtitle}</Text>
+      <Text style={styles.wbBlurb}>{item.blurb}</Text>
+      <View style={styles.wbFoot}>
+        <Text style={styles.wbMeta}>{item.minutes}</Text>
+        <View style={styles.wbStart}><Text style={styles.wbStartText}>{inProgress ? 'Resume' : 'Start'}</Text></View>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 96 },
@@ -243,4 +271,16 @@ const styles = StyleSheet.create({
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 16 },
   menuLabel: { fontSize: 15, color: COLORS.ink, marginLeft: 12, flex: 1 },
   menuTag: { fontSize: 11, color: COLORS.muted, backgroundColor: COLORS.accentSoft, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 999, overflow: 'hidden' },
+  wbCard: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14 },
+  wbTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
+  wbPill: { backgroundColor: COLORS.accentSoft, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
+  wbPillText: { fontSize: 11, letterSpacing: 0.5, color: COLORS.accent },
+  wbTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
+  wbSub: { fontSize: 14, color: COLORS.accent, marginTop: 4 },
+  wbBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: 12 },
+  wbFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
+  wbMeta: { fontSize: 13, color: COLORS.muted },
+  wbStart: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
+  wbStartText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
 });

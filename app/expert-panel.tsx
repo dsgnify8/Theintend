@@ -92,7 +92,7 @@ export default function ExpertPanel() {
           </View>
         ) : (
           bookings.map((b) => (
-            <View key={b.id} style={styles.bookingRow}>
+            <Pressable key={b.id} style={styles.bookingRow} onPress={() => router.push(`/expert-booking/${b.id}`)}>
               <View style={styles.rowIcon}>
                 <Ionicons name={b.kind === 'program' ? 'ribbon-outline' : b.kind === 'class' ? 'videocam-outline' : 'person-outline'} size={18} color={COLORS.accent} />
               </View>
@@ -103,7 +103,8 @@ export default function ExpertPanel() {
                 </View>
                 <Text style={styles.rowMeta}>{b.when_text}{b.booker_name ? ` · ${b.booker_name}` : ''}</Text>
               </View>
-            </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+            </Pressable>
           ))
         )}
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { BREATH_PROGRAMS } from '@/constants/breathwork';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
@@ -25,37 +25,37 @@ export default function BreathPlayer() {
   const [elapsed, setElapsed] = useState(0);
   const scale = useRef(new Animated.Value(0.55)).current;
 
-  // Breathing cues: a soft tone as each phase begins. Holds get their own quiet tone.
-  const sounds = useRef<{ inhale?: Audio.Sound; hold?: Audio.Sound; exhale?: Audio.Sound }>({});
+  // Breathing cues via expo-audio: a soft tone as each phase begins.
+  const players = useRef<{ inhale?: AudioPlayer; hold?: AudioPlayer; exhale?: AudioPlayer }>({});
   const mutedRef = useRef(muted);
   useEffect(() => { mutedRef.current = muted; }, [muted]);
 
   useEffect(() => {
     let alive = true;
     (async () => {
+      try { await setAudioModeAsync({ playsInSilentMode: true }); } catch {}
+      if (!alive) return;
       try {
-        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, shouldDuckAndroid: true });
-        const inh = await Audio.Sound.createAsync(require('../../assets/sounds/breathe-in.wav'));
-        const hld = await Audio.Sound.createAsync(require('../../assets/sounds/hold.wav'));
-        const exh = await Audio.Sound.createAsync(require('../../assets/sounds/breathe-out.wav'));
-        if (!alive) { inh.sound.unloadAsync(); hld.sound.unloadAsync(); exh.sound.unloadAsync(); return; }
-        sounds.current = { inhale: inh.sound, hold: hld.sound, exhale: exh.sound };
+        players.current = {
+          inhale: createAudioPlayer(require('../../assets/sounds/breathe-in.wav')),
+          hold: createAudioPlayer(require('../../assets/sounds/hold.wav')),
+          exhale: createAudioPlayer(require('../../assets/sounds/breathe-out.wav')),
+        };
       } catch {}
     })();
     return () => {
       alive = false;
-      const s = sounds.current;
-      s.inhale?.unloadAsync();
-      s.hold?.unloadAsync();
-      s.exhale?.unloadAsync();
+      const p = players.current;
+      try { p.inhale?.remove(); p.hold?.remove(); p.exhale?.remove(); } catch {}
     };
   }, []);
 
   const playCue = (label: string) => {
     if (mutedRef.current) return;
-    const s = sounds.current;
-    const snd = label === 'Breathe in' ? s.inhale : label === 'Breathe out' ? s.exhale : s.hold;
-    snd?.replayAsync().catch(() => {});
+    const p = players.current;
+    const pl = label === 'Breathe in' ? p.inhale : label === 'Breathe out' ? p.exhale : p.hold;
+    if (!pl) return;
+    try { pl.seekTo(0); pl.play(); } catch {}
   };
 
   // Total session timer

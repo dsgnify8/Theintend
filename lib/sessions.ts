@@ -3,6 +3,7 @@
 // so the originals live alongside anything experts add later.
 
 import { useEffect, useState } from 'react';
+import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import {
   CLASSES as FB_CLASSES,
@@ -32,6 +33,7 @@ function classFromRow(r: any): SessionClass {
     going: r.going ?? 0,
     link: r.link ?? '',
     color: r.color ?? '#5C4632',
+    banner: r.image ? { uri: r.image } : (FB_CLASSES.find((c) => c.id === r.id)?.banner ?? null),
     description: r.description ?? '',
   };
 }
@@ -50,6 +52,7 @@ function programFromRow(r: any): Program {
     price: r.price ?? '',
     requiresForm: !!r.requires_form,
     color: r.color ?? '#6F7A6B',
+    banner: r.image ? { uri: r.image } : (FB_PROGRAMS.find((p) => p.id === r.id)?.banner ?? null),
     description: r.description ?? '',
   };
 }
@@ -116,6 +119,27 @@ export function useSessions() {
 export async function reloadSessions() {
   cache = await load();
   emit();
+}
+
+export async function updateSession(id: string, patch: any) {
+  const { error } = await supabase.from('sessions').update(patch).eq('id', id);
+  if (!error) await reloadSessions();
+  return { error };
+}
+
+export async function deleteSession(id: string) {
+  const { error } = await supabase.from('sessions').update({ status: 'archived' }).eq('id', id);
+  if (!error) await reloadSessions();
+  return { error };
+}
+
+export async function uploadSessionImage(id: string, base64: string): Promise<string> {
+  const path = `sessions/${id}_${Date.now()}.jpg`;
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(path, decode(base64), { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
 }
 
 export async function createSession(row: any) {

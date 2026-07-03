@@ -174,11 +174,13 @@ export default function ExpertAvailability() {
           <View style={styles.editor}>
             <View style={styles.editorTop}>
               <Text style={styles.editorDay}>{FULL[selected]}</Text>
-              <Pressable onPress={() => setAllDay(selected, d.slots.length === 0)} hitSlop={8}>
-                <Text style={styles.editorToggle}>{d.slots.length === 0 ? 'Open 9–5' : 'Clear day'}</Text>
-              </Pressable>
+              {d.slots.length > 0 ? (
+                <Pressable onPress={() => setAllDay(selected, false)} hitSlop={8}>
+                  <Text style={styles.editorToggle}>Clear day</Text>
+                </Pressable>
+              ) : null}
             </View>
-            <Text style={styles.editorHint}>Tap an hour to make it available. Tap again to block it.</Text>
+            <Text style={styles.editorHint}>Brown hours are available to book. Tap an hour to turn it on, tap again to turn it off.</Text>
             <View style={styles.grid}>
               {HOURS.map((h) => {
                 const on = d.slots.includes(h);

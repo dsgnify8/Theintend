@@ -1,23 +1,74 @@
-import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ImageBackground, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
-import { SESSION_CATEGORIES, type SessionClass, type Program } from '@/constants/sessions';
+import { SESSION_CATEGORIES, type SessionClass } from '@/constants/sessions';
 import { useSessions } from '@/lib/sessions';
+import { useServices } from '@/lib/services';
+import { EXPERTS } from '@/constants/experts';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 const TABS = ['Classes', 'Programs'];
+// Seeded demo programs are not shown in the live Programs feed.
+const DEMO_PROGRAM_IDS = ['nervous-system-reset', 'building-self-worth', 'feminine-embodiment'];
+// Only these packages are featured in the public Programs feed.
+const FEED_PROGRAM_IDS = ['alev-body-pack', 'alev-lilith', 'alev-moana'];
+
+type FeedProgram = {
+  key: string;
+  title: string;
+  expertName: string;
+  pills: string[];
+  price: string;
+  sessions: number;
+  category?: string;
+  onPress: () => void;
+};
 
 export default function SessionsScreen() {
+  const router = useRouter();
   const [tab, setTab] = useState('Classes');
   const [filterOpen, setFilterOpen] = useState(false);
   const [cats, setCats] = useState<string[]>([]);
   const [maxHours, setMaxHours] = useState(4);
   const [maxSessions, setMaxSessions] = useState(10);
   const { classes: CLASSES, programs: PROGRAMS } = useSessions();
+  const { services } = useServices();
   const isClasses = tab === 'Classes';
+
+  const expertName = (eid: string) => EXPERTS.find((e) => e.id === eid)?.name ?? '';
+
+  // Programs feed: every multi-session package, plus any approved or uploaded
+  // programs from the sessions table. Seeded demo programs are excluded.
+  const programItems = useMemo<FeedProgram[]>(() => {
+    const fromPackages: FeedProgram[] = services
+      .filter((s: any) => s.kind === 'package' && FEED_PROGRAM_IDS.includes(s.id))
+      .map((s: any) => ({
+        key: s.id,
+        title: s.name,
+        expertName: expertName(s.expertId),
+        pills: [s.tagline, s.sessionsTotal ? `${s.sessionsTotal} sessions` : ''].filter(Boolean) as string[],
+        price: s.price,
+        sessions: s.sessionsTotal ?? 0,
+        category: undefined,
+        onPress: () => router.push(`/book/${s.expertId}?service=${s.id}`),
+      }));
+    const fromPrograms: FeedProgram[] = PROGRAMS
+      .filter((p: any) => !DEMO_PROGRAM_IDS.includes(p.id))
+      .map((p: any) => ({
+        key: p.id,
+        title: p.title,
+        expertName: p.expertName,
+        pills: [`${p.weeks} weeks`, `${p.sessions} sessions`, p.cadence].filter(Boolean) as string[],
+        price: p.price,
+        sessions: p.sessions ?? 0,
+        category: p.category,
+        onPress: () => router.push(`/program/${p.id}`),
+      }));
+    return [...fromPackages, ...fromPrograms];
+  }, [services, PROGRAMS]);
 
   const toggleCat = (c: string) =>
     setCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -25,8 +76,8 @@ export default function SessionsScreen() {
   const filteredClasses = CLASSES.filter(
     (c) => (cats.length === 0 || cats.includes(c.category)) && c.durationHours <= maxHours
   );
-  const filteredPrograms = PROGRAMS.filter(
-    (p) => (cats.length === 0 || cats.includes(p.category)) && p.sessions <= maxSessions
+  const filteredPrograms = programItems.filter(
+    (p) => (cats.length === 0 || (p.category ? cats.includes(p.category) : true)) && p.sessions <= maxSessions
   );
 
   const clearAll = () => {
@@ -68,7 +119,7 @@ export default function SessionsScreen() {
             </View>
           )
         ) : filteredPrograms.length > 0 ? (
-          filteredPrograms.map((p) => <ProgramCard key={p.id} item={p} />)
+          filteredPrograms.map((p) => <ProgramCard key={p.key} item={p} />)
         ) : (
           <View style={styles.noResult}>
             <Text style={styles.noResultText}>No programs match these filters yet.</Text>
@@ -97,7 +148,7 @@ export default function SessionsScreen() {
 
             {isClasses ? (
               <View>
-                <Text style={styles.filterLabel}>Duration · up to {maxHours}h</Text>
+                <Text style={styles.filterLabel}>Duration {'\u00B7'} up to {maxHours}h</Text>
                 <Slider
                   minimumValue={1}
                   maximumValue={4}
@@ -111,7 +162,7 @@ export default function SessionsScreen() {
               </View>
             ) : (
               <View>
-                <Text style={styles.filterLabel}>Sessions · up to {maxSessions}</Text>
+                <Text style={styles.filterLabel}>Sessions {'\u00B7'} up to {maxSessions}</Text>
                 <Slider
                   minimumValue={1}
                   maximumValue={10}
@@ -144,9 +195,10 @@ function ClassCard({ item }: { item: SessionClass }) {
   const router = useRouter();
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/class/${item.id}`)}>
-      <View style={[styles.cover, { backgroundColor: item.color }]}>
+      <ImageBackground source={item.banner} style={[styles.cover, { backgroundColor: item.color }]} resizeMode="cover">
+        <View style={styles.coverScrim} pointerEvents="none" />
         <Text style={styles.coverTitle}>{item.title}</Text>
-      </View>
+      </ImageBackground>
       <View style={styles.cardBody}>
         <View style={styles.metaRow}>
           <Text style={styles.pill}>{item.date}</Text>
@@ -154,26 +206,21 @@ function ClassCard({ item }: { item: SessionClass }) {
           <Text style={styles.pill}>{item.category}</Text>
         </View>
         <Text style={styles.expert}>{item.expertName}</Text>
-        <Text style={styles.going}>{item.going} going · Virtual</Text>
+        <Text style={styles.going}>{item.going} going {'\u00B7'} Virtual</Text>
       </View>
     </Pressable>
   );
 }
 
-function ProgramCard({ item }: { item: Program }) {
-  const router = useRouter();
+function ProgramCard({ item }: { item: FeedProgram }) {
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/program/${item.id}`)}>
-      <View style={[styles.cover, { backgroundColor: item.color }]}>
-        <Text style={styles.coverTitle}>{item.title}</Text>
-      </View>
+    <Pressable style={styles.card} onPress={item.onPress}>
       <View style={styles.cardBody}>
         <View style={styles.metaRow}>
-          <Text style={styles.pill}>{item.weeks} weeks</Text>
-          <Text style={styles.pill}>{item.sessions} sessions</Text>
-          {item.category ? <Text style={styles.pill}>{item.category}</Text> : null}
+          {item.pills.map((p, i) => <Text key={i} style={styles.pill}>{p}</Text>)}
         </View>
-        <Text style={styles.expert}>{item.expertName}</Text>
+        <Text style={styles.programTitle}>{item.title}</Text>
+        {item.expertName ? <Text style={styles.expert}>{item.expertName}</Text> : null}
         <Text style={styles.going}>{item.price}</Text>
       </View>
     </Pressable>
@@ -196,9 +243,11 @@ const styles = StyleSheet.create({
   card: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', marginBottom: 16 },
   cover: { height: 130, padding: 18, justifyContent: 'flex-end' },
   coverTitle: { fontFamily: FONT_SERIF, fontSize: 24, lineHeight: 28, color: '#FFFFFF' },
+  coverScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.32)' },
   cardBody: { padding: 18 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   pill: { fontSize: 12, color: COLORS.ink, backgroundColor: COLORS.accentSoft, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden' },
+  programTitle: { fontFamily: FONT_SERIF, fontSize: 20, lineHeight: 25, color: COLORS.ink, marginBottom: 6 },
   expert: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   going: { fontSize: 13, color: COLORS.muted, marginTop: 6 },
   noResult: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 24, alignItems: 'center' },

@@ -2,7 +2,9 @@
 // the person's profile, and their role (user / expert / admin).
 
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { supabase, restoreSession, clearStoredSession } from './supabase';
+import * as Linking from 'expo-linking';
 
 export type Role = 'user' | 'expert' | 'admin';
 export type Profile = {
@@ -76,6 +78,21 @@ supabase.auth.onAuthStateChange(async (_event, s) => {
   emit();
 });
 
+// Keep the access token fresh so signed-in requests do not start failing after
+// the token's ~1 hour lifetime. We refresh explicitly (on foreground and on a
+// timer) instead of the library's auto-refresh, which deadlocks on this device.
+async function refreshIfNeeded() {
+  try {
+    if (!session?.refresh_token) return;
+    const expMs = session?.expires_at ? session.expires_at * 1000 : 0;
+    if (expMs && Date.now() < expMs - 5 * 60 * 1000) return; // still fresh
+    const res: any = await withTimeout(supabase.auth.refreshSession(), 8000);
+    if (res && !res.error && res.data?.session) { session = res.data.session; emit(); }
+  } catch {}
+}
+AppState.addEventListener('change', (st) => { if (st === 'active') refreshIfNeeded(); });
+setInterval(() => { refreshIfNeeded(); }, 4 * 60 * 1000);
+
 export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email: email.trim(), password });
 }
@@ -113,6 +130,21 @@ export async function updateProfile(patch: Partial<Profile>) {
   const { error } = await supabase.from('profiles').update(patch).eq('id', session.user.id);
   if (!error) await refreshProfile();
   return { error };
+}
+
+export async function sendPasswordReset(email: string) {
+  const redirectTo = Linking.createURL('reset-password');
+  return supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+}
+export async function updatePassword(newPassword: string) {
+  return supabase.auth.updateUser({ password: newPassword });
+}
+
+export async function deleteAccount() {
+  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  if (error) return { error };
+  await signOut();
+  return { error: null };
 }
 
 export function useAuth() {

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { signIn, signUp, useAuth } from '@/lib/auth';
+import { signIn, signUp, useAuth, sendPasswordReset } from '@/lib/auth';
 
 export default function Login() {
   const { session, loading } = useAuth();
@@ -22,6 +22,16 @@ export default function Login() {
   const goBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(tabs)');
+  };
+
+  const forgotPassword = async () => {
+    setError(null); setNotice(null);
+    if (!email.trim()) { setError('Enter your email above, then tap Forgot password.'); return; }
+    setBusy(true);
+    const { error: e } = await sendPasswordReset(email);
+    setBusy(false);
+    if (e) setError(e.message || 'Could not send the reset email. Please try again.');
+    else setNotice('Check your inbox for a link to reset your password.');
   };
 
   const submit = async () => {
@@ -44,7 +54,7 @@ export default function Login() {
           setError('An account with this email already exists. Switch to Sign in.');
           setMode('in');
         } else if (/email not confirmed/i.test(m)) {
-          setError('This email needs confirming. Turn off "Confirm email" in Supabase, or use a confirmed account.');
+          setError('Please confirm your email first. We sent a confirmation link to your inbox when you signed up.');
         } else if (/invalid login credentials/i.test(m)) {
           setError('Email or password is incorrect.');
         } else {
@@ -56,7 +66,7 @@ export default function Login() {
 
       // Sign-up with email confirmation on returns no session.
       if (mode === 'up' && !res.data?.session) {
-        setNotice('Account created. If sign-in does not work, confirm the email or turn off email confirmation in Supabase.');
+        setNotice('Account created. Check your inbox to confirm your email, then sign in.');
         setMode('in');
         setBusy(false);
         return;
@@ -92,6 +102,11 @@ export default function Login() {
           ) : null}
           <Input label="Email" value={email} onChangeText={setEmail} placeholder="you@email.com" keyboardType="email-address" autoCapitalize="none" />
           <PasswordInput value={password} onChangeText={setPassword} />
+          {mode === 'in' ? (
+            <Pressable onPress={forgotPassword} style={styles.forgot} hitSlop={8}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          ) : null}
 
           {error ? (
             <View style={styles.errorBox}>
@@ -172,6 +187,8 @@ const styles = StyleSheet.create({
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 16, letterSpacing: 0.5 },
   toggle: { marginTop: 20, alignItems: 'center' },
+  forgot: { alignSelf: 'flex-end', marginTop: 10, marginBottom: 2 },
+  forgotText: { fontSize: 13, color: COLORS.accent },
   toggleText: { fontSize: 14, color: COLORS.accent },
   pwWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingRight: 10 },
   pwInput: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: COLORS.ink },

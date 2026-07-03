@@ -17,11 +17,13 @@ export type Expert = {
   photoX?: number;
   photoY?: number;
   availability?: any;
+  keywords?: string[];
 };
 
 export const EXPERTS: Expert[] = [
   {
     id: 'omar-chtioui',
+    keywords: ['Trauma Healing', 'Breathwork', 'Somatic Exercises', 'Inner Guidance'],
     name: 'Omar Chtioui',
     title: 'Trauma Healing · Breathwork',
     category: 'Breathwork',
@@ -37,6 +39,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'scheherazade-hasan',
+    keywords: ['Wealth Mindset', 'Money Blocks', 'Financial Confidence'],
     name: 'Scheherazade Hasan',
     title: 'Wealth Coach',
     category: 'Wealth',
@@ -52,6 +55,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'ekaterina-murray',
+    keywords: ['Neuropsychology', 'Identity Work', 'Self-Concept'],
     name: 'Ekaterina Murray',
     title: 'Neuropsychology & Identity Specialist',
     category: 'Identity',
@@ -67,6 +71,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'joanna-gudkina',
+    keywords: ['Skin Health', 'Integrative Medicine', 'Root Cause', 'Gut Health', 'Longevity'],
     name: 'Dr. Joanna Gudkina',
     title: 'Dermatologist & Integrative Medicine Specialist',
     category: 'Skin & Longevity',
@@ -82,6 +87,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'zahra-gozal',
+    keywords: ['Emotional Release', 'Self-Reconnection', 'Feminine Embodiment'],
     name: 'Zahra Gozal',
     title: 'Transformational Coach & Emotional Bodywork Therapist',
     category: 'Body & Somatics',
@@ -97,6 +103,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'alevtina-buzynarska',
+    keywords: ['Feminine Embodiment', 'Nervous System', 'Sensuality'],
     name: 'Alevtina Buzynarska',
     title: 'Feminine Embodiment Coach, Somatic Guide & Energy Healer',
     category: 'Body & Somatics',
@@ -112,6 +119,7 @@ export const EXPERTS: Expert[] = [
   },
   {
     id: 'irina-goldenberg',
+    keywords: ['Kundalini', 'Energy Work', 'Somatic Release', 'Grounding'],
     name: 'Irina Goldenberg',
     title: 'Kundalini Yoga & Somatic Specialist',
     category: 'Body & Somatics',

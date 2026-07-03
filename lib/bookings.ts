@@ -15,6 +15,7 @@ export type DBBooking = {
   when_text: string;
   booker_name: string | null;
   booker_email: string | null;
+  link?: string | null;
   created_at: string;
 };
 
@@ -27,15 +28,14 @@ export async function createBooking(input: {
   expertId?: string | null;
 }) {
   // Instant local mirror for class/program (so You updates immediately, even signed out).
-  if (input.kind !== 'service') {
-    addBooking({
-      refId: input.refId,
-      kind: input.kind,
-      title: input.title,
-      when: input.when,
-      expert: input.expert ?? '',
-    });
-  }
+  addBooking({
+    refId: input.refId,
+    kind: input.kind,
+    title: input.title,
+    when: input.when,
+    expert: input.expert ?? '',
+    expertId: input.expertId ?? null,
+  });
   try {
     const { data: u } = await supabase.auth.getUser();
     const userId = u?.user?.id;
@@ -97,6 +97,19 @@ export function useExpertBookings(expertId?: string) {
 
 // Loads the signed-in user's class/program bookings into the local store once,
 // so persisted bookings appear under You across sessions.
+export async function getBookingById(id: string) {
+  try {
+    const { data } = await supabase.from('bookings').select('*').eq('id', id).maybeSingle();
+    return (data as DBBooking) ?? null;
+  } catch { return null; }
+}
+export async function setBookingLink(id: string, link: string) {
+  try {
+    const { error } = await supabase.from('bookings').update({ link }).eq('id', id);
+    return { error };
+  } catch (e: any) { return { error: e }; }
+}
+
 export function useHydrateBookings() {
   useEffect(() => {
     (async () => {
@@ -104,9 +117,9 @@ export function useHydrateBookings() {
         const { data: u } = await supabase.auth.getUser();
         const uid = u?.user?.id;
         if (!uid) return;
-        const { data } = await supabase.from('bookings').select('*').eq('user_id', uid).in('kind', ['class', 'program']);
+        const { data } = await supabase.from('bookings').select('*').eq('user_id', uid).in('kind', ['class', 'program', 'service']);
         for (const b of (data as DBBooking[]) ?? []) {
-          addBooking({ refId: b.ref_id, kind: b.kind as 'class' | 'program', title: b.title, when: b.when_text, expert: b.expert_name ?? '' });
+          addBooking({ refId: b.ref_id, kind: b.kind as any, title: b.title, when: b.when_text, expert: b.expert_name ?? '', expertId: b.expert_id, link: (b as any).link ?? undefined });
         }
       } catch {}
     })();

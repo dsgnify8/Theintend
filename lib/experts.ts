@@ -85,6 +85,18 @@ export async function reloadExperts() {
   emit();
 }
 
+export async function createExpert(row: any) {
+  const { error } = await supabase.from('experts').upsert(row, { onConflict: 'id' });
+  if (!error) await reloadExperts();
+  return { error };
+}
+
+export async function deleteExpert(id: string) {
+  const { error } = await supabase.from('experts').delete().eq('id', id);
+  if (!error) await reloadExperts();
+  return { error };
+}
+
 export async function seedExperts() {
   const rows = FALLBACK.map((e, i) => ({
     id: e.id, name: e.name, title: e.title, category: e.category, blurb: e.blurb,

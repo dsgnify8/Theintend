@@ -27,7 +27,7 @@ export default function ExpertOfferNew() {
   const router = useRouter();
   const { user, role } = useAuth();
   const [expert, setExpert] = useState<Expert | null | undefined>(undefined);
-  const [kind, setKind] = useState<'class' | 'program'>('class');
+  const [kind, setKind] = useState<'class' | 'program' | 'session'>('class');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   // class fields
@@ -95,7 +95,8 @@ export default function ExpertOfferNew() {
     const payload =
       kind === 'class'
         ? { title, description, date, time, durationHours, category, link: link.trim(), expert_title: expert.title }
-        : {
+        : kind === 'program'
+        ? {
             title,
             description,
             weeks,
@@ -105,7 +106,8 @@ export default function ExpertOfferNew() {
             notes: notes.trim(),
             requiresForm: !!form,
             signup_form: form,
-          };
+          }
+        : { title, description, price, notes: notes.trim() };
     const { error } = await submitNewOffering(expert.id, expert.name, kind, payload);
     setStatus(error ? `Could not submit: ${error.message}` : 'Submitted. Your new offering is pending admin approval.');
     setBusy(false);
@@ -143,11 +145,11 @@ export default function ExpertOfferNew() {
           <Text style={styles.sub}>Once approved by the team, it appears on the Sessions page.</Text>
 
           <View style={styles.segment}>
-            {(['class', 'program'] as const).map((k) => {
+            {(['class', 'program', 'session'] as const).map((k) => {
               const on = k === kind;
               return (
                 <Pressable key={k} onPress={() => setKind(k)} style={[styles.segItem, on && styles.segItemOn]}>
-                  <Text style={[styles.segText, on && styles.segTextOn]}>{k === 'class' ? 'Class' : 'Program'}</Text>
+                  <Text style={[styles.segText, on && styles.segTextOn]}>{k === 'class' ? 'Class' : k === 'program' ? 'Program' : 'Session'}</Text>
                 </Pressable>
               );
             })}
@@ -155,8 +157,10 @@ export default function ExpertOfferNew() {
 
           {kind === 'class' ? (
             <Text style={styles.helper}>Classes are webinars, one-time classes, or live online sessions.</Text>
-          ) : (
+          ) : kind === 'program' ? (
             <Text style={styles.helper}>Programs are multi-week journeys with several live sessions.</Text>
+          ) : (
+            <Text style={styles.helper}>Sessions are one-time offerings like consultations or single calls.</Text>
           )}
 
           <Field label="Title" value={title} onChangeText={setTitle} />
@@ -176,7 +180,7 @@ export default function ExpertOfferNew() {
               />
               <Text style={styles.fieldHint}>This is shared with people who book, on their upcoming booking.</Text>
             </>
-          ) : (
+          ) : kind === 'program' ? (
             <>
               <Field label="Weeks (e.g. 6)" value={weeks} onChangeText={setWeeks} keyboardType="number-pad" />
               <Field label="Number of sessions (e.g. 6)" value={sessions} onChangeText={setSessions} keyboardType="number-pad" />
@@ -200,6 +204,11 @@ export default function ExpertOfferNew() {
                   </Text>
                 </Pressable>
               ) : null}
+            </>
+          ) : (
+            <>
+              <Field label="Price (e.g. AED 500)" value={price} onChangeText={setPrice} />
+              <Field label="Notes for our team (anything you'd like us to adjust)" value={notes} onChangeText={setNotes} multiline />
             </>
           )}
 
