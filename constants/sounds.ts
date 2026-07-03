@@ -9,11 +9,13 @@ export type Sound = {
   category: string; // Focus | Calm | Sleep | Energy
   duration: string;
   color: string;
+  url?: string;
 };
 
 export const SOUND_CATEGORIES = ['All', 'Focus', 'Calm', 'Sleep', 'Energy'];
 
 export const SOUNDS: Sound[] = [
+  { id: 'quantum-focus', title: 'Quantum Focus', purpose: '13 Hz for focus, concentration and memory', category: 'Focus', duration: '90 min', color: '#5C4632', url: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/sounds/quantum-focus.mp3' },
   { id: 'deep-focus', title: 'Deep Focus', purpose: 'For uninterrupted concentration', category: 'Focus', duration: '45–480 min', color: '#6F7A6B' },
   { id: 'clear-mind', title: 'Clear Mind', purpose: 'For a calm, sharp head', category: 'Focus', duration: '45–480 min', color: '#5C4632' },
   { id: 'ease-anxiety', title: 'Ease Anxiety', purpose: 'For helping you unwind', category: 'Calm', duration: '20–480 min', color: '#5C6B73' },

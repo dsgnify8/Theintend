@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { supabase } from '@/lib/supabase';
 import { STRIPE_PUBLISHABLE_KEY } from '@/constants/stripe';
 import { AnimatedIntro } from '@/components/AnimatedIntro';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -32,6 +33,19 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [introDone, setIntroDone] = useState(false);
+
+  // After the intro: on the very first open, show the sign-up screen once
+  // (with its Skip for now). Afterwards it never shows again.
+  const handleIntroDone = async () => {
+    setIntroDone(true);
+    try {
+      const seen = await AsyncStorage.getItem('ti_seen_intro');
+      if (!seen) {
+        await AsyncStorage.setItem('ti_seen_intro', '1');
+        router.push('/login');
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     const handle = (url: string | null) => {
@@ -61,7 +75,7 @@ export default function RootLayout() {
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
-        {!introDone ? <AnimatedIntro onDone={() => setIntroDone(true)} /> : null}
+        {!introDone ? <AnimatedIntro onDone={handleIntroDone} /> : null}
       </ThemeProvider>
     </StripeProvider>
   );

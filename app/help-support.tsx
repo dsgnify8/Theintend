@@ -36,6 +36,11 @@ export default function HelpSupport() {
           We didn't build this platform around therapy or sitting in the same problem week after week. We built it around growth. Around finding the right person for where you are right now, and letting that guidance open something in you that was always there. That's the difference, and that's the intention behind everything at The Intend.
         </Text>
 
+        <Pressable style={styles.policyRow} onPress={() => router.push('/privacy')}>
+          <Text style={styles.policyText}>Privacy Policy</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
+
         <View style={styles.contactCard}>
           <Text style={styles.contactTitle}>Need a hand?</Text>
           <Text style={styles.contactBody}>If you need any assistance or have questions, we're here.</Text>
@@ -57,6 +62,8 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginTop: 6, marginBottom: 12 },
   h1: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink, marginBottom: 20 },
   p: { fontSize: 16, lineHeight: 26, color: COLORS.ink, opacity: 0.9, marginBottom: 18 },
+  policyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginTop: 20 },
+  policyText: { fontSize: 15, color: COLORS.ink },
   contactCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 22, marginTop: 14 },
   contactTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 8 },
   contactBody: { fontSize: 15, lineHeight: 22, color: COLORS.muted, marginBottom: 18 },

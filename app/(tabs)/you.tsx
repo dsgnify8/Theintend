@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMoodInsight, pickArticleForMood } from '@/lib/mood';
@@ -7,7 +7,7 @@ import { EXPERTS } from '@/constants/experts';
 import { SOUNDS } from '@/constants/sounds';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { ACHIEVEMENTS } from '@/constants/achievements';
@@ -15,7 +15,7 @@ import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheets
 import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
-import { signOut, updateProfile, useAuth, deleteAccount } from '@/lib/auth';
+import { refreshProfile, signOut, updateProfile, useAuth, deleteAccount } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
 
 const VIEWS = ['Overview', 'Bookings', 'Saved'];
@@ -26,6 +26,11 @@ const RECORD = 5;
 export default function YouScreen() {
   const router = useRouter();
   const { session, profile, role } = useAuth();
+  const [, setFocusTick] = useState(0);
+  useFocusEffect(useCallback(() => {
+    setFocusTick((t) => t + 1);
+    refreshProfile();
+  }, []));
   const [view, setView] = useState('Overview');
   const [uploading, setUploading] = useState(false);
   const savedIds = useSaved();
@@ -95,12 +100,11 @@ export default function YouScreen() {
       <View style={styles.topBar}>
         <Text style={styles.topTitle}>You</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-          <Pressable
-            onPress={async () => { if (loggedIn) { await signOut(); } router.push('/login'); }}
-            hitSlop={10}
-          >
-            <Ionicons name={loggedIn ? 'log-out-outline' : 'log-in-outline'} size={23} color={COLORS.ink} />
-          </Pressable>
+          {loggedIn ? (
+            <Pressable onPress={async () => { await signOut(); }} hitSlop={10}>
+              <Ionicons name="log-out-outline" size={23} color={COLORS.ink} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -222,7 +226,7 @@ export default function YouScreen() {
               {loggedIn ? <Row label="Personal information" onPress={() => router.push('/personal-info')} /> : null}
               <Row label="Help & support" onPress={() => router.push('/help-support')} />
               {loggedIn ? (
-                <Row label="Sign out" onPress={async () => { await signOut(); router.push('/login'); }} />
+                <Row label="Sign out" onPress={async () => { await signOut(); }} />
               ) : (
                 <Row label="Sign in" onPress={() => router.push('/login')} />
               )}

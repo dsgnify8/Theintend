@@ -13,6 +13,7 @@ export type Profile = {
   full_name: string | null;
   role: Role;
   avatar_url: string | null;
+  phone: string | null;
 };
 
 let session: any = null;

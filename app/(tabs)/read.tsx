@@ -12,7 +12,7 @@ import { WORKSHEETS } from '@/constants/worksheets';
 import { useDraft } from '@/lib/worksheets';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
-const FORMATS = ['Articles', 'E-books', 'Books', 'Workbooks'];
+const FORMATS = ['Articles', 'E-books', 'Workbooks'];
 const TYPE_FOR: Record<string, string> = { 'E-books': 'E-book', 'Books': 'Book' };
 
 const CAT_COLOR: Record<string, string> = {

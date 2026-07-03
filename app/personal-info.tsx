@@ -16,17 +16,21 @@ export default function PersonalInfo() {
   const { user, profile } = useAuth();
 
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [lang, setLang] = useState('English');
   const [pass1, setPass1] = useState('');
   const [pass2, setPass2] = useState('');
 
   const [nameMsg, setNameMsg] = useState<string | null>(null);
+  const [phoneMsg, setPhoneMsg] = useState<string | null>(null);
   const [passMsg, setPassMsg] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
   const [savingPass, setSavingPass] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
 
   useEffect(() => { setName(profile?.full_name ?? ''); }, [profile?.full_name]);
+  useEffect(() => { setPhone(profile?.phone ?? ''); }, [profile?.phone]);
   useEffect(() => { AsyncStorage.getItem(LANG_KEY).then((v) => { if (v) setLang(v); }); }, []);
 
   const saveName = async () => {
@@ -34,6 +38,13 @@ export default function PersonalInfo() {
     const { error } = await updateProfile({ full_name: name.trim() });
     setNameMsg(error ? 'Could not save your name.' : 'Saved.');
     setSavingName(false);
+  };
+
+  const savePhone = async () => {
+    setSavingPhone(true); setPhoneMsg(null);
+    const { error } = await updateProfile({ phone: phone.trim() });
+    setPhoneMsg(error ? 'Could not save your number.' : 'Saved.');
+    setSavingPhone(false);
   };
 
   const pickLang = async (l: string) => {
@@ -77,6 +88,14 @@ export default function PersonalInfo() {
             {savingName ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Save name</Text>}
           </Pressable>
           {nameMsg ? <Text style={styles.msg}>{nameMsg}</Text> : null}
+
+          <Text style={styles.label}>Phone</Text>
+          <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+971 ..." placeholderTextColor={COLORS.muted} keyboardType="phone-pad" />
+          <Text style={styles.hint}>Used for pay in 4 with Tabby at checkout.</Text>
+          <Pressable style={[styles.btn, savingPhone && styles.btnOff]} onPress={savePhone} disabled={savingPhone}>
+            {savingPhone ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Save phone</Text>}
+          </Pressable>
+          {phoneMsg ? <Text style={styles.msg}>{phoneMsg}</Text> : null}
 
           <Text style={styles.label}>Email</Text>
           <View style={styles.readonly}><Text style={styles.readonlyText}>{user.email}</Text></View>

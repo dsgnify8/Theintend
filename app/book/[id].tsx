@@ -72,8 +72,16 @@ export default function BookScreen() {
   const isFree = !!svc && (svc.price ?? '').replace(/[^0-9]/g, '') === '';
 
   const requireAuth = () => {
-    if (!user) { router.push('/login'); return false; }
-    return true;
+    if (user) return true;
+    Alert.alert(
+      'Sign in to book',
+      'Create an account or sign in to book with an expert.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Sign in or sign up', onPress: () => router.push('/login') },
+      ]
+    );
+    return false;
   };
   const { items: bookings } = useExpertBookings(String(id));
   const { user } = useAuth();

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { signIn, signUp, useAuth, sendPasswordReset } from '@/lib/auth';
 
 export default function Login() {
   const { session, loading } = useAuth();
+  const didSubmit = useRef(false);
   const router = useRouter();
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [name, setName] = useState('');
@@ -17,7 +18,7 @@ export default function Login() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!loading && session) return <Redirect href="/(tabs)" />;
+  if (!loading && session && !didSubmit.current) return <Redirect href="/(tabs)" />;
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -35,6 +36,7 @@ export default function Login() {
   };
 
   const submit = async () => {
+    didSubmit.current = true;
     setError(null);
     setNotice(null);
     if (!email.trim()) { setError('Please enter your email.'); return; }
@@ -73,7 +75,8 @@ export default function Login() {
       }
 
       // Success: go to the app. (The auth listener also redirects, this is a safety net.)
-      router.replace('/(tabs)');
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)');
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong. Please try again.');
     } finally {
