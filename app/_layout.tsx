@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { supabase } from '@/lib/supabase';
 import { STRIPE_PUBLISHABLE_KEY } from '@/constants/stripe';
 import { AnimatedIntro } from '@/components/AnimatedIntro';
+import { usePushRegistration } from '@/lib/notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const unstable_settings = {
@@ -33,6 +34,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const [introDone, setIntroDone] = useState(false);
+  usePushRegistration();
 
   // After the intro: on the very first open, show the sign-up screen once
   // (with its Skip for now). Afterwards it never shows again.

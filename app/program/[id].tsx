@@ -9,6 +9,7 @@ import { createBooking } from '@/lib/bookings';
 import { useAuth } from '@/lib/auth';
 import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
 import { payWithTabby, priceToMajorString, tabbyInstallment } from '@/lib/tabby';
+import { TABBY_ENABLED } from '@/constants/stripe';
 import { TabbyLogo } from '@/components/TabbyLogo';
 
 type Step = 'closed' | 'form' | 'done';
@@ -86,7 +87,7 @@ export default function ProgramDetail() {
 
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.price}>{item.price}</Text>
-        {priceToMinorUnits(item.price) > 0 ? (
+        {TABBY_ENABLED && priceToMinorUnits(item.price) > 0 ? (
           <Text style={styles.tabbyLine}>or 4 interest-free payments of {tabbyInstallment(item.price)} with Tabby</Text>
         ) : null}
 

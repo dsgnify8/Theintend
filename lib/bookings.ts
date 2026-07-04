@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { addBooking } from './store';
+import { scheduleLocalReminder } from './notifications';
 
 export type DBBooking = {
   id: string;
@@ -19,6 +20,16 @@ export type DBBooking = {
   created_at: string;
 };
 
+const MON3B = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function parseWhen(w: string): number | null {
+  const m = (w || '').match(/(\d{1,2}) (\w{3}) (\d{4}), (\d{1,2}):(\d{2}) (AM|PM)/);
+  if (!m) return null;
+  const mon = MON3B.indexOf(m[2]);
+  if (mon < 0) return null;
+  let hr = parseInt(m[4], 10) % 12;
+  if (m[6] === 'PM') hr += 12;
+  return new Date(parseInt(m[3], 10), mon, parseInt(m[1], 10), hr, parseInt(m[5], 10)).getTime();
+}
 export async function createBooking(input: {
   refId: string;
   kind: 'class' | 'program' | 'service';
@@ -57,6 +68,13 @@ export async function createBooking(input: {
       booker_name: name,
       booker_email: email,
     });
+    try {
+      const t = parseWhen(input.when);
+      if (t) {
+        await scheduleLocalReminder(`rem24-${input.refId}-${t}`, 'Session tomorrow', `${input.title} is coming up.`, new Date(t - 86400000));
+        await scheduleLocalReminder(`rem1-${input.refId}-${t}`, 'Session soon', `${input.title} starts in about an hour.`, new Date(t - 3600000));
+      }
+    } catch {}
     return { error };
   } catch (e: any) {
     return { error: e };

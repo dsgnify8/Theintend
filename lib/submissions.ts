@@ -6,6 +6,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { reloadExperts } from './experts';
 import { createSession } from './sessions';
+import { sendPushTo } from './notifications';
 
 export type Submission = {
   id: string;
@@ -131,7 +132,15 @@ export async function approveSubmission(s: Submission) {
     .from('submissions')
     .update({ status: 'approved', reviewed_at: new Date().toISOString() })
     .eq('id', s.id);
-  if (!error) await reloadExperts();
+  if (!error) {
+    await reloadExperts();
+    const uid = (s as any).created_by;
+    if (uid) {
+      const label = s.kind === 'program' ? 'program' : s.kind === 'class' ? 'class' : 'profile update';
+      const title = s.payload?.title ?? 'Your submission';
+      sendPushTo(uid, `Your ${label} is live`, s.kind === 'profile' ? 'Your profile update is now live.' : `${title} is now live on The Intend.`);
+    }
+  }
   return { error };
 }
 

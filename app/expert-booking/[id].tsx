@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { getBookingById, setBookingLink } from '@/lib/bookings';
+import { sendPushTo } from '@/lib/notifications';
 
 export default function ExpertBookingDetail() {
   const router = useRouter();
@@ -31,7 +32,14 @@ export default function ExpertBookingDetail() {
     setSaving(true);
     const { error } = await setBookingLink(String(id), value.trim());
     setSaving(false);
-    if (!error) { setSaved(true); setTimeout(() => setSaved(false), 1800); }
+    if (!error) {
+      setSaved(true); setTimeout(() => setSaved(false), 1800);
+      const uid = (booking as any)?.user_id;
+      if (uid && value.trim()) {
+        const label = inPerson ? 'location' : 'join link';
+        sendPushTo(uid, 'Session details ready', `${booking.title}: your ${label} is ready.`);
+      }
+    }
   };
 
   return (

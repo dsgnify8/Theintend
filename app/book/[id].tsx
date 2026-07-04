@@ -6,8 +6,10 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { getCalendarBusy, createCalendarEvent } from '@/lib/calendar';
 import { createBooking, useExpertBookings } from '@/lib/bookings';
+import { sendPushToEmail } from '@/lib/notifications';
 import { useService } from '@/lib/services';
 import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
+import { TABBY_ENABLED } from '@/constants/stripe';
 import { payWithTabby, priceToMajorString } from '@/lib/tabby';
 import { TabbyLogo } from '@/components/TabbyLogo';
 import { createPackage, consumePackageSession, getPackage } from '@/lib/packages';
@@ -199,6 +201,9 @@ export default function BookScreen() {
       title: bookingTitle(),
       when: label, expert: expert.name, expertId: String(id),
     });
+    if ((expert as any)?.accountEmail) {
+      sendPushToEmail((expert as any).accountEmail, 'New booking', `${bookingTitle()} was just booked.`);
+    }
     const startIso = slot.toISOString();
     const endIso = new Date(slot.getTime() + (svc?.durationMin ? svc.durationMin : 60) * 60000).toISOString();
     createCalendarEvent({
@@ -307,6 +312,7 @@ export default function BookScreen() {
                 <Pressable style={[styles.requestBtn, saving && styles.btnOff]} disabled={saving} onPress={async () => {
                   if (!requireAuth() || !expert) return; setSaving(true);
                   await createBooking({ refId: String(id), kind: 'service', title: bookingTitle(), when: 'Time to be confirmed', expert: expert.name, expertId: String(id) });
+                  if ((expert as any)?.accountEmail) { sendPushToEmail((expert as any).accountEmail, 'New booking request', `${bookingTitle()} was requested.`); }
                   setChosenLabel('Time to be confirmed'); setWasRequest(true); setRequested(true); setSaving(false);
                 }}>
                   {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.requestText}>Send a request</Text>}
@@ -340,7 +346,7 @@ export default function BookScreen() {
 
                 <Text style={styles.tzNote}>Times shown in {tzName()}. Busy times from the expert's Google Calendar are hidden.</Text>
 
-                <Pressable style={[styles.requestBtn, hour == null && styles.btnOff]} disabled={hour == null} onPress={() => { if (!requireAuth()) return; (isPackageContinue || isFree) ? finalizeBooking() : setPayChoiceOpen(true); }}>
+                <Pressable style={[styles.requestBtn, hour == null && styles.btnOff]} disabled={hour == null} onPress={() => { if (!requireAuth()) return; (isPackageContinue || isFree) ? finalizeBooking() : (TABBY_ENABLED ? setPayChoiceOpen(true) : startPayment()); }}>
                   <Text style={styles.requestText}>{isPackageContinue ? 'Book next session' : 'Book'}</Text>
                 </Pressable>
               </>
