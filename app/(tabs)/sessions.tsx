@@ -65,7 +65,7 @@ export default function SessionsScreen() {
         price: p.price,
         sessions: p.sessions ?? 0,
         category: p.category,
-        onPress: () => router.push(`/program/${p.id}`),
+        onPress: () => router.push(`/program/${p.id}?fromList=1`),
       }));
     return [...fromPackages, ...fromPrograms];
   }, [services, PROGRAMS]);

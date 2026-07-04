@@ -16,7 +16,7 @@ type Step = 'closed' | 'form' | 'done';
 
 export default function ProgramDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, fromList } = useLocalSearchParams<{ id: string; fromList?: string }>();
   const { programs: PROGRAMS } = useSessions();
   const item = PROGRAMS.find((p) => p.id === id);
   const { user } = useAuth();
@@ -95,10 +95,16 @@ export default function ProgramDetail() {
         <Text style={styles.body}>{item.description}</Text>
 
         <Text style={styles.sectionTitle}>About the expert</Text>
-        <Pressable style={styles.expertRow} onPress={() => router.push(`/expert/${item.expertId}`)}>
-          <Text style={styles.expertName}>{item.expertName}</Text>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-        </Pressable>
+        {fromList ? (
+          <Pressable style={styles.expertRow} onPress={() => router.push(`/expert/${item.expertId}`)}>
+            <Text style={styles.expertName}>{item.expertName}</Text>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+          </Pressable>
+        ) : (
+          <View style={styles.expertRow}>
+            <Text style={styles.expertName}>{item.expertName}</Text>
+          </View>
+        )}
 
         <Pressable style={[styles.enrollBtn, saving && styles.enrollOff]} disabled={saving} onPress={startPay}>
           {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.enrollText}>Enroll \u00B7 {item.price}</Text>}

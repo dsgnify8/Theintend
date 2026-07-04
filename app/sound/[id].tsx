@@ -4,9 +4,9 @@ import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { SOUNDS } from '@/constants/sounds';
-import { recordListen } from '@/lib/store';
+import { recordListen, useLiked, toggleLiked } from '@/lib/store';
+import { playTrack, togglePlay, seekTo, usePlayerStatus } from '@/lib/player';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 function fmt(sec: number) {
@@ -23,29 +23,12 @@ export default function SoundPlayer() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const sound = SOUNDS.find((s) => s.id === id);
 
-  const src = sound?.url ? { uri: sound.url } : undefined;
-  const player = useAudioPlayer(src);
-  const status = useAudioPlayerStatus(player);
-
-  const [liked, setLiked] = useState(false);
+  const status = usePlayerStatus();
+  const likedIds = useLiked();
   const [downloaded, setDownloaded] = useState(false);
   const [seeking, setSeeking] = useState<number | null>(null);
 
   useEffect(() => { if (id) recordListen(id); }, [id]);
-  useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true }).catch(() => {});
-  }, []);
-
-  const hasAudio = !!sound?.url;
-  const playing = status?.playing ?? false;
-  const duration = status?.duration ?? 0;
-  const position = seeking != null ? seeking : (status?.currentTime ?? 0);
-
-  const toggle = () => {
-    if (!hasAudio) return;
-    if (playing) player.pause();
-    else player.play();
-  };
 
   if (!sound) {
     return (
@@ -60,6 +43,19 @@ export default function SoundPlayer() {
     );
   }
 
+  const hasAudio = !!sound.url;
+  const isCurrent = status.id === sound.id;
+  const playing = isCurrent && status.playing;
+  const duration = isCurrent ? status.duration : 0;
+  const position = isCurrent ? (seeking != null ? seeking : status.currentTime) : 0;
+  const liked = likedIds.includes(sound.id);
+
+  const toggle = () => {
+    if (!hasAudio) return;
+    if (isCurrent) togglePlay();
+    else playTrack(sound.id, sound.url!, sound.title);
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -68,7 +64,7 @@ export default function SoundPlayer() {
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
           <Text style={styles.backText}>Sounds</Text>
         </Pressable>
-        <Pressable onPress={() => setLiked((v) => !v)} hitSlop={10}>
+        <Pressable onPress={() => toggleLiked(sound.id)} hitSlop={10}>
           <Ionicons name={liked ? 'heart' : 'heart-outline'} size={22} color={liked ? COLORS.accent : COLORS.ink} />
         </Pressable>
       </View>
@@ -90,7 +86,7 @@ export default function SoundPlayer() {
               maximumValue={duration > 0 ? duration : 1}
               value={position}
               onValueChange={(v) => setSeeking(v)}
-              onSlidingComplete={(v) => { player.seekTo(v); setSeeking(null); }}
+              onSlidingComplete={(v) => { seekTo(v); setSeeking(null); }}
               minimumTrackTintColor={COLORS.accent}
               maximumTrackTintColor={COLORS.line}
               thumbTintColor={COLORS.accent}
@@ -103,7 +99,8 @@ export default function SoundPlayer() {
             <Pressable style={styles.playBtn} onPress={toggle}>
               <Ionicons name={playing ? 'pause' : 'play'} size={30} color={COLORS.bg} style={playing ? undefined : { marginLeft: 3 }} />
             </Pressable>
-            {!status?.isLoaded ? <Text style={styles.status}>Loading…</Text> : null}
+            {isCurrent && !status.isLoaded ? <Text style={styles.status}>Loading…</Text> : null}
+            <Text style={styles.status}>Keeps playing while you explore the app.</Text>
           </>
         ) : (
           <>
@@ -124,11 +121,7 @@ export default function SoundPlayer() {
             <Text style={styles.downloadLabel}>Download for offline</Text>
             <Text style={styles.downloadHint}>{downloaded ? 'Available without wifi' : 'Listen anywhere, no wifi needed'}</Text>
           </View>
-          <Switch
-            value={downloaded}
-            onValueChange={setDownloaded}
-            trackColor={{ true: COLORS.accent, false: COLORS.line }}
-          />
+          <Switch value={downloaded} onValueChange={setDownloaded} trackColor={{ true: COLORS.accent, false: COLORS.line }} />
         </View>
       </View>
     </SafeAreaView>
@@ -152,9 +145,9 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: COLORS.muted },
   playBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
   playOff: { opacity: 0.4 },
+  status: { fontSize: 12, color: COLORS.muted, marginTop: 14, textAlign: 'center' },
   downloadRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 28 },
   downloadLabel: { fontSize: 15, color: COLORS.ink },
   downloadHint: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
-  status: { fontSize: 12, color: COLORS.muted, marginTop: 14, textAlign: 'center' },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
 });

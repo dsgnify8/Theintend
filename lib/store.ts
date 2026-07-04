@@ -34,6 +34,8 @@ const LISTEN_KEY = 'intend.listens.v1';
 const LASTREAD_KEY = 'intend.lastread.v1';
 const SCROLL_KEY = 'intend.bookscroll.v1';
 const JOURNAL_KEY = 'intend.journaldays.v1';
+const SAVED_KEY = 'intend.saved.v1';
+const LIKED_KEY = 'intend.liked.v1';
 
 const listeners = new Set<() => void>();
 function emit() { listeners.forEach((l) => l()); }
@@ -53,6 +55,10 @@ function emit() { listeners.forEach((l) => l()); }
     if (bs) bookScroll = JSON.parse(bs);
     const jd = await AsyncStorage.getItem(JOURNAL_KEY);
     if (jd) journalDays = JSON.parse(jd);
+    const sv = await AsyncStorage.getItem(SAVED_KEY);
+    if (sv) savedIds = JSON.parse(sv);
+    const lk = await AsyncStorage.getItem(LIKED_KEY);
+    if (lk) likedIds = JSON.parse(lk);
   } catch {}
   emit();
 })();
@@ -64,12 +70,14 @@ function dayKey(t: number) {
 
 export function toggleSaved(id: string) {
   savedIds = savedIds.includes(id) ? savedIds.filter((x) => x !== id) : [...savedIds, id];
+  AsyncStorage.setItem(SAVED_KEY, JSON.stringify(savedIds)).catch(() => {});
   emit();
 }
 export function isSaved(id: string) { return savedIds.includes(id); }
 
 export function toggleLiked(id: string) {
   likedIds = likedIds.includes(id) ? likedIds.filter((x) => x !== id) : [...likedIds, id];
+  AsyncStorage.setItem(LIKED_KEY, JSON.stringify(likedIds)).catch(() => {});
   emit();
 }
 export function isLiked(id: string) { return likedIds.includes(id); }

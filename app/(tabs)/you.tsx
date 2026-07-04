@@ -5,6 +5,7 @@ import { useMoodInsight, pickArticleForMood } from '@/lib/mood';
 import { MOOD_RECO, MOODS } from '@/constants/mood';
 import { EXPERTS } from '@/constants/experts';
 import { SOUNDS } from '@/constants/sounds';
+import { LIBRARY } from '@/constants/library';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -15,7 +16,7 @@ import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheets
 import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
-import { refreshProfile, signOut, updateProfile, useAuth, deleteAccount } from '@/lib/auth';
+import { refreshProfile, signOut, updateProfile, useAuth } from '@/lib/auth';
 import { uploadAvatar } from '@/lib/upload';
 
 const VIEWS = ['Overview', 'Bookings', 'Saved'];
@@ -43,8 +44,16 @@ export default function YouScreen() {
   const upcoming = useUpcomingBookings();
   useHydrateBookings();
   const { articles } = useArticles();
-  const saved = articles.filter((a) => savedIds.includes(a.id));
-  const liked = articles.filter((a) => likedIds.includes(a.id));
+  const libRoute = (l: any) => (l.pdf || l.html ? `/ebook/${l.id}` : `/title/${l.id}`);
+  const saved = [
+    ...articles.filter((a) => savedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => savedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
+  ];
+  const liked = [
+    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
+    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, route: `/sound/${sd.id}` })),
+  ];
 
   const loggedIn = !!session;
   const displayName = loggedIn ? (profile?.full_name || 'You') : 'Welcome';
@@ -84,24 +93,13 @@ export default function YouScreen() {
     }
   };
 
-  const confirmDelete = () => {
-    Alert.alert(
-      'Delete account',
-      'This permanently deletes your account and everything saved to it. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: async () => { await deleteAccount(); router.replace('/login'); } },
-      ]
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
         <Text style={styles.topTitle}>You</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
           {loggedIn ? (
-            <Pressable onPress={async () => { await signOut(); }} hitSlop={10}>
+            <Pressable onPress={async () => { await signOut(); router.replace('/login'); }} hitSlop={10}>
               <Ionicons name="log-out-outline" size={23} color={COLORS.ink} />
             </Pressable>
           ) : null}
@@ -226,11 +224,10 @@ export default function YouScreen() {
               {loggedIn ? <Row label="Personal information" onPress={() => router.push('/personal-info')} /> : null}
               <Row label="Help & support" onPress={() => router.push('/help-support')} />
               {loggedIn ? (
-                <Row label="Sign out" onPress={async () => { await signOut(); }} />
+                <Row label="Sign out" onPress={async () => { await signOut(); router.replace('/login'); }} />
               ) : (
                 <Row label="Sign in" onPress={() => router.push('/login')} />
               )}
-              {loggedIn ? <Row label="Delete account" onPress={confirmDelete} /> : null}
             </View>
           </View>
         ) : null}
@@ -239,16 +236,16 @@ export default function YouScreen() {
           <View>
             <Text style={styles.sectionTitle}>Saved reads</Text>
             {saved.length === 0 ? (
-              <Empty text="Nothing saved yet. Tap the bookmark on any article to keep it here." />
+              <Empty text="Nothing saved yet. Tap the bookmark on any article or e-book to keep it here." />
             ) : (
-              saved.map((a) => <SavedRow key={a.id} a={a} onPress={() => router.push(`/article/${a.id}`)} />)
+              saved.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)
             )}
 
             <Text style={[styles.sectionTitle, { marginTop: 26 }]}>Liked</Text>
             {liked.length === 0 ? (
-              <Empty text="Nothing liked yet. Tap the heart on any article." />
+              <Empty text="Nothing liked yet. Tap the heart on any article, sound, or e-book." />
             ) : (
-              liked.map((a) => <SavedRow key={a.id} a={a} onPress={() => router.push(`/article/${a.id}`)} />)
+              liked.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)
             )}
           </View>
         ) : null}

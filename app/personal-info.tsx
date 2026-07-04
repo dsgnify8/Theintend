@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { useAuth, updateProfile } from '@/lib/auth';
+import { useAuth, updateProfile, deleteAccount } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 const LANGS = ['English', 'Svenska', 'فارسی'];
@@ -45,6 +45,17 @@ export default function PersonalInfo() {
     const { error } = await updateProfile({ phone: phone.trim() });
     setPhoneMsg(error ? 'Could not save your number.' : 'Saved.');
     setSavingPhone(false);
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete account',
+      'This permanently deletes your account and everything saved to it. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => { await deleteAccount(); router.replace('/login'); } },
+      ]
+    );
   };
 
   const pickLang = async (l: string) => {
@@ -172,6 +183,8 @@ const styles = StyleSheet.create({
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 15 },
   msg: { fontSize: 13, color: COLORS.accent, marginTop: 8 },
+  dangerWrap: { marginTop: 36, alignItems: 'center' },
+  dangerText: { fontSize: 14, color: '#8F4A3B' },
   pwRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginTop: 28 },
   pwRowText: { fontSize: 15, color: COLORS.ink },
   pwRoot: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },

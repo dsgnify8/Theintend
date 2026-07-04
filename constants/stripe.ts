@@ -1,6 +1,6 @@
 // Your Stripe publishable key. Safe to ship inside the app.
-// Test key (pk_test_) for building; swap to the live key (pk_live_) at launch.
-export const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TUBWlF5uDJnD5GN31pH8iNRs5kPKflbEas5AuHgJ8Gi0xuU23XqJ2Wstv8QfvTjSVkQvJYsZ4KYuZ8yFNtbSvTJ00Kf5TbgEv';
+// LIVE publishable key (pk_live_). Safe to ship inside the app.
+export const STRIPE_PUBLISHABLE_KEY = 'pk_live_51TUBWlF5uDJnD5GNuxa3qKDrRffP5pzV5OjLRINLsRbofPQ8egk8mV72pP8v4J3y6L8yoCVWapyqMWw1ZI2PZ40b00nWToHrMF';
 
 // Turn Tabby (pay in 4) on/off. Keep false until Tabby approves your live keys.
 export const TABBY_ENABLED = false;
