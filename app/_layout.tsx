@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { STRIPE_PUBLISHABLE_KEY } from '@/constants/stripe';
 import { AnimatedIntro } from '@/components/AnimatedIntro';
 import { usePushRegistration } from '@/lib/notifications';
+import { useAuth } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const unstable_settings = {
@@ -35,18 +36,14 @@ export default function RootLayout() {
   const router = useRouter();
   const [introDone, setIntroDone] = useState(false);
   usePushRegistration();
+  const { session } = useAuth();
 
   // After the intro: on the very first open, show the sign-up screen once
   // (with its Skip for now). Afterwards it never shows again.
-  const handleIntroDone = async () => {
+  const handleIntroDone = () => {
     setIntroDone(true);
-    try {
-      const seen = await AsyncStorage.getItem('ti_seen_intro');
-      if (!seen) {
-        await AsyncStorage.setItem('ti_seen_intro', '1');
-        router.push('/login');
-      }
-    } catch {}
+    // Logged out on cold open -> show the sign-in / sign-up screen first (Skip stays).
+    if (!session) router.push('/login');
   };
 
   useEffect(() => {

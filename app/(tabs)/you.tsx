@@ -96,7 +96,6 @@ export default function YouScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.topBar}>
-        <Text style={styles.topTitle}>You</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
           {loggedIn ? (
             <Pressable onPress={async () => { await signOut(); router.replace('/login'); }} hitSlop={10}>
@@ -108,7 +107,6 @@ export default function YouScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profile}>
-          {loggedIn ? (
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
               {profile?.avatar_url ? (
@@ -126,7 +124,6 @@ export default function YouScreen() {
               <Ionicons name="camera" size={13} color={COLORS.bg} />
             </Pressable>
           </View>
-          ) : null}
           <Text style={styles.name}>{displayName}</Text>
           {loggedIn ? (
             <>
@@ -137,14 +134,7 @@ export default function YouScreen() {
                 </View>
               ) : null}
             </>
-          ) : (
-            <>
-              <Text style={styles.handle}>Sign in to create and save your account</Text>
-              <Pressable style={styles.signInBtn} onPress={() => router.push('/login')}>
-                <Text style={styles.signInText}>Sign in or create account</Text>
-              </Pressable>
-            </>
-          )}
+          ) : null}
         </View>
 
         {role === 'admin' ? (
@@ -268,6 +258,17 @@ export default function YouScreen() {
           </View>
         ) : null}
       </ScrollView>
+      {!loggedIn ? (
+        <View style={styles.lockOverlay}>
+          <View style={styles.lockCard}>
+            <Text style={styles.lockTitle}>Welcome</Text>
+            <Text style={styles.lockText}>Sign in to view your profile, activity and bookings.</Text>
+            <Pressable style={styles.lockBtn} onPress={() => router.push('/login')}>
+              <Text style={styles.lockBtnText}>Sign in or create account</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
 
     </SafeAreaView>
   );
@@ -406,6 +407,12 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 }
 
 const styles = StyleSheet.create({
+  lockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(247,242,234,0.72)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  lockCard: { width: '100%', backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 32, paddingHorizontal: 26, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 8 },
+  lockTitle: { fontFamily: FONT_SERIF, fontSize: 30, color: COLORS.ink, marginBottom: 10 },
+  lockText: { fontSize: 15, lineHeight: 22, color: COLORS.muted, textAlign: 'center', marginBottom: 22 },
+  lockBtn: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
+  lockBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
   safe: { flex: 1, backgroundColor: COLORS.bg },
   insightCard: { backgroundColor: COLORS.accentSoft, borderRadius: 20, padding: 18, marginBottom: 16 },
   insightEyebrow: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },

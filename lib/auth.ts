@@ -153,6 +153,7 @@ export function useAuth() {
   useEffect(() => {
     const l = () => force((x) => x + 1);
     listeners.add(l);
+    l();
     return () => {
       listeners.delete(l);
     };
