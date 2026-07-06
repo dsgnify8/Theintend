@@ -95,7 +95,18 @@ AppState.addEventListener('change', (st) => { if (st === 'active') refreshIfNeed
 setInterval(() => { refreshIfNeeded(); }, 4 * 60 * 1000);
 
 export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email: email.trim(), password });
+  const res = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  // Update our store immediately rather than waiting on onAuthStateChange, which
+  // does not reliably fire on a re-login after a local sign-out. This is what
+  // moves the login screen into the app the moment sign-in succeeds. Profile
+  // loads right after so navigation is not held up by it.
+  if (res.data?.session) {
+    session = res.data.session;
+    finishInit();
+    emit();
+    loadProfile(res.data.session.user.id).then(emit).catch(() => {});
+  }
+  return res;
 }
 
 export async function signUp(email: string, password: string, fullName: string) {
@@ -128,8 +139,12 @@ export async function refreshProfile() {
 
 export async function updateProfile(patch: Partial<Profile>) {
   if (!session?.user) return { error: { message: 'Not signed in' } };
+  // Reflect the change immediately so the UI (avatar, name, and so on) updates
+  // right away, instead of waiting on a server re-read that can come back stale.
+  const prev = profile;
+  if (profile) { profile = { ...profile, ...patch }; emit(); }
   const { error } = await supabase.from('profiles').update(patch).eq('id', session.user.id);
-  if (!error) await refreshProfile();
+  if (error) { profile = prev; emit(); } // roll back only if the write failed
   return { error };
 }
 

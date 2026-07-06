@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { EXPERTS } from '@/constants/experts';
+import { useLiked, toggleLiked } from '@/lib/store';
 import { FramedImage } from '@/components/FramedImage';
 import { useSessions } from '@/lib/sessions';
 import { useServices } from '@/lib/services';
@@ -24,6 +25,7 @@ export default function ExpertProfile() {
   const { expert, loading } = useExpert(id);
   const { classes: CLASSES, programs: PROGRAMS } = useSessions();
   const { services: ALL_SERVICES } = useServices();
+  const likedIds = useLiked();
 
   if (loading) {
     return (
@@ -52,6 +54,7 @@ export default function ExpertProfile() {
   const packageServices = services.filter((s: any) => s.kind === 'package');
   const firstName = expert.name.replace('Dr. ', '').split(' ')[0];
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
+  const liked = likedIds.includes(expert.id);
 
   // "Where I can help" keywords come from the expert's focus areas + category.
   const kw = EXPERTS.find((e) => e.id === expert.id)?.keywords;
@@ -91,9 +94,14 @@ export default function ExpertProfile() {
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
           <Text style={styles.backText}>Experts</Text>
         </Pressable>
-        <Pressable style={styles.shareBtn} onPress={onShare} hitSlop={10}>
-          <Ionicons name="share-outline" size={20} color={COLORS.ink} />
-        </Pressable>
+        <View style={styles.topRight}>
+          <Pressable style={styles.shareBtn} onPress={() => toggleLiked(expert.id)} hitSlop={10}>
+            <Ionicons name={liked ? 'heart' : 'heart-outline'} size={22} color={liked ? COLORS.accent : COLORS.ink} />
+          </Pressable>
+          <Pressable style={styles.shareBtn} onPress={onShare} hitSlop={10}>
+            <Ionicons name="share-outline" size={20} color={COLORS.ink} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -196,6 +204,7 @@ const styles = StyleSheet.create({
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
   shareBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  topRight: { flexDirection: 'row', alignItems: 'center' },
   loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   head: { alignItems: 'center', paddingVertical: 12 },

@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF, USER } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
+import { EXPERTS } from '@/constants/experts';
 import { useBookings, useProgress, useUpcomingBookings } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 
@@ -18,12 +19,6 @@ function greeting() {
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
 }
-
-const FEATURED = [
-  { kind: 'program' as const, item: PROGRAMS[0] },
-  { kind: 'program' as const, item: PROGRAMS[1] },
-  { kind: 'class' as const, item: CLASSES[0] },
-];
 
 // Every keyword across all levels — you can feel happy and still feel stressed.
 const ALL_KEYWORDS = MOODS.flatMap((m) => m.keywords);
@@ -209,19 +204,22 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        <Text style={styles.section}>Featured courses</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredRow}>
-          {FEATURED.map((f) => (
-            <Pressable
-              key={f.item.id}
-              style={styles.featuredCard}
-              onPress={() => router.push(f.kind === 'program' ? `/program/${f.item.id}` : `/class/${f.item.id}`)}
-            >
-              <View style={[styles.featuredCover, { backgroundColor: f.item.color }]}>
-                <Text style={styles.featuredCoverTitle}>{f.item.title}</Text>
+        <Text style={styles.section}>This week's expert highlight</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expertRow}>
+          {EXPERTS.slice(0, 3).map((e) => (
+            <Pressable key={e.id} style={styles.expertCard} onPress={() => router.push(`/expert/${e.id}`)}>
+              <View style={styles.expertPhotoWrap}>
+                {e.photo ? (
+                  <Image source={{ uri: e.photo }} style={styles.expertPhoto} resizeMode="cover" />
+                ) : (
+                  <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.accent }]} />
+                )}
               </View>
-              <Text style={styles.featuredName}>{f.item.expertName}</Text>
-              <Text style={styles.featuredKind}>{f.kind === 'program' ? 'Program' : 'Live class'}</Text>
+              <View style={styles.expertBody}>
+                <Text style={styles.expertName} numberOfLines={1}>{e.name}</Text>
+                <Text style={styles.expertTitle} numberOfLines={1}>{e.title}</Text>
+                <Text style={styles.expertBlurb} numberOfLines={3}>{e.blurb}</Text>
+              </View>
             </Pressable>
           ))}
         </ScrollView>
@@ -269,5 +267,13 @@ const styles = StyleSheet.create({
   featuredCoverTitle: { fontFamily: FONT_SERIF, fontSize: 21, lineHeight: 25, color: '#FFFFFF' },
   featuredName: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, marginTop: 10 },
   featuredKind: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  expertRow: { gap: 16, paddingRight: 8, paddingVertical: 8 },
+  expertCard: { width: 224, backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, shadowColor: '#2B2622', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 4 },
+  expertPhotoWrap: { height: 190, borderTopLeftRadius: 22, borderTopRightRadius: 22, overflow: 'hidden', backgroundColor: COLORS.line },
+  expertPhoto: { width: '100%', height: 250 },
+  expertBody: { padding: 16 },
+  expertName: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.ink },
+  expertTitle: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
+  expertBlurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.8, marginTop: 10 },
 });
 

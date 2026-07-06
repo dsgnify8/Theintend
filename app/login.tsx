@@ -74,7 +74,8 @@ export default function Login() {
         return;
       }
 
-      // Success: go to the app. (The auth listener also redirects, this is a safety net.)
+      // Success: go straight to the app, do not wait on the auth listener.
+      router.replace('/(tabs)');
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong. Please try again.');
     } finally {

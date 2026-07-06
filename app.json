@@ -12,7 +12,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.theintend.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {

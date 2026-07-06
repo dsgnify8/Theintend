@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { SOUNDS, SOUND_CATEGORIES, type Sound } from '@/constants/sounds';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+
+const COVERS: Record<string, any> = {
+  'quantum-focus': require('../assets/images/quantum-focus-cover.jpg'),
+  '432hz-energizer': require('../assets/images/432hz-cover.jpg'),
+};
 
 export default function SoundsScreen() {
   const router = useRouter();
@@ -53,9 +58,13 @@ function SoundCard({ sound }: { sound: Sound }) {
   const router = useRouter();
   return (
     <Pressable style={styles.cardWrap} onPress={() => router.push(`/sound/${sound.id}`)}>
-      <View style={[styles.card, { backgroundColor: sound.color }]}>
-        <Ionicons name="musical-notes-outline" size={20} color="rgba(255,255,255,0.85)" />
-      </View>
+      {COVERS[sound.id] ? (
+        <Image source={COVERS[sound.id]} style={styles.cardImg} resizeMode="cover" />
+      ) : (
+        <View style={[styles.card, { backgroundColor: sound.color }]}>
+          <Ionicons name="musical-notes-outline" size={20} color="rgba(255,255,255,0.85)" />
+        </View>
+      )}
       <Text style={styles.cardTitle}>{sound.title}</Text>
       <Text style={styles.cardPurpose}>{sound.purpose}</Text>
       <Text style={styles.cardDuration}>{sound.duration}</Text>
@@ -79,6 +88,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: 16 },
   cardWrap: { width: '48%', marginBottom: 22 },
   card: { height: 130, borderRadius: 18, padding: 14, justifyContent: 'flex-start' },
+  cardImg: { width: '100%', height: 130, borderRadius: 18 },
   cardTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink, marginTop: 10 },
   cardPurpose: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 4 },
   cardDuration: { fontSize: 12, color: COLORS.muted, marginTop: 6 },

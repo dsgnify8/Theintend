@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,13 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SOUNDS } from '@/constants/sounds';
 import { recordListen, useLiked, toggleLiked } from '@/lib/store';
 import { playTrack, togglePlay, seekTo, usePlayerStatus } from '@/lib/player';
+import { localUriFor, downloadTrack, removeDownload } from '@/lib/offline';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+
+const COVERS: Record<string, any> = {
+  'quantum-focus': require('../../assets/images/quantum-focus-cover.jpg'),
+  '432hz-energizer': require('../../assets/images/432hz-cover.jpg'),
+};
 
 function fmt(sec: number) {
   if (!sec || sec < 0 || !isFinite(sec)) return '0:00';
@@ -26,9 +32,23 @@ export default function SoundPlayer() {
   const status = usePlayerStatus();
   const likedIds = useLiked();
   const [downloaded, setDownloaded] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [localUri, setLocalUri] = useState<string | null>(null);
   const [seeking, setSeeking] = useState<number | null>(null);
 
   useEffect(() => { if (id) recordListen(id); }, [id]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!id) return;
+    localUriFor(id).then((uri) => {
+      if (!alive) return;
+      setLocalUri(uri);
+      setDownloaded(!!uri);
+    });
+    return () => { alive = false; };
+  }, [id]);
 
   if (!sound) {
     return (
@@ -53,7 +73,28 @@ export default function SoundPlayer() {
   const toggle = () => {
     if (!hasAudio) return;
     if (isCurrent) togglePlay();
-    else playTrack(sound.id, sound.url!, sound.title);
+    else playTrack(sound.id, localUri ?? sound.url!, sound.title);
+  };
+
+  const onToggleDownload = async (val: boolean) => {
+    if (!hasAudio || downloading) return;
+    if (val) {
+      setDownloading(true);
+      setProgress(0);
+      const ok = await downloadTrack(sound.id, sound.url!, (f) => setProgress(f));
+      setDownloading(false);
+      if (ok) {
+        const uri = await localUriFor(sound.id);
+        setLocalUri(uri);
+        setDownloaded(true);
+      } else {
+        setDownloaded(false);
+      }
+    } else {
+      await removeDownload(sound.id);
+      setLocalUri(null);
+      setDownloaded(false);
+    }
   };
 
   return (
@@ -70,9 +111,13 @@ export default function SoundPlayer() {
       </View>
 
       <View style={styles.content}>
-        <View style={[styles.art, { backgroundColor: sound.color }]}>
-          <Ionicons name="musical-notes" size={40} color="rgba(255,255,255,0.9)" />
-        </View>
+        {COVERS[sound.id] ? (
+          <Image source={COVERS[sound.id]} style={styles.art} resizeMode="cover" />
+        ) : (
+          <View style={[styles.art, { backgroundColor: sound.color }]}>
+            <Ionicons name="musical-notes" size={40} color="rgba(255,255,255,0.9)" />
+          </View>
+        )}
 
         <Text style={styles.title}>{sound.title}</Text>
         <Text style={styles.meta}>{sound.category} · {sound.duration}</Text>
@@ -119,9 +164,9 @@ export default function SoundPlayer() {
         <View style={styles.downloadRow}>
           <View>
             <Text style={styles.downloadLabel}>Download for offline</Text>
-            <Text style={styles.downloadHint}>{downloaded ? 'Available without wifi' : 'Listen anywhere, no wifi needed'}</Text>
+            <Text style={styles.downloadHint}>{downloading ? `Downloading… ${Math.round(progress * 100)}%` : downloaded ? 'Available offline, no wifi needed' : 'Listen anywhere, no wifi needed'}</Text>
           </View>
-          <Switch value={downloaded} onValueChange={setDownloaded} trackColor={{ true: COLORS.accent, false: COLORS.line }} />
+          <Switch value={downloaded || downloading} disabled={downloading} onValueChange={onToggleDownload} trackColor={{ true: COLORS.accent, false: COLORS.line }} />
         </View>
       </View>
     </SafeAreaView>

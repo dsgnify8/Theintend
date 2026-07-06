@@ -33,6 +33,7 @@ export default function YouScreen() {
     refreshProfile();
   }, []));
   const [view, setView] = useState('Overview');
+  const [likedCat, setLikedCat] = useState('All');
   const [uploading, setUploading] = useState(false);
   const savedIds = useSaved();
   const likedIds = useLiked();
@@ -50,10 +51,15 @@ export default function YouScreen() {
     ...LIBRARY.filter((l) => savedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
   ];
   const liked = [
-    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, route: `/article/${a.id}` })),
-    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
-    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, route: `/sound/${sd.id}` })),
+    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, type: 'Articles', route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, type: 'E-books', route: libRoute(l) })),
+    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, type: 'Sounds', route: `/sound/${sd.id}` })),
+    ...EXPERTS.filter((e) => likedIds.includes(e.id)).map((e) => ({ id: e.id, title: e.name, category: 'Expert', type: 'Experts', route: `/expert/${e.id}` })),
   ];
+  const LIKED_TYPES = ['Articles', 'Sounds', 'Experts', 'E-books'];
+  const likedCats = ['All', ...LIKED_TYPES.filter((t) => liked.some((it) => it.type === t))];
+  const effectiveLikedCat = likedCats.includes(likedCat) ? likedCat : 'All';
+  const shownLiked = effectiveLikedCat === 'All' ? liked : liked.filter((it) => it.type === effectiveLikedCat);
 
   const loggedIn = !!session;
   const displayName = loggedIn ? (profile?.full_name || 'You') : 'Welcome';
@@ -233,9 +239,23 @@ export default function YouScreen() {
 
             <Text style={[styles.sectionTitle, { marginTop: 26 }]}>Liked</Text>
             {liked.length === 0 ? (
-              <Empty text="Nothing liked yet. Tap the heart on any article, sound, or e-book." />
+              <Empty text="Nothing liked yet. Tap the heart on any article, sound, e-book, or expert." />
             ) : (
-              liked.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)
+              <>
+                {likedCats.length > 2 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.likedTabs}>
+                    {likedCats.map((c) => {
+                      const on = effectiveLikedCat === c;
+                      return (
+                        <Pressable key={c} onPress={() => setLikedCat(c)} style={[styles.likedTab, on && styles.likedTabOn]}>
+                          <Text style={[styles.likedTabText, on && styles.likedTabTextOn]}>{c}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                ) : null}
+                {shownLiked.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)}
+              </>
             )}
           </View>
         ) : null}
@@ -521,4 +541,9 @@ const styles = StyleSheet.create({
   notifTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   notifBody: { fontSize: 13, lineHeight: 19, color: COLORS.muted, marginTop: 3 },
   notifTime: { fontSize: 12, color: COLORS.muted, marginLeft: 8 },
+  likedTabs: { gap: 8, paddingBottom: 14, paddingRight: 8 },
+  likedTab: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
+  likedTabOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  likedTabText: { fontSize: 13, color: COLORS.muted },
+  likedTabTextOn: { color: COLORS.bg },
 });
