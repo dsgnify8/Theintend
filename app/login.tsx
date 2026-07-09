@@ -125,7 +125,7 @@ export default function Login() {
             {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>{mode === 'in' ? 'Sign in' : 'Create account'}</Text>}
           </Pressable>
 
-          <Pressable onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setError(null); setNotice(null); }} style={styles.toggle}>
+          <Pressable onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setError(null); setNotice(null); setPassword(''); setName(''); }} style={styles.toggle}>
             <Text style={styles.toggleText}>
               {mode === 'in' ? 'New here? Create an account' : 'Already have an account? Sign in'}
             </Text>

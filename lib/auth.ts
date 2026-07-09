@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { supabase, restoreSession, clearStoredSession } from './supabase';
+import { clearAllUserData } from './store';
 import * as Linking from 'expo-linking';
 
 export type Role = 'user' | 'expert' | 'admin';
@@ -127,6 +128,7 @@ export async function signOut() {
   await clearStoredSession();
   session = null;
   profile = null;
+  await clearAllUserData();
   emit();
 }
 

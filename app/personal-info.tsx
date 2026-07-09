@@ -7,20 +7,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth, updateProfile, deleteAccount } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-
 const LANGS = ['English', 'Svenska', 'فارسی'];
 const LANG_KEY = 'intend.language.v1';
-
 export default function PersonalInfo() {
   const router = useRouter();
   const { user, profile } = useAuth();
-
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [lang, setLang] = useState('English');
   const [pass1, setPass1] = useState('');
   const [pass2, setPass2] = useState('');
-
   const [nameMsg, setNameMsg] = useState<string | null>(null);
   const [phoneMsg, setPhoneMsg] = useState<string | null>(null);
   const [passMsg, setPassMsg] = useState<string | null>(null);
@@ -28,25 +24,21 @@ export default function PersonalInfo() {
   const [savingPhone, setSavingPhone] = useState(false);
   const [savingPass, setSavingPass] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
-
   useEffect(() => { setName(profile?.full_name ?? ''); }, [profile?.full_name]);
   useEffect(() => { setPhone(profile?.phone ?? ''); }, [profile?.phone]);
   useEffect(() => { AsyncStorage.getItem(LANG_KEY).then((v) => { if (v) setLang(v); }); }, []);
-
   const saveName = async () => {
     setSavingName(true); setNameMsg(null);
     const { error } = await updateProfile({ full_name: name.trim() });
     setNameMsg(error ? 'Could not save your name.' : 'Saved.');
     setSavingName(false);
   };
-
   const savePhone = async () => {
     setSavingPhone(true); setPhoneMsg(null);
     const { error } = await updateProfile({ phone: phone.trim() });
     setPhoneMsg(error ? 'Could not save your number.' : 'Saved.');
     setSavingPhone(false);
   };
-
   const confirmDelete = () => {
     Alert.alert(
       'Delete account',
@@ -57,12 +49,10 @@ export default function PersonalInfo() {
       ]
     );
   };
-
   const pickLang = async (l: string) => {
     setLang(l);
     await AsyncStorage.setItem(LANG_KEY, l).catch(() => {});
   };
-
   const changePassword = async () => {
     setPassMsg(null);
     if (pass1.length < 6) { setPassMsg('Password must be at least 6 characters.'); return; }
@@ -73,7 +63,6 @@ export default function PersonalInfo() {
     else { setPassMsg('Password updated.'); setPass1(''); setPass2(''); setPassOpen(false); }
     setSavingPass(false);
   };
-
   if (!user) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
@@ -83,7 +72,6 @@ export default function PersonalInfo() {
       </SafeAreaView>
     );
   }
-
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -92,14 +80,12 @@ export default function PersonalInfo() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.kicker}>ACCOUNT</Text>
           <Text style={styles.h1}>Personal information</Text>
-
           <Text style={styles.label}>Name</Text>
           <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={COLORS.muted} />
           <Pressable style={[styles.btn, savingName && styles.btnOff]} onPress={saveName} disabled={savingName}>
             {savingName ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Save name</Text>}
           </Pressable>
           {nameMsg ? <Text style={styles.msg}>{nameMsg}</Text> : null}
-
           <Text style={styles.label}>Phone</Text>
           <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+971 ..." placeholderTextColor={COLORS.muted} keyboardType="phone-pad" />
           <Text style={styles.hint}>Used for pay in 4 with Tabby at checkout.</Text>
@@ -107,11 +93,9 @@ export default function PersonalInfo() {
             {savingPhone ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>Save phone</Text>}
           </Pressable>
           {phoneMsg ? <Text style={styles.msg}>{phoneMsg}</Text> : null}
-
           <Text style={styles.label}>Email</Text>
           <View style={styles.readonly}><Text style={styles.readonlyText}>{user.email}</Text></View>
           <Text style={styles.hint}>To change your email, contact support for now.</Text>
-
           <Text style={styles.label}>Language</Text>
           <View style={styles.langRow}>
             {LANGS.map((l) => {
@@ -123,15 +107,22 @@ export default function PersonalInfo() {
               );
             })}
           </View>
-
           <Pressable style={styles.pwRow} onPress={() => { setPassMsg(null); setPass1(''); setPass2(''); setPassOpen(true); }}>
             <Text style={styles.pwRowText}>Change password</Text>
             <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
           </Pressable>
           {passMsg && !passOpen ? <Text style={styles.msg}>{passMsg}</Text> : null}
+
+          <View style={styles.dangerSection}>
+            <Text style={styles.dangerLabel}>Danger zone</Text>
+            <Pressable style={styles.deleteBtn} onPress={confirmDelete}>
+              <Ionicons name="trash-outline" size={18} color="#8F4A3B" />
+              <Text style={styles.deleteBtnText}>Delete account</Text>
+            </Pressable>
+            <Text style={styles.deleteHint}>This permanently deletes your account and all your data.</Text>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
       <Modal visible={passOpen} transparent animationType="fade" onRequestClose={() => setPassOpen(false)}>
         <View style={styles.pwRoot}>
           <Pressable style={styles.pwBackdrop} onPress={() => setPassOpen(false)} />
@@ -150,7 +141,6 @@ export default function PersonalInfo() {
     </SafeAreaView>
   );
 }
-
 function BackBar({ router }: { router: any }) {
   return (
     <Pressable style={styles.back} onPress={() => router.back()} hitSlop={12}>
@@ -159,7 +149,6 @@ function BackBar({ router }: { router: any }) {
     </Pressable>
   );
 }
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   back: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
@@ -183,8 +172,11 @@ const styles = StyleSheet.create({
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 15 },
   msg: { fontSize: 13, color: COLORS.accent, marginTop: 8 },
-  dangerWrap: { marginTop: 36, alignItems: 'center' },
-  dangerText: { fontSize: 14, color: '#8F4A3B' },
+  dangerSection: { marginTop: 40, borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 24 },
+  dangerLabel: { fontSize: 12, letterSpacing: 2, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 12 },
+  deleteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#8F4A3B', borderRadius: 999, paddingVertical: 15 },
+  deleteBtnText: { color: '#8F4A3B', fontSize: 15, letterSpacing: 0.3 },
+  deleteHint: { fontSize: 12, color: COLORS.muted, textAlign: 'center', marginTop: 10 },
   pwRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginTop: 28 },
   pwRowText: { fontSize: 15, color: COLORS.ink },
   pwRoot: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
@@ -193,5 +185,3 @@ const styles = StyleSheet.create({
   pwTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginBottom: 14 },
   pwCancel: { fontSize: 14, color: COLORS.muted, textAlign: 'center', marginTop: 14 },
 });
-
-

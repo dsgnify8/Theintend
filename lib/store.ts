@@ -68,6 +68,26 @@ function dayKey(t: number) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
+export async function clearAllUserData() {
+  savedIds = [];
+  likedIds = [];
+  progressMap = {};
+  lastReadId = null;
+  bookings = [];
+  reads = [];
+  worksheetsDone = [];
+  listens = [];
+  lastRead = null;
+  bookScroll = {};
+  journalDays = [];
+  try {
+    await AsyncStorage.multiRemove([
+      READS_KEY, WORK_KEY, LISTEN_KEY, LASTREAD_KEY, SCROLL_KEY, JOURNAL_KEY, SAVED_KEY, LIKED_KEY,
+    ]);
+  } catch {}
+  emit();
+}
+
 export function toggleSaved(id: string) {
   savedIds = savedIds.includes(id) ? savedIds.filter((x) => x !== id) : [...savedIds, id];
   AsyncStorage.setItem(SAVED_KEY, JSON.stringify(savedIds)).catch(() => {});
