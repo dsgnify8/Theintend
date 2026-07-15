@@ -1,6 +1,6 @@
-// Live articles from the Wix Blog, with an admin override layer stored in
-// Supabase. Overrides (edited title / category / body) are merged on top of the
-// Wix content for everyone.
+// Articles. Read order: the Supabase cache first (filled by the sync-articles
+// function), then live Wix, then a bundled sample. Reading the cache first means
+// a Wix outage no longer empties the Library. Admin overrides are merged on top.
 
 import { useEffect, useState } from 'react';
 import { type Article, type Block, type Run, FALLBACK_ARTICLES } from '@/constants/articles';
@@ -98,14 +98,59 @@ async function loadOverrides(): Promise<Record<string, any>> {
   }
 }
 
-async function loadArticles(): Promise<Article[]> {
-  const token = await getToken();
-  const cats = await fetchCategories(token);
-  const overrides = await loadOverrides();
-  const r = await fetch(`${BASE}/blog/v3/posts?paging.limit=100&fieldsets=RICH_CONTENT`, { headers: { Authorization: token } });
+function applyOverride(base: Article, ov: any): Article {
+  if (!ov) return base;
+  if (ov.title) base.title = ov.title;
+  if (ov.category) base.category = ov.category;
+  if (ov.image) base.image = ov.image;
+  if (ov.body && Array.isArray(ov.body) && ov.body.length) base.body = ov.body as Block[];
+  return base;
+}
+
+function rowToArticle(r: any): Article {
+  return {
+    id: r.post_id,
+    title: r.title ?? 'Untitled',
+    category: r.category ?? 'Article',
+    excerpt: r.excerpt ?? '',
+    image: r.image ?? null,
+    author: r.author ?? undefined,
+    readMinutes: r.read_minutes ?? 4,
+    body: Array.isArray(r.body) ? (r.body as Block[]) : [],
+  };
+}
+
+// The cached copy in Supabase, filled by the sync-articles function.
+async function loadFromCache(): Promise<Article[]> {
+  try {
+    const { data, error } = await supabase
+      .from('articles_cache')
+      .select('*')
+      .order('published_at', { ascending: false });
+    if (error || !data) return [];
+    return data.map(rowToArticle);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchPosts(token: string, rich: boolean, limit: number): Promise<any[]> {
+  const url = `${BASE}/blog/v3/posts?paging.limit=${limit}` + (rich ? '&fieldsets=RICH_CONTENT' : '');
+  const r = await fetch(url, { headers: { Authorization: token } });
   if (!r.ok) throw new Error(`posts ${r.status}`);
   const d = await r.json();
-  const posts: any[] = d.posts ?? [];
+  return d.posts ?? [];
+}
+
+async function loadFromWix(overrides: Record<string, any>): Promise<Article[]> {
+  const token = await getToken();
+  const cats = await fetchCategories(token);
+  let posts: any[] = [];
+  try {
+    posts = await fetchPosts(token, true, 30);
+  } catch {
+    posts = await fetchPosts(token, false, 30);
+  }
   const english = posts.filter((p) => !p.language || p.language === 'en');
   return english.map((p): Article => {
     const base: Article = {
@@ -118,15 +163,17 @@ async function loadArticles(): Promise<Article[]> {
       readMinutes: p.minutesToRead ?? 4,
       body: bodyOf(p),
     };
-    const ov = overrides[p.id];
-    if (ov) {
-      if (ov.title) base.title = ov.title;
-      if (ov.category) base.category = ov.category;
-      if (ov.image) base.image = ov.image;
-      if (ov.body && Array.isArray(ov.body) && ov.body.length) base.body = ov.body as Block[];
-    }
-    return base;
+    return applyOverride(base, overrides[p.id]);
   });
+}
+
+async function loadArticles(): Promise<Article[]> {
+  const overrides = await loadOverrides();
+  // 1) Supabase cache: fast, and it keeps working when Wix does not.
+  const cached = await loadFromCache();
+  if (cached.length) return cached.map((a) => applyOverride(a, overrides[a.id]));
+  // 2) Nothing cached yet, so go to Wix directly.
+  return loadFromWix(overrides);
 }
 
 let cache: Article[] | null = null;

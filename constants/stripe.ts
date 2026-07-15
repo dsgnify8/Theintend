@@ -3,4 +3,4 @@
 export const STRIPE_PUBLISHABLE_KEY = 'pk_live_51TUBWlF5uDJnD5GNuxa3qKDrRffP5pzV5OjLRINLsRbofPQ8egk8mV72pP8v4J3y6L8yoCVWapyqMWw1ZI2PZ40b00nWToHrMF';
 
 // Turn Tabby (pay in 4) on/off. Keep false until Tabby approves your live keys.
-export const TABBY_ENABLED = false;
+export const TABBY_ENABLED = true;
