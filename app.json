@@ -43,11 +43,13 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-solid.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#E4E2E3",
+          "resizeMode": "cover",
+          "backgroundColor": "#D9D1C4",
           "dark": {
-            "backgroundColor": "#E4E2E3"
-          }
+            "backgroundColor": "#D9D1C4"
+          },
+          "enableFullScreenImage_legacy": true,
+          "imageWidth": 1290
         }
       ],
       "expo-web-browser",

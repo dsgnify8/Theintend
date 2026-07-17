@@ -85,6 +85,17 @@ export default function BookScreen() {
     );
     return false;
   };
+
+  const askForPhone = (msg?: string) => {
+    Alert.alert(
+      'Add your number',
+      msg || 'Add your phone number in Personal information to pay with Tabby.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Add number', onPress: () => router.push('/personal-info') },
+      ]
+    );
+  };
   const { items: bookings } = useExpertBookings(String(id));
   const { user } = useAuth();
 
@@ -236,6 +247,7 @@ export default function BookScreen() {
     const res = await payWithTabby({ amount: priceToMajorString(svc.price), label: `${svc.name} with ${expert.name}` });
     setSaving(false);
     if (res.ok) { finalizeBooking(); }
+    else if (res.code === 'phone_required') { askForPhone(res.error); }
     else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
   };
 

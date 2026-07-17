@@ -16,12 +16,26 @@ export function tabbyInstallment(price: string): string {
   return Math.round(whole / 4).toLocaleString('en-US') + ' AED';
 }
 
-export async function payWithTabby(opts: { amount: string; label: string }): Promise<{ ok: boolean; error?: string }> {
+export async function payWithTabby(opts: { amount: string; label: string; category?: string }): Promise<{ ok: boolean; error?: string; code?: string }> {
   try {
     const create = await supabase.functions.invoke('tabby', {
-      body: { action: 'create', amount: opts.amount, currency: 'aed', label: opts.label },
+      body: { action: 'create', amount: opts.amount, currency: 'aed', label: opts.label, category: opts.category },
     });
-    if (create.error) return { ok: false, error: create.error.message };
+    if (create.error) {
+      // supabase-js reports any non-2xx with a generic message, so read the
+      // response body for the reason the function actually gave us.
+      let code: string | undefined;
+      let message: string | undefined;
+      try {
+        const ctx: any = (create.error as any).context;
+        if (ctx && typeof ctx.json === 'function') {
+          const b = await ctx.json();
+          code = b?.code;
+          message = b?.error;
+        }
+      } catch {}
+      return { ok: false, error: message ?? create.error.message, code };
+    }
     if (create.data?.rejected) return { ok: false, error: 'Tabby is not available for this purchase.' };
     const webUrl = create.data?.webUrl;
     const paymentId = create.data?.paymentId;

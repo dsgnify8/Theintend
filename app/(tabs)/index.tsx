@@ -39,7 +39,7 @@ function Face({ level, active, color }: { level: number; active: boolean; color:
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { session, profile } = useAuth();
+  const { session, profile, loading: authLoading } = useAuth();
   const loggedIn = !!session;
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : null;
   const todayMood = useTodayMood();
@@ -101,7 +101,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>
           {greeting()}{firstName ? `, ${firstName}` : ''}.
         </Text>
-        {!loggedIn ? (
+        {!loggedIn && !authLoading ? (
           <Pressable style={styles.signinPrompt} onPress={() => router.push('/login')}>
             <Text style={styles.signinPromptText}>Sign in or create an account to track your journey</Text>
             <Ionicons name="chevron-forward" size={16} color={COLORS.accent} />

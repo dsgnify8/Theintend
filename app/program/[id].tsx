@@ -45,6 +45,17 @@ export default function ProgramDetail() {
     setStep('done');
   };
 
+  const askForPhone = (msg?: string) => {
+    Alert.alert(
+      'Add your number',
+      msg || 'Add your phone number in Personal information to pay with Tabby.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Add number', onPress: () => router.push('/personal-info') },
+      ]
+    );
+  };
+
   const startPay = async () => {
     if (!user) { router.push('/login'); return; }
     const amount = priceToMinorUnits(item.price);
@@ -69,6 +80,8 @@ export default function ProgramDetail() {
     if (res.ok) {
       if (item.requiresForm) setStep('form');
       else finalize();
+    } else if (res.code === 'phone_required') {
+      askForPhone(res.error);
     } else if (res.error && res.error !== 'canceled') {
       Alert.alert('Tabby', res.error);
     }
