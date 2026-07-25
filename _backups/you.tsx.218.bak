@@ -1,0 +1,580 @@
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMoodInsight, pickArticleForMood } from '@/lib/mood';
+import { MOOD_RECO, MOODS } from '@/constants/mood';
+import { EXPERTS } from '@/constants/experts';
+import { SOUNDS } from '@/constants/sounds';
+import { LIBRARY } from '@/constants/library';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { useArticles } from '@/lib/articles';
+import { ACHIEVEMENTS } from '@/constants/achievements';
+import { useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone, useUpcomingBookings, type Booking } from '@/lib/store';
+import { useAllJournalEntries } from '@/lib/journal';
+import { useHydrateBookings } from '@/lib/bookings';
+import { useMyPackages } from '@/lib/packages';
+import { refreshProfile, signOut, updateProfile, useAuth } from '@/lib/auth';
+import { uploadAvatar } from '@/lib/upload';
+
+const VIEWS = ['Overview', 'Bookings', 'Saved'];
+const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const STREAK = 4;
+const RECORD = 5;
+const DEMO_STREAK = { streak: STREAK, record: RECORD, week: [true, true, true, true, false, false, false], todayIndex: 3 };
+const DEMO_STATS = { reads: '12', sessions: '3', journals: '8', worksheets: '5' };
+// Stepped opacities standing in for a gradient, lightest at the top.
+const FADE_BANDS = [0.015, 0.03, 0.05, 0.075, 0.105, 0.14, 0.18, 0.225, 0.27, 0.32];
+
+export default function YouScreen() {
+  const router = useRouter();
+  const { session, profile, role } = useAuth();
+  const [, setFocusTick] = useState(0);
+  useFocusEffect(useCallback(() => {
+    setFocusTick((t) => t + 1);
+    refreshProfile();
+  }, []));
+  const [view, setView] = useState('Overview');
+  const [likedCat, setLikedCat] = useState('All');
+  const [uploading, setUploading] = useState(false);
+  const savedIds = useSaved();
+  const likedIds = useLiked();
+  const reads = useReads();
+  const journalEntries = useAllJournalEntries();
+  const worksheetsDone = useWorksheetsDone();
+  const streakLive = useReadStreak();
+  const bookings = useBookings();
+  const upcoming = useUpcomingBookings();
+  useHydrateBookings();
+  const { articles } = useArticles();
+  const libRoute = (l: any) => (l.pdf || l.html ? `/ebook/${l.id}` : `/title/${l.id}`);
+  const saved = [
+    ...articles.filter((a) => savedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => savedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
+  ];
+  const liked = [
+    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, type: 'Articles', route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, type: 'E-books', route: libRoute(l) })),
+    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, type: 'Sounds', route: `/sound/${sd.id}` })),
+    ...EXPERTS.filter((e) => likedIds.includes(e.id)).map((e) => ({ id: e.id, title: e.name, category: 'Expert', type: 'Experts', route: `/expert/${e.id}` })),
+  ];
+  const LIKED_TYPES = ['Articles', 'Sounds', 'Experts', 'E-books'];
+  const likedCats = ['All', ...LIKED_TYPES.filter((t) => liked.some((it) => it.type === t))];
+  const effectiveLikedCat = likedCats.includes(likedCat) ? likedCat : 'All';
+  const shownLiked = effectiveLikedCat === 'All' ? liked : liked.filter((it) => it.type === effectiveLikedCat);
+
+  const loggedIn = !!session;
+  const demo = !loggedIn;
+  const streakInfo = demo ? DEMO_STREAK : streakLive;
+  const displayName = loggedIn ? (profile?.full_name || 'You') : 'Your name';
+  const initials = loggedIn && profile?.full_name ? profile.full_name.split(' ').map((p) => p[0]).slice(0, 2).join('') : '·';
+
+  const pickAndUpload = async () => {
+    if (!loggedIn) {
+      router.push('/login');
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.6, base64: true });
+    if (res.canceled || !res.assets?.[0]?.base64) return;
+    setUploading(true);
+    try {
+      const url = await uploadAvatar(session.user.id, res.assets[0].base64);
+      await updateProfile({ avatar_url: url });
+    } catch (e) {
+      console.warn('avatar upload failed', e);
+    }
+    setUploading(false);
+  };
+
+  const removePhoto = async () => {
+    await updateProfile({ avatar_url: null });
+  };
+
+  const photoOptions = () => {
+    if (!loggedIn) { router.push('/login'); return; }
+    if (profile?.avatar_url) {
+      Alert.alert('Profile photo', undefined, [
+        { text: 'Choose new photo', onPress: pickAndUpload },
+        { text: 'Remove photo', style: 'destructive', onPress: removePhoto },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    } else {
+      pickAndUpload();
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.topBar}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
+          {loggedIn ? (
+            <Pressable onPress={async () => { await signOut(); router.replace('/login'); }} hitSlop={10}>
+              <Ionicons name="log-out-outline" size={23} color={COLORS.ink} />
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={[styles.content, demo && { paddingBottom: 260 }]} showsVerticalScrollIndicator={false}>
+        <View style={styles.profile}>
+          <View style={styles.avatarWrap}>
+            <View style={styles.avatar}>
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} resizeMode="cover" />
+              ) : (
+                <Text style={styles.avatarText}>{initials}</Text>
+              )}
+              {uploading ? (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator color={COLORS.bg} />
+                </View>
+              ) : null}
+            </View>
+            <Pressable style={styles.cameraBadge} onPress={photoOptions} hitSlop={8}>
+              <Ionicons name="camera" size={13} color={COLORS.bg} />
+            </Pressable>
+          </View>
+          <Text style={styles.name}>{displayName}</Text>
+          {loggedIn ? (
+            <>
+              <Text style={styles.handle}>{profile?.email || 'Your space at The Intend'}</Text>
+              {role !== 'user' ? (
+                <View style={styles.roleBadge}>
+                  <Text style={styles.roleText}>{role.toUpperCase()}</Text>
+                </View>
+              ) : null}
+            </>
+          ) : null}
+        </View>
+
+        {role === 'admin' ? (
+          <Pressable style={styles.panelLink} onPress={() => router.push('/admin')} hitSlop={8}>
+            <Text style={styles.panelLinkText}>Admin panel {'\u203A'}</Text>
+          </Pressable>
+        ) : role === 'expert' ? (
+          <Pressable style={styles.panelLink} onPress={() => router.push('/expert-panel')} hitSlop={8}>
+            <Text style={styles.panelLinkText}>Expert panel {'\u203A'}</Text>
+          </Pressable>
+        ) : null}
+
+        <View style={styles.segment}>
+          {VIEWS.map((v) => {
+            const on = v === view;
+            return (
+              <Pressable key={v} onPress={() => setView(v)} style={[styles.segItem, on && styles.segItemOn]}>
+                <Text style={[styles.segText, on && styles.segTextOn]}>{v}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {view === 'Overview' ? (
+          <View>
+            <MoodInsightCard />
+            <Pressable style={styles.aiCard} onPress={() => router.push(loggedIn ? '/your-ai' : '/login')}>
+              <View style={styles.aiIcon}>
+                <Ionicons name="sparkles" size={19} color={COLORS.bg} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.aiTitle}>Your AI</Text>
+                <Text style={styles.aiSub}>Think out loud. See what is really going on.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
+            </Pressable>
+            <View style={styles.streakCard}>
+              <View style={styles.ringWrap}>
+                <View style={styles.ringOuter}>
+                  <View style={styles.ringInner}>
+                    <Text style={styles.ringNum}>{streakInfo.streak}</Text>
+                    <Text style={styles.ringUnit}>DAYS</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.streakHeadline}>You{'\u2019'}re on a {streakInfo.streak}-day streak</Text>
+              <Text style={styles.streakSubline}>Keep it going{'\u2009\u00B7\u2009'}Your record is {streakInfo.record} days</Text>
+              <View style={styles.weekRow}>
+                {WEEK.map((d, i) => {
+                  const on = streakInfo.week[i];
+                  const today = i === streakInfo.todayIndex;
+                  return (
+                    <View key={i} style={styles.dayCol}>
+                      <View style={[styles.dayCircle, on && styles.dayCircleOn, today && styles.dayCircleToday]}>
+                        {on ? (
+                          <Text style={styles.dayCheck}>{'\u2713'}</Text>
+                        ) : (
+                          <Text style={[styles.dayLetter, today && styles.dayLetterToday]}>{d}</Text>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.statGrid}>
+              <Stat label="Articles read" value={demo ? DEMO_STATS.reads : String(reads.length)} />
+              <Stat label="Sessions" value={demo ? DEMO_STATS.sessions : String(bookings.length)} />
+              <Stat label="Journals" value={demo ? DEMO_STATS.journals : String(journalEntries.length)} />
+              <Stat label="Worksheets" value={demo ? DEMO_STATS.worksheets : String(worksheetsDone.length)} />
+            </View>
+            {demo ? (
+              <Text style={styles.sampleNote}>A preview. Your own numbers appear once you sign in.</Text>
+            ) : (
+              <Text style={styles.sampleNote}>Saved, likes and sessions are live. The rest fills in once tracking is connected.</Text>
+            )}
+
+            <Pressable style={styles.progressCard} onPress={() => router.push('/progress')}>
+              <View style={styles.progressIcon}>
+                <Ionicons name="trending-up" size={20} color={COLORS.bg} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.progressTitle}>Progress & achievements</Text>
+                <Text style={styles.progressSub}>Your journey so far</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+            </Pressable>
+
+            <View style={styles.accountWrap}>
+              {loggedIn ? <Row label="Personal information" onPress={() => router.push('/personal-info')} /> : null}
+              <Row label="Help & support" onPress={() => router.push('/help-support')} />
+              {loggedIn ? (
+                <Row label="Sign out" onPress={async () => { await signOut(); router.replace('/login'); }} />
+              ) : (
+                <Row label="Sign in" onPress={() => router.push('/login')} />
+              )}
+            </View>
+          </View>
+        ) : null}
+
+        {view === 'Saved' ? (
+          <View>
+            <Text style={styles.sectionTitle}>Saved reads</Text>
+            {saved.length === 0 ? (
+              <Empty text="Nothing saved yet. Tap the bookmark on any article or e-book to keep it here." />
+            ) : (
+              saved.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)
+            )}
+
+            <Text style={[styles.sectionTitle, { marginTop: 26 }]}>Liked</Text>
+            {liked.length === 0 ? (
+              <Empty text="Nothing liked yet. Tap the heart on any article, sound, e-book, or expert." />
+            ) : (
+              <>
+                {likedCats.length > 2 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.likedTabs}>
+                    {likedCats.map((c) => {
+                      const on = effectiveLikedCat === c;
+                      return (
+                        <Pressable key={c} onPress={() => setLikedCat(c)} style={[styles.likedTab, on && styles.likedTabOn]}>
+                          <Text style={[styles.likedTabText, on && styles.likedTabTextOn]}>{c}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                ) : null}
+                {shownLiked.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)}
+              </>
+            )}
+          </View>
+        ) : null}
+
+        {view === 'Bookings' ? (
+          <View>
+            <PackagesBlock />
+            <Text style={styles.sectionTitle}>Upcoming sessions</Text>
+            {upcoming.length === 0 ? (
+              <Empty text="No upcoming sessions yet." />
+            ) : (
+              upcoming.map((b) => <BookingRow key={`${b.refId}-${b.when}`} b={b} onPress={() => router.push({ pathname: '/booking-info', params: { title: b.title, when: b.when, expert: b.expert ?? '', link: b.link ?? '' } })} />)
+            )}
+            <Pressable style={styles.cta} onPress={() => router.navigate('/sessions')}>
+              <Text style={styles.ctaText}>Browse sessions</Text>
+            </Pressable>
+
+            <Text style={[styles.sectionTitle, { marginTop: 26 }]}>Past sessions</Text>
+            <Empty text="Your completed sessions will appear here." />
+          </View>
+        ) : null}
+      </ScrollView>
+      {!loggedIn ? (
+        <View style={styles.lockOverlay} pointerEvents="box-none">
+          <View style={styles.lockFade} pointerEvents="none">
+            {FADE_BANDS.map((o, i) => (
+              <View key={i} style={[styles.lockFadeBand, { opacity: o }]} />
+            ))}
+          </View>
+          <View style={styles.lockCard}>
+            <Text style={styles.lockTitle}>Your profile</Text>
+            <Text style={styles.lockText}>Sign in or create an account to view your profile, see your bookings and track your progress.</Text>
+            <Pressable style={styles.lockBtn} onPress={() => router.push('/login')}>
+              <Text style={styles.lockBtnText}>Sign in or create account</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+    </SafeAreaView>
+  );
+}
+
+function PackagesBlock() {
+  const router = useRouter();
+  const { items } = useMyPackages();
+  const active = items.filter((p) => p.total - p.used > 0);
+  if (active.length === 0) return null;
+  return (
+    <View style={{ marginBottom: 26 }}>
+      <Text style={styles.sectionTitle}>Your packages</Text>
+      {active.map((p) => {
+        const remaining = Math.max(p.total - p.used, 0);
+        return (
+          <View key={p.id} style={styles.pkgCard}>
+            <Text style={styles.pkgTitle}>{p.title}</Text>
+            <View style={styles.pkgDots}>
+              {Array.from({ length: p.total }).map((_, i) => (
+                <View key={i} style={[styles.pkgDot, i < p.used ? styles.pkgDotUsed : styles.pkgDotOpen]} />
+              ))}
+            </View>
+            <Text style={styles.pkgCount}>{remaining} of {p.total} sessions remaining</Text>
+            <Pressable style={styles.pkgBtn} onPress={() => router.push(`/book/${p.expert_id}?service=${p.service_id}&pkg=${p.id}`)}>
+              <Text style={styles.pkgBtnText}>Book next session</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.statCard}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function SavedRow({ a, onPress }: { a: { id: string; title: string; category: string }; onPress: () => void }) {
+  return (
+    <Pressable style={styles.savedRow} onPress={onPress}>
+      <Text style={styles.savedCat}>{a.category.toUpperCase()}</Text>
+      <Text style={styles.savedTitle}>{a.title}</Text>
+    </Pressable>
+  );
+}
+
+function MoodInsightCard() {
+  const router = useRouter();
+  const { ready, level, keyword, recoKind } = useMoodInsight(3, 14);
+  const { articles } = useArticles();
+  if (!ready || !level) return null;
+  const r = MOOD_RECO[level];
+  if (!r) return null;
+  const moodLabel = (keyword ?? level).toLowerCase();
+
+  let reco: { lead: string; title: string; subtitle: string; onPress: () => void } | null = null;
+  if (recoKind === 'expert') {
+    const e = EXPERTS.find((x) => x.id === r.expertId);
+    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+  } else if (recoKind === 'sound') {
+    const sd = SOUNDS.find((x) => x.id === r.soundId);
+    if (sd) reco = { lead: 'A sound to settle into', title: sd.title, subtitle: sd.purpose, onPress: () => router.push(`/sound/${sd.id}`) };
+  } else {
+    const a = pickArticleForMood(level, articles);
+    if (a) reco = { lead: 'A read that might land', title: a.title, subtitle: `${a.readMinutes ?? 5} min read`, onPress: () => router.push(`/article/${a.id}`) };
+  }
+  if (!reco) {
+    const e = EXPERTS.find((x) => x.id === r.expertId);
+    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+  }
+
+  return (
+    <View style={styles.insightCard}>
+      <Text style={styles.insightEyebrow}>A GENTLE NOTE</Text>
+      <Text style={styles.insightText}>We{'\u2019'}ve noticed you{'\u2019'}ve been feeling {moodLabel} lately.</Text>
+      {reco ? (
+        <Pressable style={styles.insightReco} onPress={reco.onPress}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.insightRecoLead}>{reco.lead}</Text>
+            <Text style={styles.insightRecoTitle} numberOfLines={2}>{reco.title}</Text>
+            <Text style={styles.insightRecoSub} numberOfLines={1}>{reco.subtitle}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
+  return (
+    <Pressable style={styles.bookingRow} onPress={onPress}>
+      <View style={styles.bookingIcon}>
+        <Ionicons name="videocam" size={16} color={COLORS.bg} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.bookingTitle}>{b.title}</Text>
+        <Text style={styles.bookingMeta}>{b.when}</Text>
+        <Text style={styles.bookingMeta}>with {b.expert}</Text>
+        {b.link ? (
+          /^https?:\/\//i.test(b.link) ? (
+            <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6} style={{ marginTop: 6 }}>
+              <Text style={styles.bookingLink}>Open join link</Text>
+            </Pressable>
+          ) : (
+            <Text style={[styles.bookingMeta, { marginTop: 6 }]}>Location: {b.link}</Text>
+          )
+        ) : null}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+    </Pressable>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return (
+    <View style={styles.empty}>
+      <Text style={styles.emptyText}>{text}</Text>
+    </View>
+  );
+}
+
+function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
+  return (
+    <Pressable style={styles.row} onPress={onPress}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      {value ? <Text style={styles.rowValue}>{value}</Text> : <Text style={styles.rowChevron}>{'\u203A'}</Text>}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  lockOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingBottom: 20 },
+  lockFade: { position: 'absolute', left: 0, right: 0, bottom: 0, top: -170 },
+  lockFadeBand: { flex: 1, backgroundColor: COLORS.ink },
+  lockCard: { width: '100%', backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 24, paddingHorizontal: 22, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 28, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
+  lockTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginBottom: 8 },
+  lockText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, textAlign: 'center', marginBottom: 18 },
+  lockBtn: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
+  lockBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
+  safe: { flex: 1, backgroundColor: COLORS.bg },
+  aiCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.ink, borderRadius: 20, paddingVertical: 18, paddingHorizontal: 18, marginBottom: 16 },
+  aiIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(247,242,234,0.14)', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  aiTitle: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.bg },
+  aiSub: { fontSize: 13, lineHeight: 18, color: COLORS.bg, opacity: 0.72, marginTop: 3 },
+  insightCard: { backgroundColor: COLORS.accentSoft, borderRadius: 20, padding: 18, marginBottom: 16 },
+  insightEyebrow: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },
+  insightText: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 26, color: COLORS.ink, marginBottom: 14 },
+  insightReco: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14 },
+  insightRecoLead: { fontSize: 11, letterSpacing: 0.5, color: COLORS.muted, marginBottom: 4 },
+  insightRecoTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  insightRecoSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
+  topTitle: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
+  bellDot: { position: 'absolute', top: 0, right: 0, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.accent },
+  content: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 48 },
+  profile: { alignItems: 'center', paddingVertical: 12 },
+  avatarWrap: { marginBottom: 14 },
+  avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImg: { width: '100%', height: '100%' },
+  avatarText: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.accent },
+  uploadOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
+  cameraBadge: { position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.bg },
+  name: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
+  handle: { fontSize: 14, color: COLORS.muted, marginTop: 4, textAlign: 'center' },
+  roleBadge: { marginTop: 10, backgroundColor: COLORS.ink, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
+  roleText: { fontSize: 11, letterSpacing: 1.5, color: COLORS.bg },
+  signInBtn: { marginTop: 14, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 999, backgroundColor: COLORS.accent },
+  signInText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
+  segment: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginTop: 8, marginBottom: 22 },
+  panelLink: { alignSelf: 'center', paddingVertical: 8, marginBottom: 8 },
+  panelLinkText: { color: COLORS.accent, fontSize: 14, letterSpacing: 0.3 },
+  segItem: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
+  segItemOn: { backgroundColor: COLORS.ink },
+  segText: { fontSize: 14, color: COLORS.ink },
+  segTextOn: { color: COLORS.bg },
+  streakCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 16 },
+  streakTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
+  streakBadge: { width: 54, height: 54, borderRadius: 16, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  streakNum: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.bg },
+  streakLabel: { fontSize: 13, letterSpacing: 1.5, color: COLORS.muted },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  ringWrap: { alignItems: 'center', marginBottom: 16 },
+  ringOuter: { width: 156, height: 156, borderRadius: 78, borderWidth: 12, borderColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  ringInner: { width: 112, height: 112, borderRadius: 56, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
+  ringNum: { fontFamily: FONT_SERIF, fontSize: 50, lineHeight: 54, color: COLORS.bg },
+  ringUnit: { fontSize: 11, letterSpacing: 3, color: COLORS.bg, opacity: 0.85, marginTop: 2 },
+  streakHeadline: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, textAlign: 'center' },
+  streakSubline: { fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, marginBottom: 20 },
+  dayCol: { alignItems: 'center', flex: 1 },
+  dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: COLORS.line, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
+  dayCircleOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  dayCircleToday: { borderColor: COLORS.accent, borderWidth: 2 },
+  dayCheck: { color: COLORS.bg, fontSize: 15 },
+  dayLetter: { fontSize: 13, color: COLORS.muted },
+  dayLetterToday: { color: COLORS.accent, fontWeight: '600' },
+  dot: { width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  dotOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
+  dotText: { fontSize: 13, color: COLORS.muted },
+  dotTextOn: { color: COLORS.bg },
+  statGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  statCard: { width: '48%', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 12, alignItems: 'center' },
+  statValue: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink },
+  statLabel: { fontSize: 12, letterSpacing: 0.5, color: COLORS.muted, marginTop: 6, textAlign: 'center' },
+  sampleNote: { fontSize: 12, color: COLORS.muted, marginTop: 2, marginBottom: 22 },
+  progressCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 28 },
+  progressIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  progressTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  progressSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
+  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink },
+  seeAll: { fontSize: 14, color: COLORS.accent },
+  badgeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 28 },
+  badgeMini: { alignItems: 'center' },
+  badgeCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  badgeLocked: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.line },
+  accountWrap: { marginTop: 4 },
+  savedRow: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 10 },
+  savedCat: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 6 },
+  savedTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 22, color: COLORS.ink },
+  bookingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 10 },
+  bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  bookingLink: { fontSize: 13, color: COLORS.accent },
+  empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginTop: 10 },
+  emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
+  pkgCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginTop: 10 },
+  pkgTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  pkgDots: { flexDirection: 'row', gap: 6, marginTop: 14 },
+  pkgDot: { flex: 1, height: 7, borderRadius: 4 },
+  pkgDotUsed: { backgroundColor: COLORS.line },
+  pkgDotOpen: { backgroundColor: COLORS.accent },
+  pkgCount: { fontSize: 13, color: COLORS.ink, marginTop: 10 },
+  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  pkgBtnText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
+  cta: { marginTop: 12, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.accent },
+  ctaText: { color: COLORS.bg, fontSize: 14 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 8 },
+  rowLabel: { fontSize: 15, color: COLORS.ink },
+  rowValue: { fontSize: 14, color: COLORS.muted },
+  rowChevron: { fontSize: 18, color: COLORS.muted },
+  modalRoot: { flex: 1, justifyContent: 'flex-end' },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
+  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 36, maxHeight: '85%' },
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
+  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 16 },
+  notifRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line },
+  notifIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  notifTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  notifBody: { fontSize: 13, lineHeight: 19, color: COLORS.muted, marginTop: 3 },
+  notifTime: { fontSize: 12, color: COLORS.muted, marginLeft: 8 },
+  likedTabs: { gap: 8, paddingBottom: 14, paddingRight: 8 },
+  likedTab: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
+  likedTabOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  likedTabText: { fontSize: 13, color: COLORS.muted },
+  likedTabTextOn: { color: COLORS.bg },
+});

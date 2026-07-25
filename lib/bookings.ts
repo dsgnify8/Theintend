@@ -17,6 +17,8 @@ export type DBBooking = {
   booker_name: string | null;
   booker_email: string | null;
   link?: string | null;
+  package_id?: string | null;
+  session_no?: number | null;
   created_at: string;
 };
 
@@ -37,6 +39,8 @@ export async function createBooking(input: {
   when: string;
   expert?: string;
   expertId?: string | null;
+  packageId?: string | null;
+  sessionNo?: number | null;
 }) {
   // Instant local mirror for class/program (so You updates immediately, even signed out).
   addBooking({
@@ -67,6 +71,8 @@ export async function createBooking(input: {
       when_text: input.when,
       booker_name: name,
       booker_email: email,
+      package_id: input.packageId ?? null,
+      session_no: input.sessionNo ?? null,
     });
     try {
       const t = parseWhen(input.when);

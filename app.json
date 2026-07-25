@@ -42,14 +42,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-solid.png",
-          "resizeMode": "cover",
-          "backgroundColor": "#D9D1C4",
+          "image": "./assets/images/splash-logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F4EFEF",
           "dark": {
-            "backgroundColor": "#D9D1C4"
+            "backgroundColor": "#F4EFEF"
           },
-          "enableFullScreenImage_legacy": true,
-          "imageWidth": 1290
+          "imageWidth": 200
         }
       ],
       "expo-web-browser",

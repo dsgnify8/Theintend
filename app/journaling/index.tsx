@@ -26,14 +26,27 @@ export default function JournalHub() {
         <Text style={styles.lede}>Write freely. Everything you write is saved as you go, and each page you keep is dated so you can return to it.</Text>
 
         <View style={styles.dailyRow}>
-          {daily.map((c) => (
-            <Pressable key={c.id} style={styles.dailyCard} onPress={() => router.push(`/journaling/${c.id}`)}>
-              <Ionicons name={c.id === 'morning' ? 'sunny-outline' : 'moon-outline'} size={22} color={COLORS.accent} />
-              <Text style={styles.dailyTitle}>{c.id === 'morning' ? 'Morning' : 'Night'}</Text>
-              <Text style={styles.dailyMeta}>{c.prompts.length} prompts</Text>
-              {counts[c.id] ? <Text style={styles.dailyCount}>{counts[c.id]} saved</Text> : null}
-            </Pressable>
-          ))}
+          {daily.map((c) => {
+            const night = c.id === 'night';
+            return (
+              <Pressable
+                key={c.id}
+                style={[styles.dailyCard, night && styles.dailyCardNight]}
+                onPress={() => router.push(`/journaling/${c.id}`)}
+              >
+                <Ionicons
+                  name={night ? 'moon' : 'sunny-outline'}
+                  size={22}
+                  color={night ? '#E8C97D' : COLORS.accent}
+                />
+                <Text style={[styles.dailyTitle, night && styles.dailyTitleNight]}>{night ? 'Night' : 'Morning'}</Text>
+                <Text style={[styles.dailyMeta, night && styles.dailyMetaNight]}>{c.prompts.length} prompts</Text>
+                {counts[c.id] ? (
+                  <Text style={[styles.dailyCount, night && styles.dailyCountNight]}>{counts[c.id]} saved</Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
         </View>
 
         <Text style={styles.sectionLabel}>Explore by theme</Text>
@@ -73,7 +86,11 @@ const styles = StyleSheet.create({
   h1: { fontFamily: FONT_SERIF, fontSize: 28, lineHeight: 34, color: COLORS.ink },
   lede: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: 10, marginBottom: 22 },
   dailyRow: { flexDirection: 'row', gap: 12, marginBottom: 28 },
-  dailyCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
+  dailyCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.55)', borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 18, shadowColor: '#2B2622', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
+  dailyCardNight: { backgroundColor: '#2B2622', borderColor: '#2B2622' },
+  dailyTitleNight: { color: '#F4EFE9' },
+  dailyMetaNight: { color: 'rgba(244,239,233,0.6)' },
+  dailyCountNight: { color: '#E8C97D' },
   dailyTitle: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginTop: 12 },
   dailyMeta: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
   dailyCount: { fontSize: 12, color: COLORS.accent, marginTop: 4 },

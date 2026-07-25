@@ -1,206 +1,221 @@
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { type Article } from '@/constants/articles';
 import { useArticles } from '@/lib/articles';
 import { LIBRARY, type LibraryItem } from '@/constants/library';
+import { SOUNDS, type Sound } from '@/constants/sounds';
 import { WORKSHEETS } from '@/constants/worksheets';
 import { useDraft } from '@/lib/worksheets';
+import { useAuth } from '@/lib/auth';
+import { useAppImages, uploadAppImage } from '@/lib/appImages';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
-const FORMATS = ['Articles', 'E-books', 'Workbooks'];
-const TYPE_FOR: Record<string, string> = { 'E-books': 'E-book', 'Books': 'Book' };
+type Practice = { key: string; label: string; line: string; icon: any; color: string; route: string };
 
-const CAT_COLOR: Record<string, string> = {
-  Wellbeing: '#5C6B73',
-  'Mental Health': '#5C6B73',
-  Healing: '#6F7A6B',
-  Wealth: '#7C6F62',
-  Breathwork: '#5C4632',
-};
-const colorFor = (c: string) => CAT_COLOR[c] ?? '#7C6F62';
+const PRACTICES: Practice[] = [
+  { key: 'practice:sounds', label: 'Sounds', line: 'Settle and rest', icon: 'musical-notes-outline', color: '#5A5B7A', route: '/sounds' },
+  { key: 'practice:breathwork', label: 'Breathwork', line: 'Regulate the body', icon: 'leaf-outline', color: '#6F7A6B', route: '/breathwork' },
+  { key: 'practice:journaling', label: 'Journaling', line: 'Think on paper', icon: 'create-outline', color: '#7C6F62', route: '/journaling' },
+  { key: 'practice:affirmations', label: 'Affirmations', line: 'I am', icon: 'sparkles-outline', color: '#9A7B4F', route: '/affirmations' },
+];
+
+const TINT = '#F1E9DE';
+
+// Admin only: pick a photo and store it against this key.
+async function pickAndSave(key: string, onBusy: (b: boolean) => void) {
+  const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.7, base64: true });
+  if (res.canceled || !res.assets?.[0]?.base64) return;
+  onBusy(true);
+  try {
+    await uploadAppImage(key, res.assets[0].base64);
+  } catch (e: any) {
+    Alert.alert('Upload failed', e?.message ?? 'Could not save that image.');
+  }
+  onBusy(false);
+}
 
 export default function LibraryScreen() {
   const router = useRouter();
-  const [format, setFormat] = useState('Articles');
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showBar, setShowBar] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [cat, setCat] = useState<string | null>(null);
-  const { loading, articles, error } = useArticles();
-  const items = LIBRARY.filter((i) => i.type === TYPE_FOR[format]);
+  const { loading, articles } = useArticles();
+  const { role } = useAuth();
+  const images = useAppImages();
+  const isAdmin = role === 'admin';
+  const lead = articles[0];
 
-  const cats = useMemo(
-    () => Array.from(new Set(articles.map((a) => a.category).filter(Boolean))),
-    [articles]
-  );
-  const visible = cat ? articles.filter((a) => a.category === cat) : articles;
-
-  const go = (path: string) => {
-    setMenuOpen(false);
-    router.push(path);
-  };
-
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setShowBar(e.nativeEvent.contentOffset.y > 60);
-  };
+  const ebooks = LIBRARY.filter((i) => i.type === 'E-book');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={16}>
-        <Text style={styles.kicker}>THE INTEND</Text>
-        <View style={styles.titleRow}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.band, styles.masthead]}>
+          <Text style={styles.kicker}>THE INTEND</Text>
           <Text style={styles.h1}>Library</Text>
-          <Pressable style={styles.menuBtn} onPress={() => setMenuOpen(true)} hitSlop={10}>
-            <Ionicons name="menu" size={24} color={COLORS.ink} />
+          <View style={styles.titleRule} />
+          <Text style={styles.sub}>Everything here is yours to use at your own pace.</Text>
+        </View>
+
+        <View style={[styles.band, styles.bandTint]}>
+          <Text style={styles.sectionLabel}>PRACTICES</Text>
+          {isAdmin ? <Text style={styles.adminHint}>Hold a tile to change its image</Text> : null}
+          <View style={styles.grid}>
+            {PRACTICES.map((p) => (
+              <PracticeTile key={p.key} practice={p} uri={images[p.key]} isAdmin={isAdmin} />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.band}>
+          <Text style={styles.sectionLabel}>READ</Text>
+          <Pressable style={styles.feature} onPress={() => router.push('/articles')}>
+            {lead?.image ? (
+              <ImageBackground source={{ uri: lead.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.accent }]} />
+            )}
+            <LinearGradient
+              colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.88)']}
+              locations={[0, 0.45, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.featureBody}>
+              <Text style={styles.featureEyebrow}>ARTICLES</Text>
+              <Text style={styles.featureTitle}>
+                The <Text style={styles.featureTitleAccent}>reading</Text> room
+              </Text>
+              <Text style={styles.featureLine}>
+                {loading ? 'Essays and guides from our experts.' : `${articles.length} pieces on healing, patterns, money and the body.`}
+              </Text>
+              <View style={styles.featureCta}>
+                <Text style={styles.featureCtaText}>Enter</Text>
+                <Ionicons name="arrow-forward" size={15} color={COLORS.ink} />
+              </View>
+            </View>
           </Pressable>
         </View>
-        <Text style={styles.sub}>Read and listen at your own pace.</Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          {FORMATS.map((f) => {
-            const on = f === format;
-            return (
-              <Pressable key={f} onPress={() => setFormat(f)} style={[styles.chip, on && styles.chipOn]}>
-                <Text style={[styles.chipText, on && styles.chipTextOn]}>{f}</Text>
+        {ebooks.length ? (
+          <View style={[styles.band, styles.bandTint]}>
+            <Text style={styles.shelfTitle}>E-books</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
+              {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
+            </ScrollView>
+          </View>
+        ) : null}
+
+        {SOUNDS.length ? (
+          <View style={styles.band}>
+            <View style={styles.shelfHead}>
+              <Text style={styles.shelfTitle}>Sounds & Frequencies</Text>
+              <Pressable onPress={() => router.push('/sounds')} hitSlop={8}>
+                <Text style={styles.seeAll}>See all {'\u203A'}</Text>
               </Pressable>
-            );
-          })}
-        </ScrollView>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
+              {SOUNDS.map((sd) => <SoundCard key={sd.id} sound={sd} uri={images[`sound:${sd.id}`]} isAdmin={isAdmin} />)}
+            </ScrollView>
+          </View>
+        ) : null}
 
-        {format === 'Articles' ? (
-          loading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator color={COLORS.accent} />
-              <Text style={styles.loaderText}>Loading your articles…</Text>
-            </View>
-          ) : (
-            <View>
-              {error ? (
-                <Text style={styles.errNote}>Couldn't reach the blog ({error}). Showing a sample for now.</Text>
-              ) : null}
-              {visible.map((a) => (
-                <ArticleCover key={a.id} article={a} />
-              ))}
-            </View>
-          )
-        ) : format === 'Workbooks' ? (
-          <View style={{ marginTop: 8 }}>
-            {WORKSHEETS.map((w) => (
-              <WorkbookCard key={w.id} item={w} />
-            ))}
+        <View style={[styles.band, styles.bandTint]}>
+          <Text style={styles.shelfTitle}>Workbooks</Text>
+          <View style={{ marginTop: 4 }}>
+            {WORKSHEETS.map((w) => <WorkbookCard key={w.id} item={w} />)}
           </View>
-        ) : (
-          <View>
-            <Text style={styles.shelfTitle}>Top reads</Text>
-            <View style={styles.grid}>
-              {items.map((i) => (
-                <TitleCard key={i.id} item={i} />
-              ))}
-            </View>
-          </View>
-        )}
+        </View>
       </ScrollView>
-
-      {format === 'Articles' && showBar ? (
-        <View style={styles.barWrap} pointerEvents="box-none">
-          <Pressable onPress={() => setFilterOpen(true)}>
-            <BlurView intensity={32} tint="light" style={styles.bar}>
-              <Ionicons name="options-outline" size={17} color={COLORS.ink} />
-              <Text style={styles.barText}>{cat ?? 'All categories'}</Text>
-              <Ionicons name="chevron-up" size={16} color={COLORS.muted} />
-            </BlurView>
-          </Pressable>
-        </View>
-      ) : null}
-
-      <Modal visible={filterOpen} transparent animationType="slide" onRequestClose={() => setFilterOpen(false)}>
-        <View style={styles.modalRoot}>
-          <Pressable style={styles.backdrop} onPress={() => setFilterOpen(false)} />
-          <View style={styles.sheet}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Filter by category</Text>
-            <CatRow label="All categories" active={cat === null} onPress={() => { setCat(null); setFilterOpen(false); }} />
-            {cats.map((c) => (
-              <CatRow key={c} label={c} active={cat === c} onPress={() => { setCat(c); setFilterOpen(false); }} />
-            ))}
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
-        <Pressable style={styles.menuBackdrop} onPress={() => setMenuOpen(false)} />
-        <View style={styles.menuCard}>
-          <MenuRow icon="musical-notes-outline" label="Sounds" onPress={() => go('/sounds')} />
-          <MenuRow icon="leaf-outline" label="Breathwork" onPress={() => go('/breathwork')} />
-          <MenuRow icon="create-outline" label="Journaling" onPress={() => go('/journaling')} />
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
 
-function CatRow({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable style={styles.catRow} onPress={onPress}>
-      <Text style={[styles.catLabel, active && styles.catLabelActive]}>{label}</Text>
-      {active ? <Ionicons name="checkmark" size={18} color={COLORS.accent} /> : null}
-    </Pressable>
-  );
-}
-
-function MenuRow({ icon, label, tag, onPress }: { icon: any; label: string; tag?: string; onPress: () => void }) {
-  return (
-    <Pressable style={styles.menuRow} onPress={onPress}>
-      <Ionicons name={icon} size={18} color={COLORS.ink} />
-      <Text style={styles.menuLabel}>{label}</Text>
-      {tag ? <Text style={styles.menuTag}>{tag}</Text> : null}
-    </Pressable>
-  );
-}
-
-function ArticleCover({ article }: { article: Article }) {
+function PracticeTile({ practice, uri, isAdmin }: { practice: Practice; uri?: string; isAdmin: boolean }) {
   const router = useRouter();
-  const img = article.image;
+  const [busy, setBusy] = useState(false);
   return (
-    <Pressable style={styles.cover} onPress={() => router.push(`/article/${article.id}`)}>
-      {img ? (
-        <ImageBackground source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-      ) : (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: colorFor(article.category) }]} />
-      )}
-      <LinearGradient
-        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.86)']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={styles.coverContent}>
-        <Text style={styles.coverCat}>{article.category.toUpperCase()}</Text>
-        <Text style={styles.coverTitle}>{article.title}</Text>
-        <Text style={styles.coverMeta}>{article.readMinutes} min read</Text>
-      </View>
+    <Pressable
+      style={[styles.tile, !uri && { backgroundColor: practice.color }]}
+      onPress={() => router.push(practice.route as any)}
+      onLongPress={isAdmin ? () => pickAndSave(practice.key, setBusy) : undefined}
+      delayLongPress={450}
+    >
+      {uri ? (
+        <>
+          <ImageBackground source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.2)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.78)']}
+            locations={[0, 0.5, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+        </>
+      ) : null}
+      <Ionicons name={practice.icon} size={22} color={COLORS.bg} />
+      <View style={{ flex: 1 }} />
+      <Text style={styles.tileLabel}>{practice.label}</Text>
+      <Text style={styles.tileLine}>{practice.line}</Text>
+      {busy ? (
+        <View style={styles.tileBusy}><ActivityIndicator color={COLORS.bg} /></View>
+      ) : null}
     </Pressable>
   );
 }
 
-function TitleCard({ item }: { item: LibraryItem }) {
+function TitleCard({ item, uri, isAdmin }: { item: LibraryItem; uri?: string; isAdmin: boolean }) {
   const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const open = () => router.push(item.pdf || item.html ? `/ebook/${item.id}` : `/title/${item.id}`);
   return (
-    <Pressable style={styles.cardWrap} onPress={() => router.push(item.pdf || item.html ? `/ebook/${item.id}` : `/title/${item.id}`)}>
-      {item.cover ? (
-        <Image source={item.cover} style={styles.bookCoverImg} resizeMode="cover" />
+    <Pressable
+      style={styles.shelfCard}
+      onPress={open}
+      onLongPress={isAdmin ? () => pickAndSave(`library:${item.id}`, setBusy) : undefined}
+      delayLongPress={450}
+    >
+      {uri ? (
+        <Image source={{ uri }} style={styles.shelfCover} resizeMode="cover" />
+      ) : item.cover ? (
+        <Image source={item.cover} style={styles.shelfCover} resizeMode="cover" />
       ) : (
-        <View style={[styles.bookCover, { backgroundColor: item.color }]}>
-          <Ionicons name={item.type === 'Audiobook' ? 'headset-outline' : 'book-outline'} size={22} color="rgba(255,255,255,0.9)" />
+        <View style={[styles.shelfCover, styles.shelfCoverBlank, { backgroundColor: item.color }]}>
+          <Ionicons name={item.type === 'Audiobook' ? 'headset-outline' : 'book-outline'} size={24} color="rgba(255,255,255,0.9)" />
         </View>
       )}
-      <Text style={styles.bookTitle}>{item.title}</Text>
-      <Text style={styles.bookAuthor}>{item.author}</Text>
-      <Text style={styles.bookLen}>{item.length}</Text>
+      {busy ? <View style={styles.coverBusy}><ActivityIndicator color={COLORS.bg} /></View> : null}
+      <Text style={styles.shelfName} numberOfLines={2}>{item.title}</Text>
+      <Text style={styles.shelfAuthor} numberOfLines={1}>{item.author}</Text>
+      <Text style={styles.shelfLen}>{item.length}</Text>
+    </Pressable>
+  );
+}
+
+function SoundCard({ sound, uri, isAdmin }: { sound: Sound; uri?: string; isAdmin: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  return (
+    <Pressable
+      style={styles.shelfCard}
+      onPress={() => router.push(`/sound/${sound.id}`)}
+      onLongPress={isAdmin ? () => pickAndSave(`sound:${sound.id}`, setBusy) : undefined}
+      delayLongPress={450}
+    >
+      <View style={styles.soundCover}>
+        {uri ? (
+          <ImageBackground source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: sound.color }]} />
+        )}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.55)']}
+          style={StyleSheet.absoluteFill}
+        />
+        <Ionicons name="pulse-outline" size={22} color="rgba(255,255,255,0.9)" style={styles.soundGlyph} />
+        <Text style={styles.soundDuration}>{sound.duration}</Text>
+        {busy ? <View style={styles.soundBusy}><ActivityIndicator color={COLORS.bg} /></View> : null}
+      </View>
+      <Text style={styles.shelfName} numberOfLines={2}>{sound.title}</Text>
+      <Text style={styles.soundPurpose} numberOfLines={2}>{sound.purpose}</Text>
     </Pressable>
   );
 }
@@ -228,50 +243,53 @@ function WorkbookCard({ item }: { item: any }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 96 },
-  kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 10 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  h1: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink },
-  menuBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
-  sub: { fontSize: 15, lineHeight: 22, color: COLORS.muted, marginTop: 8, marginBottom: 12 },
-  chips: { gap: 8, paddingVertical: 4, paddingRight: 8 },
-  chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
-  chipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
-  chipText: { fontSize: 13, color: COLORS.ink },
-  chipTextOn: { color: COLORS.bg },
-  loader: { paddingVertical: 60, alignItems: 'center' },
-  loaderText: { fontSize: 14, color: COLORS.muted, marginTop: 12 },
-  errNote: { fontSize: 13, color: COLORS.muted, marginTop: 16, marginBottom: 4 },
-  cover: { borderRadius: 20, minHeight: 270, justifyContent: 'flex-end', marginTop: 16, overflow: 'hidden' },
-  coverContent: { padding: 20 },
-  coverCat: { fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.9)', marginBottom: 8 },
-  coverTitle: { fontFamily: FONT_SERIF, fontSize: 20, lineHeight: 25, color: '#FFFFFF' },
-  coverMeta: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8 },
-  shelfTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 22, marginBottom: 14 },
+  content: { paddingBottom: 90 },
+
+  band: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 26 },
+  bandTint: { backgroundColor: TINT },
+
+  masthead: { alignItems: 'center', paddingTop: 26, paddingBottom: 32 },
+  titleRule: { width: 36, height: 1, backgroundColor: COLORS.accent, opacity: 0.5, marginTop: 16, marginBottom: 14 },
+  kicker: { fontSize: 11, letterSpacing: 4, color: COLORS.muted, marginBottom: 14 },
+  h1: { fontFamily: FONT_SERIF, fontSize: 44, lineHeight: 50, color: COLORS.ink, textAlign: 'center' },
+  sub: { fontFamily: FONT_SERIF, fontStyle: 'italic', fontSize: 16, lineHeight: 23, color: COLORS.accent, textAlign: 'center', paddingHorizontal: 12 },
+
+  sectionLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 14 },
+  adminHint: { fontSize: 11, color: COLORS.accent, marginTop: -8, marginBottom: 12 },
+
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  cardWrap: { width: '48%', marginBottom: 22 },
-  bookCover: { height: 170, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  bookCoverImg: { height: 170, width: '100%', borderRadius: 16, backgroundColor: COLORS.accentSoft },
-  bookTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 21, color: COLORS.ink, marginTop: 10 },
-  bookAuthor: { fontSize: 13, color: COLORS.muted, marginTop: 4 },
-  bookLen: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
-  barWrap: { position: 'absolute', left: 0, right: 0, bottom: 22, alignItems: 'center' },
-  bar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(43,38,34,0.12)', overflow: 'hidden', backgroundColor: 'rgba(247,242,234,0.55)' },
-  barText: { fontSize: 14, color: COLORS.ink },
-  modalRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
-  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 36, maxHeight: '80%' },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
-  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 12 },
-  catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 15, borderTopWidth: 1, borderTopColor: COLORS.line },
-  catLabel: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
-  catLabelActive: { color: COLORS.accent, fontWeight: '700' },
-  menuBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  menuCard: { position: 'absolute', top: 104, right: 20, backgroundColor: COLORS.bg, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 6, minWidth: 190, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, paddingHorizontal: 16 },
-  menuLabel: { fontSize: 15, color: COLORS.ink, marginLeft: 12, flex: 1 },
-  menuTag: { fontSize: 11, color: COLORS.muted, backgroundColor: COLORS.accentSoft, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 999, overflow: 'hidden' },
-  wbCard: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14 },
+  tile: { width: '48.5%', height: 148, borderRadius: 20, padding: 16, marginBottom: 12, overflow: 'hidden' },
+  tileLabel: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.bg },
+  tileLine: { fontSize: 12, color: COLORS.bg, opacity: 0.8, marginTop: 3 },
+  tileBusy: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
+
+  feature: { height: 250, borderRadius: 24, overflow: 'hidden', justifyContent: 'flex-end' },
+  featureBody: { padding: 22 },
+  featureEyebrow: { fontSize: 10, letterSpacing: 2.4, color: 'rgba(255,255,255,0.85)', marginBottom: 8 },
+  featureTitle: { fontFamily: FONT_SERIF, fontSize: 30, color: '#FFFFFF' },
+  featureTitleAccent: { fontStyle: 'italic', color: '#E6C79B' },
+  featureLine: { fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.86)', marginTop: 8 },
+  featureCta: { flexDirection: 'row', alignItems: 'center', gap: 7, alignSelf: 'flex-start', backgroundColor: COLORS.bg, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18, marginTop: 16 },
+  featureCtaText: { fontSize: 13, letterSpacing: 0.4, color: COLORS.ink },
+
+  shelfHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  seeAll: { fontSize: 13, color: COLORS.accent },
+  shelfTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
+  shelf: { gap: 16, paddingRight: 20 },
+  shelfCard: { width: 142 },
+  shelfCover: { width: 142, height: 196, borderRadius: 14, backgroundColor: COLORS.accentSoft },
+  shelfCoverBlank: { alignItems: 'center', justifyContent: 'center' },
+  coverBusy: { position: 'absolute', left: 0, right: 0, top: 0, height: 196, borderRadius: 14, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
+  shelfName: { fontFamily: FONT_SERIF, fontSize: 15, lineHeight: 20, color: COLORS.ink, marginTop: 10 },
+  shelfAuthor: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
+  shelfLen: { fontSize: 11, color: COLORS.muted, marginTop: 3 },
+  soundCover: { width: 142, height: 150, borderRadius: 14, overflow: 'hidden', justifyContent: 'flex-end' },
+  soundGlyph: { position: 'absolute', top: 12, left: 12 },
+  soundDuration: { fontSize: 11, color: 'rgba(255,255,255,0.92)', padding: 12 },
+  soundBusy: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
+  soundPurpose: { fontSize: 12, lineHeight: 17, color: COLORS.muted, marginTop: 3 },
+
+  wbCard: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14 },
   wbTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
   wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
   wbPill: { backgroundColor: COLORS.accentSoft, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },

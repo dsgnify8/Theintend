@@ -191,7 +191,13 @@ export default function BookScreen() {
     const label = formatSlot(slot);
     setSaving(true);
 
-    // Package accounting: buying creates the package; continuing consumes one credit.
+    // Package accounting: buying creates the package; continuing consumes one
+    // credit. Either way we come out knowing which package this belongs to and
+    // which session number it is, so the booking can be filed against it.
+    let packageId: string | null = null;
+    let sessionNo: number | null = null;
+    let totalForTitle: number | null = null;
+
     if (isPackagePurchase && svc) {
       const total = svc.sessionsTotal ?? 5;
       const newId = await createPackage({
@@ -199,21 +205,32 @@ export default function BookScreen() {
         title: svc.name + ' with ' + expert.name,
         expertName: expert.name, total,
       });
-      if (newId) { const used = await consumePackageSession(newId); setPkgTotal(total); setRemaining(total - (used ?? 1)); }
+      if (newId) {
+        const used = await consumePackageSession(newId);
+        setPkgTotal(total); setRemaining(total - (used ?? 1));
+        packageId = newId; sessionNo = used ?? 1; totalForTitle = total;
+      }
     } else if (isPackageContinue && pkg) {
       const before = await getPackage(String(pkg));
       const used = await consumePackageSession(String(pkg));
       const total = before?.total ?? 5;
       setPkgTotal(total); setRemaining(Math.max(total - (used ?? total), 0));
+      packageId = String(pkg); sessionNo = used ?? null; totalForTitle = total;
     }
+
+    // The expert panel lists bookings by title, so the session number goes in it.
+    const fullTitle = sessionNo && totalForTitle
+      ? `${bookingTitle()} (session ${sessionNo} of ${totalForTitle})`
+      : bookingTitle();
 
     await createBooking({
       refId: String(id), kind: 'service',
-      title: bookingTitle(),
+      title: fullTitle,
       when: label, expert: expert.name, expertId: String(id),
+      packageId, sessionNo,
     });
     if ((expert as any)?.accountEmail) {
-      sendPushToEmail((expert as any).accountEmail, 'New booking', `${bookingTitle()} was just booked.`);
+      sendPushToEmail((expert as any).accountEmail, 'New booking', `${fullTitle} was just booked.`);
     }
     const startIso = slot.toISOString();
     const endIso = new Date(slot.getTime() + (svc?.durationMin ? svc.durationMin : 60) * 60000).toISOString();

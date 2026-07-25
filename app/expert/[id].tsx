@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Image, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { EXPERTS } from '@/constants/experts';
@@ -16,6 +17,9 @@ export default function ExpertProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const flip = useRef(new Animated.Value(0)).current;
   const [flipped, setFlipped] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
+  const [chosen, setChosen] = useState<any | null>(null);
+  const [mode, setMode] = useState<'online' | 'inperson' | null>(null);
   const doFlip = () => {
     Animated.spring(flip, { toValue: flipped ? 0 : 1, useNativeDriver: true, friction: 8, tension: 12 }).start();
     setFlipped((v) => !v);
@@ -53,6 +57,8 @@ export default function ExpertProfile() {
   const singleServices = services.filter((s: any) => s.kind !== 'package');
   const packageServices = services.filter((s: any) => s.kind === 'package');
   const firstName = expert.name.replace('Dr. ', '').split(' ')[0];
+  const isOmar = expert.id === 'omar-chtioui';
+  // Photos are framed head-near-top; bias the default crop down to show faces.
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
   const liked = likedIds.includes(expert.id);
 
@@ -106,16 +112,28 @@ export default function ExpertProfile() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Pressable onPress={doFlip} style={styles.flipWrap}>
-          <Animated.View style={[styles.flipFace, styles.flipFront, { transform: [{ perspective: 1000 }, { rotateY: frontRotate }] }]}>
-            <View style={styles.avatar}>
-              {expert.photo ? (
-                <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={50} />
-              ) : (
-                <Text style={styles.avatarText}>{initials}</Text>
-              )}
+          <Animated.View style={[styles.flipFace, styles.coverFront, { transform: [{ perspective: 1000 }, { rotateY: frontRotate }] }]}>
+            {expert.photo ? (
+              <Image source={{ uri: expert.photo }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, styles.coverFallback]}>
+                <Text style={styles.coverInitials}>{initials}</Text>
+              </View>
+            )}
+            <LinearGradient
+              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.82)']}
+              locations={[0, 0.5, 1]}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+            <View style={styles.coverBody}>
+              <Text style={styles.coverName}>{expert.name}</Text>
+              <Text style={styles.coverTitle}>{expert.title.toUpperCase()}</Text>
             </View>
-            <Text style={styles.name}>{expert.name}</Text>
-            <Text style={styles.title}>{expert.title.toUpperCase()}</Text>
+            <View style={styles.coverTapHint}>
+              <Ionicons name="shield-checkmark" size={13} color="#FFFFFF" />
+              <Text style={styles.coverTapText}>TAP</Text>
+            </View>
           </Animated.View>
           <Animated.View style={[styles.flipFace, styles.flipBack, { transform: [{ perspective: 1000 }, { rotateY: backRotate }] }]}>
             <View style={styles.verifyBadge}>
@@ -166,10 +184,89 @@ export default function ExpertProfile() {
           </View>
         ))}
 
-        <Pressable style={styles.bookBtn} onPress={() => router.push(services[0] ? `/book/${expert.id}?service=${services[0].id}` : `/book/${expert.id}`)}>
+        <Pressable
+          style={styles.bookBtn}
+          onPress={() => {
+            if (services.length === 0) { router.push(`/book/${expert.id}`); return; }
+            if (services.length === 1) {
+              const s0: any = services[0];
+              if (s0.online && s0.inPerson) { setChosen(s0); setMode(null); setBookOpen(true); }
+              else { router.push(`/book/${expert.id}?service=${s0.id}`); }
+              return;
+            }
+            setChosen(null); setMode(null); setBookOpen(true);
+          }}
+        >
           <Text style={styles.bookText}>Book with {firstName}</Text>
         </Pressable>
       </ScrollView>
+
+      <Modal visible={bookOpen} transparent animationType="slide" onRequestClose={() => setBookOpen(false)}>
+        <View style={styles.sheetRoot}>
+          <Pressable style={styles.sheetBackdrop} onPress={() => setBookOpen(false)} />
+          <SafeAreaView edges={['bottom']} style={styles.bookSheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Book with {firstName}</Text>
+            <Text style={styles.sheetSub}>{chosen ? 'How would you like to meet?' : 'Choose what you would like.'}</Text>
+
+            {!chosen ? (
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                {singleServices.length > 0 ? <Text style={styles.sheetGroup}>SESSIONS</Text> : null}
+                {singleServices.map((s: any) => (
+                  <Pressable key={s.id} style={styles.sheetOffer} onPress={() => {
+                    if (s.online && s.inPerson) { setChosen(s); setMode(null); }
+                    else { setBookOpen(false); router.push(`/book/${expert.id}?service=${s.id}`); }
+                  }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sheetOfferTitle}>{s.name}</Text>
+                      <Text style={styles.sheetOfferMeta}>{offerMeta(s)}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+                  </Pressable>
+                ))}
+                {packageServices.length > 0 ? <Text style={styles.sheetGroup}>PROGRAMS</Text> : null}
+                {packageServices.map((s: any) => (
+                  <Pressable key={s.id} style={styles.sheetOffer} onPress={() => {
+                    if (s.online && s.inPerson) { setChosen(s); setMode(null); }
+                    else { setBookOpen(false); router.push(`/book/${expert.id}?service=${s.id}`); }
+                  }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sheetOfferTitle}>{s.name}</Text>
+                      <Text style={styles.sheetOfferMeta}>{offerMeta(s)}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : (
+              <View>
+                <Pressable style={styles.chosenRow} onPress={() => { setChosen(null); setMode(null); }}>
+                  <Ionicons name="chevron-back" size={18} color={COLORS.accent} />
+                  <Text style={styles.chosenName}>{chosen.name}</Text>
+                </Pressable>
+                <View style={styles.modeRow}>
+                  <Pressable style={[styles.modeCard, mode === 'online' && styles.modeCardOn]} onPress={() => setMode('online')}>
+                    <Ionicons name="videocam-outline" size={22} color={mode === 'online' ? COLORS.bg : COLORS.accent} />
+                    <Text style={[styles.modeText, mode === 'online' && styles.modeTextOn]}>Online</Text>
+                  </Pressable>
+                  <Pressable style={[styles.modeCard, mode === 'inperson' && styles.modeCardOn]} onPress={() => setMode('inperson')}>
+                    <Ionicons name="location-outline" size={22} color={mode === 'inperson' ? COLORS.bg : COLORS.accent} />
+                    <Text style={[styles.modeText, mode === 'inperson' && styles.modeTextOn]}>In person</Text>
+                    {chosen.location ? <Text style={[styles.modeLoc, mode === 'inperson' && styles.modeTextOn]}>{chosen.location}</Text> : null}
+                  </Pressable>
+                </View>
+                <Pressable
+                  style={[styles.continueBtn, !mode && styles.continueOff]}
+                  disabled={!mode}
+                  onPress={() => { setBookOpen(false); router.push(`/book/${expert.id}?service=${chosen.id}&mode=${mode}`); }}
+                >
+                  <Text style={styles.continueText}>Continue to calendar</Text>
+                </Pressable>
+              </View>
+            )}
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -208,9 +305,17 @@ const styles = StyleSheet.create({
   loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   head: { alignItems: 'center', paddingVertical: 12 },
-  flipWrap: { height: 268, marginTop: 8, marginBottom: 4 },
+  flipWrap: { height: 300, marginTop: 8, marginBottom: 4 },
   flipFace: { position: 'absolute', width: '100%', height: '100%', borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backfaceVisibility: 'hidden' },
   flipFront: { backgroundColor: 'rgba(255,255,255,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)' },
+  coverFront: { borderRadius: 22, overflow: 'hidden', padding: 0, alignItems: 'stretch', justifyContent: 'flex-end', backgroundColor: COLORS.accentSoft },
+  coverFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.accent },
+  coverInitials: { fontFamily: FONT_SERIF, fontSize: 64, color: COLORS.bg },
+  coverBody: { padding: 22, alignItems: 'flex-start' },
+  coverName: { fontFamily: FONT_SERIF, fontSize: 30, lineHeight: 35, color: '#FFFFFF', textAlign: 'left' },
+  coverTitle: { fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.9)', marginTop: 8, textAlign: 'left' },
+  coverTapHint: { position: 'absolute', top: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 999, paddingVertical: 6, paddingHorizontal: 11 },
+  coverTapText: { fontSize: 9, letterSpacing: 1.5, color: '#FFFFFF' },
   flipBack: { backgroundColor: COLORS.accent },
   tapHint: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 12 },
   tapHintText: { fontSize: 10, letterSpacing: 1, color: COLORS.accent },
@@ -218,7 +323,7 @@ const styles = StyleSheet.create({
   verifyTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.bg, textAlign: 'center', marginBottom: 10 },
   verifyText: { fontSize: 14, lineHeight: 21, color: 'rgba(255,255,255,0.92)', textAlign: 'center' },
   verifyTapBack: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 14 },
-  avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 14 },
+  avatar: { width: 132, height: 132, borderRadius: 24, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 16 },
   avatarImg: { width: '100%', height: '100%' },
   avatarText: { fontFamily: FONT_SERIF, fontSize: 34, color: COLORS.accent },
   name: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink, textAlign: 'center' },
@@ -238,5 +343,26 @@ const styles = StyleSheet.create({
   bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
   bookText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
+  sheetRoot: { flex: 1, justifyContent: 'flex-end' },
+  sheetBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
+  bookSheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 12 },
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
+  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
+  sheetSub: { fontSize: 14, color: COLORS.muted, marginTop: 6, marginBottom: 16 },
+  sheetGroup: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, marginTop: 8, marginBottom: 10 },
+  sheetOffer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
+  sheetOfferTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  sheetOfferMeta: { fontSize: 13, color: COLORS.muted, marginTop: 3 },
+  chosenRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
+  chosenName: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  modeRow: { flexDirection: 'row', gap: 12 },
+  modeCard: { flex: 1, alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 22, gap: 8 },
+  modeCardOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  modeText: { fontSize: 14, color: COLORS.ink },
+  modeTextOn: { color: COLORS.bg },
+  modeLoc: { fontSize: 11, color: COLORS.muted },
+  continueBtn: { marginTop: 20, marginBottom: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  continueOff: { opacity: 0.5 },
+  continueText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
 });
 
