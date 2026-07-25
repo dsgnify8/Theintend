@@ -16,7 +16,7 @@ export function tabbyInstallment(price: string): string {
   return Math.round(whole / 4).toLocaleString('en-US') + ' AED';
 }
 
-export async function payWithTabby(opts: { amount: string; label: string; category?: string }): Promise<{ ok: boolean; error?: string; code?: string; paymentId?: string }> {
+export async function payWithTabby(opts: { amount: string; label: string; category?: string }): Promise<{ ok: boolean; error?: string; code?: string }> {
   try {
     const create = await supabase.functions.invoke('tabby', {
       body: { action: 'create', amount: opts.amount, currency: 'aed', label: opts.label, category: opts.category },
@@ -42,11 +42,11 @@ export async function payWithTabby(opts: { amount: string; label: string; catego
     if (!webUrl || !paymentId) return { ok: false, error: 'Could not start Tabby.' };
 
     const result = await WebBrowser.openAuthSessionAsync(webUrl, 'theintend://tabby-return');
-    if (result.type !== 'success') return { ok: false, error: 'canceled', paymentId };
+    if (result.type !== 'success') return { ok: false, error: 'canceled' };
 
     const cap = await supabase.functions.invoke('tabby', { body: { action: 'capture', paymentId } });
-    if (cap.error || !cap.data?.ok) return { ok: false, error: cap.data?.error || 'Tabby payment was not completed.', paymentId };
-    return { ok: true, paymentId };
+    if (cap.error || !cap.data?.ok) return { ok: false, error: cap.data?.error || 'Tabby payment was not completed.' };
+    return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message ?? 'Tabby payment failed.' };
   }

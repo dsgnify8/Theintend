@@ -9,20 +9,13 @@ export function priceToMinorUnits(price: string): number {
   return whole * 100;
 }
 
-export async function payWithSheet(opts: { amount: number; currency?: string; label: string }): Promise<{ ok: boolean; error?: string; paymentIntentId?: string }> {
+export async function payWithSheet(opts: { amount: number; currency?: string; label: string }): Promise<{ ok: boolean; error?: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('create-payment', {
       body: { amount: opts.amount, currency: opts.currency ?? 'aed', label: opts.label },
     });
     if (error) return { ok: false, error: error.message || 'Could not start payment.' };
     if (!data?.paymentIntent) return { ok: false, error: 'Could not start payment.' };
-
-    // The intent id is the part of the client secret before "_secret". We keep
-    // it so the order row can point at the real charge.
-    const clientSecret: string = String(data.paymentIntent);
-    const paymentIntentId: string | undefined =
-      (typeof (data as any).paymentIntentId === 'string' ? (data as any).paymentIntentId : undefined) ??
-      (clientSecret.indexOf('_secret') > 0 ? clientSecret.split('_secret')[0] : undefined);
 
     const init = await initPaymentSheet({
       merchantDisplayName: 'The Intend',
@@ -39,9 +32,9 @@ export async function payWithSheet(opts: { amount: number; currency?: string; la
     const res = await presentPaymentSheet();
     if (res.error) {
       const canceled = res.error.code === 'Canceled';
-      return { ok: false, error: canceled ? 'canceled' : (res.error.message || 'Payment failed.'), paymentIntentId };
+      return { ok: false, error: canceled ? 'canceled' : (res.error.message || 'Payment failed.') };
     }
-    return { ok: true, paymentIntentId };
+    return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message ?? 'Payment failed.' };
   }

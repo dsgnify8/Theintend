@@ -55,7 +55,7 @@ export async function createBooking(input: {
     const { data: u } = await supabase.auth.getUser();
     const userId = u?.user?.id;
     const email = u?.user?.email ?? null;
-    if (!userId) return { error: null, id: null }; // not signed in: local mirror only
+    if (!userId) return { error: null }; // not signed in: local mirror only
     let name: string | null = null;
     try {
       const { data: p } = await supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle();
@@ -74,25 +74,6 @@ export async function createBooking(input: {
       package_id: input.packageId ?? null,
       session_no: input.sessionNo ?? null,
     });
-
-    // Best effort read back of the row we just wrote, so a paid order can
-    // record which booking it produced. Wrapped so it can never affect the
-    // booking itself.
-    let newId: string | null = null;
-    if (!error) {
-      try {
-        const { data: row } = await supabase
-          .from('bookings')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('ref_id', input.refId)
-          .eq('when_text', input.when)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        newId = (row as any)?.id ?? null;
-      } catch {}
-    }
     try {
       const t = parseWhen(input.when);
       if (t) {
@@ -100,9 +81,9 @@ export async function createBooking(input: {
         await scheduleLocalReminder(`rem1-${input.refId}-${t}`, 'Session soon', `${input.title} starts in about an hour.`, new Date(t - 3600000));
       }
     } catch {}
-    return { error, id: newId };
+    return { error };
   } catch (e: any) {
-    return { error: e, id: null };
+    return { error: e };
   }
 }
 

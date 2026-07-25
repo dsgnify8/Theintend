@@ -6,7 +6,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useExpert } from '@/lib/experts';
 import { getCalendarBusy, createCalendarEvent } from '@/lib/calendar';
 import { createBooking, useExpertBookings } from '@/lib/bookings';
-import { createOrder, markOrderPaid, markOrderFulfilled, markOrderFailed } from '@/lib/orders';
 import { sendPushToEmail } from '@/lib/notifications';
 import { useService } from '@/lib/services';
 import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
@@ -26,7 +25,6 @@ const DAYS_AHEAD = 14;
 function keyFor(y: number, m: number, d: number, h: number) { return `${y}-${m}-${d}-${h}`; }
 function hourLabel(h: number) { const hh = ((h + 11) % 12) + 1; return `${hh}:00 ${h < 12 ? 'AM' : 'PM'}`; }
 function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time'; } catch { return 'local time'; } }
-function tzId(): string | null { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; } }
 
 function normalizeSlots(day: any): number[] {
   if (!day) return [];
@@ -187,7 +185,7 @@ export default function BookScreen() {
     return `${svc ? svc.name : type} with ${expert?.name ?? ''}`;
   };
 
-  const finalizeBooking = async (orderId?: string | null) => {
+  const finalizeBooking = async () => {
     if (!expert || hour == null || !days[dayIdx]) return;
     const slot = new Date(days[dayIdx].date); slot.setHours(hour, 0, 0, 0);
     const label = formatSlot(slot);
@@ -225,15 +223,12 @@ export default function BookScreen() {
       ? `${bookingTitle()} (session ${sessionNo} of ${totalForTitle})`
       : bookingTitle();
 
-    const created = await createBooking({
+    await createBooking({
       refId: String(id), kind: 'service',
       title: fullTitle,
       when: label, expert: expert.name, expertId: String(id),
       packageId, sessionNo,
     });
-    if (orderId) {
-      markOrderFulfilled(orderId, { bookingId: (created as any)?.id ?? null, packageId });
-    }
     if ((expert as any)?.accountEmail) {
       sendPushToEmail((expert as any).accountEmail, 'New booking', `${fullTitle} was just booked.`);
     }
@@ -252,67 +247,25 @@ export default function BookScreen() {
     setSaving(false);
   };
 
-  // The time the customer picked, recorded on the order so a charge without a
-  // booking can still be matched to what they were buying.
-  const intendedSlot = () => {
-    if (hour == null || !days[dayIdx]) return null;
-    const d = new Date(days[dayIdx].date); d.setHours(hour, 0, 0, 0);
-    return d;
-  };
-
   const startPayment = async () => {
     if (!expert || hour == null || !days[dayIdx]) return;
     const amount = svc ? priceToMinorUnits(svc.price) : 0;
     if (amount <= 0) { finalizeBooking(); return; }
-    const label = `${svc?.name ?? 'Session'} with ${expert.name}`;
     setSaving(true);
-    const orderId = await createOrder({
-      provider: 'stripe',
-      amountMinor: amount,
-      currency: 'aed',
-      kind: isPackagePurchase ? 'package' : 'single',
-      expertId: String(id),
-      serviceId: svc?.id ? String(svc.id) : null,
-      label,
-      intendedStart: intendedSlot(),
-      intendedTz: tzId(),
-    });
-    const res = await payWithSheet({ amount, label });
+    const res = await payWithSheet({ amount, label: `${svc?.name ?? 'Session'} with ${expert.name}` });
     setSaving(false);
-    if (res.ok) {
-      await markOrderPaid(orderId, res.paymentIntentId ?? null);
-      finalizeBooking(orderId);
-    } else {
-      await markOrderFailed(orderId, res.error ?? 'unknown');
-      if (res.error && res.error !== 'canceled') { Alert.alert('Payment', res.error); }
-    }
+    if (res.ok) { finalizeBooking(); }
+    else if (res.error && res.error !== 'canceled') { Alert.alert('Payment', res.error); }
   };
 
   const startTabby = async () => {
     if (!expert || hour == null || !days[dayIdx] || !svc) return;
-    const label = `${svc.name} with ${expert.name}`;
     setSaving(true);
-    const orderId = await createOrder({
-      provider: 'tabby',
-      amountMinor: priceToMinorUnits(svc.price),
-      currency: 'aed',
-      kind: isPackagePurchase ? 'package' : 'single',
-      expertId: String(id),
-      serviceId: svc?.id ? String(svc.id) : null,
-      label,
-      intendedStart: intendedSlot(),
-      intendedTz: tzId(),
-    });
-    const res = await payWithTabby({ amount: priceToMajorString(svc.price), label });
+    const res = await payWithTabby({ amount: priceToMajorString(svc.price), label: `${svc.name} with ${expert.name}` });
     setSaving(false);
-    if (res.ok) {
-      await markOrderPaid(orderId, res.paymentId ?? null);
-      finalizeBooking(orderId);
-    } else {
-      await markOrderFailed(orderId, res.code ? res.code + ': ' + (res.error ?? '') : (res.error ?? 'unknown'));
-      if (res.code === 'phone_required') { askForPhone(res.error); }
-      else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
-    }
+    if (res.ok) { finalizeBooking(); }
+    else if (res.code === 'phone_required') { askForPhone(res.error); }
+    else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
   };
 
   const active = days[dayIdx];
