@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   trackFill: { width: '0%', height: 4, backgroundColor: COLORS.accent },
   times: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginTop: 0 },
   time: { fontSize: 12, color: COLORS.muted },
-  playBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
+  playBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.taupe, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
   playOff: { opacity: 0.4 },
   status: { fontSize: 12, color: COLORS.muted, marginTop: 14, textAlign: 'center' },
   downloadRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 28 },

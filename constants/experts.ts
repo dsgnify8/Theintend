@@ -1,4 +1,4 @@
-// The Intend — expert directory.
+// The Intend, expert directory.
 // Profiles (bio, title, FAQs) are the real summaries from your site. Photos are
 // imported from theintend.com/experts. Each expert's offerings (classes, programs,
 // consultations) are drawn from your Sessions data by matching expertId.
@@ -35,7 +35,7 @@ export const EXPERTS: Expert[] = [
       `My body is healthy but I still can't get pregnant. Could something deeper be blocking this?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_c30b5193603e46d990e3f5a3ffb7ef3f~mv2.jpeg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/omar-chtioui/1785063943143.avif',
   },
   {
     id: 'scheherazade-hasan',
@@ -51,7 +51,7 @@ export const EXPERTS: Expert[] = [
       `I always feel like I'm running out of money, why is that?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_b489e1d91e9f48e9949985e30007600b~mv2.jpg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/scheherazade-hasan/1785064004963.png',
   },
   {
     id: 'ekaterina-murray',
@@ -67,7 +67,7 @@ export const EXPERTS: Expert[] = [
       `I feel stuck between two life stages or roles.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_7f29c751856b44ba9d514866a0251eab~mv2.jpeg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/ekaterina-murray/1785064017642.avif',
   },
   {
     id: 'joanna-gudkina',
@@ -83,7 +83,7 @@ export const EXPERTS: Expert[] = [
       `I want to focus on anti-aging and perfect skin without botox or fillers.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_50e4762e170a491786f9f1df3d4c9295~mv2.jpeg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/joanna-gudkina/1785064021169.avif',
   },
   {
     id: 'zahra-gozal',
@@ -99,7 +99,7 @@ export const EXPERTS: Expert[] = [
       `I've rebuilt my life on the outside, but on the inside nothing has really changed.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_1c2f322723d24ed88816686e615cbbcb~mv2.jpg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/zahra-gozal/1785064025327.avif',
   },
   {
     id: 'alevtina-buzynarska',
@@ -115,7 +115,7 @@ export const EXPERTS: Expert[] = [
       `I want more love and passion out of my life and my relationships.`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_72bd9b4dafc149ecb05aec5964d7e167~mv2.jpg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/alevtina-buzynarska/1785064065894.png',
   },
   {
     id: 'irina-goldenberg',
@@ -131,6 +131,6 @@ export const EXPERTS: Expert[] = [
       `I have neck pain that leads to headaches. How can I relieve this tension?`,
     ],
     profileUrl: 'https://www.theintend.com/experts',
-    photo: 'https://static.wixstatic.com/media/5445e6_cc83748887964f41b610058e7c362806~mv2.jpg',
+    photo: 'https://xpjtyjjbgvemwwpnxtad.supabase.co/storage/v1/object/public/expert-photos/irina-goldenberg/1785064061713.avif',
   },
 ];

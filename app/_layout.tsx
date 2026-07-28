@@ -12,6 +12,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { usePushRegistration } from '@/lib/notifications';
 import { useAuth } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFonts } from 'expo-font';
+import {
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_500Medium,
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+} from '@expo-google-fonts/playfair-display';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond';
+import { PinyonScript_400Regular } from '@expo-google-fonts/pinyon-script';
 
 // Keep the native splash up until the app is ready, then lift it. No animated
 // intro: the app opens straight to the tabs. The login screen is shown once, on
@@ -46,6 +56,28 @@ export default function RootLayout() {
   const [welcomeSeen, setWelcomeSeen] = useState<boolean | null>(null);
   const sentToWelcome = useRef(false);
 
+  // A ceiling on waiting for fonts. If they fail, the app opens in the fallback
+  // face rather than never opening at all.
+  const [fontWaited, setFontWaited] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setFontWaited(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_500Medium,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    CormorantGaramond_500Medium_Italic,
+    PinyonScript_400Regular,
+  });
+
+  const fontsReady = fontsLoaded || fontWaited;
+
   // Read the first-launch flag. On any failure we assume it has been seen, so a
   // storage problem can never trap someone on the login screen.
   useEffect(() => {
@@ -60,10 +92,10 @@ export default function RootLayout() {
   // Lift the native splash as soon as the app is mounted and auth has settled.
   // This deliberately does not wait on the welcome flag.
   useEffect(() => {
-    if (!mounted || loading) return;
+    if (!mounted || loading || !fontsReady) return;
     const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 60);
     return () => clearTimeout(t);
-  }, [mounted, loading]);
+  }, [mounted, loading, fontsReady]);
 
   // First launch only: send them to login so they can sign up, sign in, or skip.
   // The flag is written as we go, so this happens exactly once on the device.
@@ -91,6 +123,9 @@ export default function RootLayout() {
     const sub = Linking.addEventListener('url', (e) => handle(e.url));
     return () => sub.remove();
   }, []);
+
+  // Held behind the splash until the type is ready.
+  if (!fontsReady) return null;
 
   return (
     <StripeProvider

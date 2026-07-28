@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   input: { fontSize: 16, lineHeight: 26, color: COLORS.ink, minHeight: 52, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: COLORS.line },
   autosaveNote: { fontSize: 13, lineHeight: 20, color: COLORS.muted, marginTop: 16 },
   savedNote: { fontSize: 13, color: COLORS.accent, marginTop: 8 },
-  saveBtn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  saveBtn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   btnOff: { opacity: 0.5 },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   pastLabel: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 34, marginBottom: 12 },

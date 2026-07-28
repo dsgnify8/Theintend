@@ -2,7 +2,7 @@
   "expo": {
     "name": "The-intend",
     "slug": "The-intend",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "theintend",
@@ -66,7 +66,8 @@
         {
           "color": "#5C4632"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

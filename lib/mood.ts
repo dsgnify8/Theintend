@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import { MOOD_RECO, MOODS, levelForKeyword, type MoodKey } from '@/constants/mood';
 
@@ -7,6 +8,49 @@ function todayKey() {
 }
 
 export type MoodEntry = { day: string; mood: string };
+
+// Once answered, the picker rests for twelve hours. Stored locally because it
+// is a display rule, not data the website or another device needs.
+export const MOOD_HIDE_KEY = 'intend.mood.answeredAt';
+export const MOOD_HIDE_MS = 12 * 60 * 60 * 1000;
+
+export function useMoodPicker() {
+  const [state, setState] = useState<{ checked: boolean; visible: boolean }>({ checked: false, visible: false });
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      let visible = true;
+      try {
+        const raw = await AsyncStorage.getItem(MOOD_HIDE_KEY);
+        const t = raw ? parseInt(raw, 10) : 0;
+        if (t && Date.now() - t < MOOD_HIDE_MS) visible = false;
+      } catch {}
+      if (alive) setState({ checked: true, visible });
+    })();
+    return () => { alive = false; };
+  }, []);
+  // Recorded on answering. The card stays up for the rest of this session so
+  // keywords can still be added, and does not return until the window passes.
+  const markAnswered = () => {
+    AsyncStorage.setItem(MOOD_HIDE_KEY, String(Date.now())).catch(() => {});
+  };
+  return { checked: state.checked, visible: state.visible, markAnswered };
+}
+
+// How many days in a row have a check-in, counting back from today, or from
+// yesterday when today has not been answered yet.
+export function consecutiveDays(entries: MoodEntry[]): number {
+  const days = new Set(entries.map((e) => e.day));
+  const key = (d: Date) => d.toISOString().slice(0, 10);
+  let cursor = new Date();
+  if (!days.has(key(cursor))) cursor = new Date(Date.now() - 86400000);
+  let n = 0;
+  while (days.has(key(cursor))) {
+    n++;
+    cursor = new Date(cursor.getTime() - 86400000);
+  }
+  return n;
+}
 
 // One check-in per day; saving again overwrites today's. `value` is a keyword.
 export async function setMoodToday(value: string) {
@@ -100,16 +144,20 @@ export type MoodInsight = {
   level: MoodKey | null;
   keyword: string | null;
   daysLogged: number;
+  streak: number;
   recoKind: RecoKind | null;
 };
 
-export function useMoodInsight(minDays = 3, windowDays = 14): MoodInsight {
+// minConsecutiveDays is days in a row, not entries in the window. Two days
+// running says more about how someone is doing than three scattered days.
+export function useMoodInsight(minConsecutiveDays = 2, windowDays = 14): MoodInsight {
   const { entries, loading } = useMoodHistory(windowDays);
   const daysLogged = entries.length;
+  const streak = consecutiveDays(entries);
   const { level, keyword } = dominantLevel(entries);
-  const ready = !loading && daysLogged >= minDays && !!level;
+  const ready = !loading && streak >= minConsecutiveDays && !!level;
   const recoKind: RecoKind | null = ready ? (['expert', 'article', 'sound'] as const)[daysLogged % 3] : null;
-  return { ready, loading, level, keyword, daysLogged, recoKind };
+  return { ready, loading, level, keyword, daysLogged, streak, recoKind };
 }
 
 // Find a live article that fits a level, by keyword then category.

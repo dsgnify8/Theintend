@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { getBookingById, setBookingLink } from '@/lib/bookings';
+import { formatWhenForExpert, getBookingById, setBookingLink } from '@/lib/bookings';
 import { sendPushTo } from '@/lib/notifications';
 
 export default function ExpertBookingDetail() {
@@ -58,7 +58,7 @@ export default function ExpertBookingDetail() {
           <>
             <Text style={styles.kicker}>BOOKING</Text>
             <Text style={styles.h1}>{booking.title}</Text>
-            <Text style={styles.meta}>{booking.when_text}</Text>
+            <Text style={styles.meta}>{formatWhenForExpert(booking)}</Text>
 
             <View style={styles.card}>
               <Text style={styles.cardLabel}>CLIENT</Text>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   label: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginTop: 26, marginBottom: 6 },
   hint: { fontSize: 13, lineHeight: 19, color: COLORS.muted, marginBottom: 12 },
   input: { backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 14, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
-  btn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  btn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
 });

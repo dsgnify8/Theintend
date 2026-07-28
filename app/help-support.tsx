@@ -67,6 +67,6 @@ const styles = StyleSheet.create({
   contactCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 22, marginTop: 14 },
   contactTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 8 },
   contactBody: { fontSize: 15, lineHeight: 22, color: COLORS.muted, marginBottom: 18 },
-  contactBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 15 },
+  contactBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 15 },
   contactBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
 });

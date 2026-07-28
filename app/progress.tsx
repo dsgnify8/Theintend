@@ -9,7 +9,7 @@ import { useArticles } from '@/lib/articles';
 import { SOUNDS } from '@/constants/sounds';
 import { getCategory } from '@/constants/journal';
 import { getWorksheet } from '@/constants/worksheets';
-import { useMyBookings } from '@/lib/bookings';
+import { formatWhenLocal, useMyBookings } from '@/lib/bookings';
 import { useReads, useListens, useReadStreak } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
 import { useAllWorksheetEntries } from '@/lib/worksheets';
@@ -216,7 +216,7 @@ function BookingItem({ b, onRebook }: { b: any; onRebook: () => void }) {
     <View style={styles.bookingItem}>
       <View style={{ flex: 1 }}>
         <Text style={styles.itemTitle} numberOfLines={1}>{b.title}</Text>
-        <Text style={styles.itemMeta}>{b.when_text}{b.expert_name ? ` · ${b.expert_name}` : ''}</Text>
+        <Text style={styles.itemMeta}>{formatWhenLocal(b)}{b.expert_name ? ` · ${b.expert_name}` : ''}</Text>
       </View>
       <Pressable style={styles.rebookBtn} onPress={onRebook}>
         <Text style={styles.rebookText}>{b.expert_name ? 'Re-book' : 'Browse'}</Text>
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   itemTitle: { flex: 1, fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   itemMeta: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
   bookingItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line, gap: 12 },
-  rebookBtn: { backgroundColor: COLORS.accent, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
+  rebookBtn: { backgroundColor: COLORS.taupe, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
   rebookText: { color: COLORS.bg, fontSize: 13 },
   empty: { fontSize: 14, color: COLORS.muted, paddingVertical: 20, textAlign: 'center' },
 });

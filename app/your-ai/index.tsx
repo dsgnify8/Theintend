@@ -59,7 +59,7 @@ export default function YourAi() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerBtn}>
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
         </Pressable>
-        <Text style={styles.headerTitle}>Your AI</Text>
+        <Text style={styles.headerTitle}>My Companion</Text>
         <View style={styles.headerBtn} />
       </View>
 
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
 
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: COLORS.line, backgroundColor: COLORS.bg },
   input: { flex: 1, maxHeight: 120, backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, fontSize: 15, color: COLORS.ink },
-  sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
+  sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.taupe, alignItems: 'center', justifyContent: 'center' },
   sendBtnOff: { opacity: 0.4 },
 });
 

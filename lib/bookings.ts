@@ -19,8 +19,26 @@ export type DBBooking = {
   link?: string | null;
   package_id?: string | null;
   session_no?: number | null;
+  // Absolute instant of the session. when_text is a local clock string with no
+  // zone, so starts_at is the only value that means the same thing on every
+  // device. Null on rows written before this existed.
+  starts_at?: string | null;
+  duration_minutes?: number | null;
+  timezone?: string | null;
+  service_id?: string | null;
+  status?: string | null;
   created_at: string;
 };
+
+// The instant a booking starts, in ms. Prefers the absolute column and falls
+// back to reading when_text in the local clock for older rows.
+export function bookingStartMs(b: { starts_at?: string | null; when_text?: string | null }): number | null {
+  if (b?.starts_at) {
+    const t = new Date(b.starts_at).getTime();
+    if (!isNaN(t)) return t;
+  }
+  return parseWhen(b?.when_text || '');
+}
 
 const MON3B = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function parseWhen(w: string): number | null {
@@ -32,6 +50,64 @@ function parseWhen(w: string): number | null {
   if (m[6] === 'PM') hr += 12;
   return new Date(parseInt(m[3], 10), mon, parseInt(m[1], 10), hr, parseInt(m[5], 10)).getTime();
 }
+// --- Showing a booking time ---
+// Always formatted from starts_at, which is an absolute instant, so each
+// person sees their own clock. when_text is only a fallback for rows written
+// before starts_at existed.
+
+const WD3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function clockLabel(h: number, m: number) {
+  const hh = ((h + 11) % 12) + 1;
+  const mm = m < 10 ? '0' + m : String(m);
+  return hh + ':' + mm + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+
+type WhenLike = { starts_at?: string | null; when_text?: string | null; timezone?: string | null };
+
+export function formatWhenLocal(b: WhenLike): string {
+  if (!b?.starts_at) return b?.when_text ?? '';
+  const d = new Date(b.starts_at);
+  if (isNaN(d.getTime())) return b?.when_text ?? '';
+  return WD3[d.getDay()] + ', ' + d.getDate() + ' ' + MON3B[d.getMonth()] + ' ' + d.getFullYear() + ', ' + clockLabel(d.getHours(), d.getMinutes());
+}
+
+// "Europe/Stockholm" reads better as "Stockholm".
+export function zoneCity(tz?: string | null): string | null {
+  if (!tz) return null;
+  const part = tz.split('/').pop();
+  return part ? part.replace(/_/g, ' ') : null;
+}
+
+function timeInZone(iso: string, tz: string): string | null {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz,
+    }).format(d);
+  } catch {
+    return null;
+  }
+}
+
+// For expert-facing screens: their own time, plus the client's when it differs.
+export function formatWhenForExpert(b: WhenLike): string {
+  const mine = formatWhenLocal(b);
+  const tz = b?.timezone;
+  if (!tz || !b?.starts_at) return mine;
+  try {
+    const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!here || here === tz) return mine;
+  } catch {
+    return mine;
+  }
+  const theirs = timeInZone(b.starts_at, tz);
+  const city = zoneCity(tz);
+  if (!theirs || !city) return mine;
+  return mine + ' (' + theirs + ' in ' + city + ')';
+}
+
 export async function createBooking(input: {
   refId: string;
   kind: 'class' | 'program' | 'service';
@@ -41,6 +117,10 @@ export async function createBooking(input: {
   expertId?: string | null;
   packageId?: string | null;
   sessionNo?: number | null;
+  startsAt?: Date | null;
+  durationMin?: number | null;
+  timezone?: string | null;
+  serviceId?: string | null;
 }) {
   // Instant local mirror for class/program (so You updates immediately, even signed out).
   addBooking({
@@ -73,6 +153,10 @@ export async function createBooking(input: {
       booker_email: email,
       package_id: input.packageId ?? null,
       session_no: input.sessionNo ?? null,
+      starts_at: input.startsAt ? input.startsAt.toISOString() : null,
+      duration_minutes: input.durationMin ?? null,
+      timezone: input.timezone ?? null,
+      service_id: input.serviceId ?? null,
     });
 
     // Best effort read back of the row we just wrote, so a paid order can
@@ -94,7 +178,7 @@ export async function createBooking(input: {
       } catch {}
     }
     try {
-      const t = parseWhen(input.when);
+      const t = input.startsAt ? input.startsAt.getTime() : parseWhen(input.when);
       if (t) {
         await scheduleLocalReminder(`rem24-${input.refId}-${t}`, 'Session tomorrow', `${input.title} is coming up.`, new Date(t - 86400000));
         await scheduleLocalReminder(`rem1-${input.refId}-${t}`, 'Session soon', `${input.title} starts in about an hour.`, new Date(t - 3600000));

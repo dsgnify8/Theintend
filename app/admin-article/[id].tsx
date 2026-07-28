@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginBottom: 8 },
   input: { backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 12, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
   body: { minHeight: 280, textAlignVertical: 'top', lineHeight: 22 },
-  saveBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  saveBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14, textAlign: 'center' },
 });

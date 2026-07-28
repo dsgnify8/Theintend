@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   knob: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF' },
   knobOn: { alignSelf: 'flex-end' },
 
-  cta: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 18, paddingHorizontal: 40, alignItems: 'center', marginTop: 26 },
+  cta: { backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 18, paddingHorizontal: 40, alignItems: 'center', marginTop: 26 },
   ctaWide: { alignSelf: 'stretch', marginHorizontal: 8 },
   ctaOff: { opacity: 0.5 },
   ctaText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },

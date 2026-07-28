@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowText: { fontSize: 15, color: COLORS.ink },
   label: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginTop: 28, marginBottom: 12 },
-  linkBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 15 },
+  linkBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 15 },
   linkBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   locationBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
   locationText: { flex: 1, fontSize: 15, color: COLORS.ink },

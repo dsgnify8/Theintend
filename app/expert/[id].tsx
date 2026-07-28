@@ -10,7 +10,7 @@ import { useLiked, toggleLiked } from '@/lib/store';
 import { FramedImage } from '@/components/FramedImage';
 import { useSessions } from '@/lib/sessions';
 import { useServices } from '@/lib/services';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { COLORS, FONT_ITALIC, FONT_SANS, FONT_SERIF } from '@/constants/brand';
 
 export default function ExpertProfile() {
   const router = useRouter();
@@ -87,7 +87,7 @@ export default function ExpertProfile() {
 
   const onShare = () => {
     Share.share({
-      message: `${expert.name} — ${expert.title} on The Intend. ${expert.profileUrl}`,
+      message: `${expert.name}, ${expert.title} on The Intend. ${expert.profileUrl}`,
       url: expert.profileUrl,
     }).catch(() => {});
   };
@@ -176,7 +176,9 @@ export default function ExpertProfile() {
           </>
         ) : null}
 
-        <Text style={styles.sectionTitle}>Client Questions</Text>
+        <Text style={styles.sectionTitle}>
+          Client <Text style={styles.sectionTitleItalic}>Questions</Text>
+        </Text>
         {expert.faqs.map((q, i) => (
           <View key={i} style={styles.cqCard}>
             <Text style={styles.cqMark}>{'\u201C'}</Text>
@@ -311,12 +313,12 @@ const styles = StyleSheet.create({
   coverFront: { borderRadius: 22, overflow: 'hidden', padding: 0, alignItems: 'stretch', justifyContent: 'flex-end', backgroundColor: COLORS.accentSoft },
   coverFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.accent },
   coverInitials: { fontFamily: FONT_SERIF, fontSize: 64, color: COLORS.bg },
-  coverBody: { padding: 22, alignItems: 'flex-start' },
-  coverName: { fontFamily: FONT_SERIF, fontSize: 30, lineHeight: 35, color: '#FFFFFF', textAlign: 'left' },
-  coverTitle: { fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.9)', marginTop: 8, textAlign: 'left' },
+  coverBody: { padding: 22, alignItems: 'center' },
+  coverName: { fontFamily: FONT_SERIF, fontSize: 30, lineHeight: 35, color: '#FFFFFF', textAlign: 'center' },
+  coverTitle: { fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.9)', marginTop: 8, textAlign: 'center' },
   coverTapHint: { position: 'absolute', top: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 999, paddingVertical: 6, paddingHorizontal: 11 },
   coverTapText: { fontSize: 9, letterSpacing: 1.5, color: '#FFFFFF' },
-  flipBack: { backgroundColor: COLORS.accent },
+  flipBack: { backgroundColor: COLORS.taupe },
   tapHint: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 12 },
   tapHintText: { fontSize: 10, letterSpacing: 1, color: COLORS.accent },
   verifyBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
@@ -329,6 +331,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink, textAlign: 'center' },
   title: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, textAlign: 'center', marginTop: 8 },
   sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 28, marginBottom: 12 },
+  sectionTitleItalic: { fontFamily: FONT_ITALIC, fontSize: 22 },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
   tagText: { fontSize: 13, color: COLORS.ink },
@@ -337,10 +340,10 @@ const styles = StyleSheet.create({
   offerIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   offerTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   offerMeta: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  cqCard: { backgroundColor: COLORS.card, borderRadius: 16, borderLeftWidth: 3, borderLeftColor: COLORS.accent, borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: COLORS.line, paddingHorizontal: 16, paddingBottom: 16, paddingTop: 6, marginBottom: 10 },
-  cqMark: { fontFamily: FONT_SERIF, fontSize: 36, lineHeight: 40, color: COLORS.accent },
-  cqText: { fontSize: 15, lineHeight: 23, color: COLORS.ink, marginTop: -8 },
-  bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  cqCard: { borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 2, paddingBottom: 18 },
+  cqMark: { fontFamily: FONT_SERIF, fontSize: 68, lineHeight: 62, color: COLORS.accent, opacity: 0.10 },
+  cqText: { fontFamily: FONT_SANS, fontSize: 14, lineHeight: 22, color: COLORS.taupe, marginTop: -20 },
+  bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   bookText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
@@ -361,7 +364,7 @@ const styles = StyleSheet.create({
   modeText: { fontSize: 14, color: COLORS.ink },
   modeTextOn: { color: COLORS.bg },
   modeLoc: { fontSize: 11, color: COLORS.muted },
-  continueBtn: { marginTop: 20, marginBottom: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  continueBtn: { marginTop: 20, marginBottom: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   continueOff: { opacity: 0.5 },
   continueText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
 });

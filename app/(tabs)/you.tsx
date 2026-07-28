@@ -9,7 +9,8 @@ import { MOOD_RECO } from '@/constants/mood';
 import { EXPERTS } from '@/constants/experts';
 import { SOUNDS } from '@/constants/sounds';
 import { LIBRARY } from '@/constants/library';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import {
   useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone,
@@ -18,12 +19,17 @@ import {
 import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings, useMyBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
+import { formatWhenLocal } from '@/lib/bookings';
+import { useNotificationFeed } from '@/lib/notificationsFeed';
 import { refreshProfile, signOut, updateProfile, useAuth } from '@/lib/auth';
 import { noteKey, saveSessionNote, useSessionNotes } from '@/lib/sessionNotes';
 import { uploadAvatar } from '@/lib/upload';
 
 const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const TINT = '#F1E9DE';
+
+// Warm at the top, clearing towards the foot of the card.
+const RESUME_WASH = ['rgba(107,97,87,0.15)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 const DEMO_STREAK = { streak: 4, record: 5, week: [true, true, true, true, false, false, false], todayIndex: 3 };
 const DEMO_STATS = { reads: '12', sessions: '3', journals: '8', worksheets: '5' };
 const FADE_BANDS = [0.015, 0.03, 0.05, 0.075, 0.105, 0.14, 0.18, 0.225, 0.27, 0.32];
@@ -62,6 +68,9 @@ export default function YouScreen() {
   const [likedCat, setLikedCat] = useState('All');
   const [sesTab, setSesTab] = useState<'upcoming' | 'past'>('upcoming');
   const [savTab, setSavTab] = useState<'saved' | 'liked'>('saved');
+  const [notifsOpen, setNotifsOpen] = useState(false);
+  const notifs = useNotificationFeed();
+  const openNotifs = () => { notifs.reload(); setNotifsOpen(true); notifs.markAllSeen(); };
   const [uploading, setUploading] = useState(false);
 
   const savedIds = useSaved();
@@ -83,14 +92,14 @@ export default function YouScreen() {
 
   const libRoute = (l: any) => (l.pdf || l.html ? `/ebook/${l.id}` : `/title/${l.id}`);
   const saved = [
-    ...articles.filter((a) => savedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, route: `/article/${a.id}` })),
-    ...LIBRARY.filter((l) => savedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, route: libRoute(l) })),
+    ...articles.filter((a) => savedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, image: a.image ?? null, route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => savedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, image: (l as any).cover ?? null, route: libRoute(l) })),
   ];
   const liked = [
-    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, type: 'Articles', route: `/article/${a.id}` })),
-    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, type: 'E-books', route: libRoute(l) })),
-    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, type: 'Sounds', route: `/sound/${sd.id}` })),
-    ...EXPERTS.filter((e) => likedIds.includes(e.id)).map((e) => ({ id: e.id, title: e.name, category: 'Expert', type: 'Experts', route: `/expert/${e.id}` })),
+    ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, image: a.image ?? null, type: 'Articles', route: `/article/${a.id}` })),
+    ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, image: (l as any).cover ?? null, type: 'E-books', route: libRoute(l) })),
+    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, image: (sd as any).image ?? (sd as any).cover ?? null, type: 'Sounds', route: `/sound/${sd.id}` })),
+    ...EXPERTS.filter((e) => likedIds.includes(e.id)).map((e) => ({ id: e.id, title: e.name, category: 'Expert', image: (e as any).photo ?? null, type: 'Experts', route: `/expert/${e.id}` })),
   ];
   const LIKED_TYPES = ['Articles', 'Sounds', 'Experts', 'E-books'];
   const likedCats = ['All', ...LIKED_TYPES.filter((t) => liked.some((it) => it.type === t))];
@@ -99,15 +108,15 @@ export default function YouScreen() {
 
   // Anything worth carrying on with. Only what genuinely exists.
   const resume = useMemo(() => {
-    const out: { key: string; kind: string; title: string; meta: string; route: string }[] = [];
+    const out: { key: string; kind: string; title: string; meta: string; route: string; image?: any }[] = [];
     const art = lastReadId ? articles.find((a) => a.id === lastReadId) : undefined;
     if (art) {
       const pct = Math.round((progressMap[art.id] ?? 0) * 100);
-      out.push({ key: 'art', kind: 'READING', title: art.title, meta: pct > 0 ? `${pct}% through` : `${art.readMinutes ?? 5} min read`, route: `/article/${art.id}` });
+      out.push({ key: 'art', kind: 'READING', title: art.title, meta: pct > 0 ? `${pct}% through` : `${art.readMinutes ?? 5} min read`, route: `/article/${art.id}`, image: art.image ?? null });
     }
     if (lastRead) {
       const item = LIBRARY.find((l) => l.id === lastRead.id);
-      out.push({ key: 'book', kind: 'E-BOOK', title: lastRead.title, meta: 'Pick up where you stopped', route: item ? libRoute(item) : `/title/${lastRead.id}` });
+      out.push({ key: 'book', kind: 'E-BOOK', title: lastRead.title, meta: 'Pick up where you stopped', route: item ? libRoute(item) : `/title/${lastRead.id}`, image: item ? (item as any).cover ?? null : null });
     }
     const j = journalEntries[0];
     if (j) {
@@ -165,7 +174,10 @@ export default function YouScreen() {
       <ScrollView contentContainerStyle={[styles.content, demo && { paddingBottom: 280 }]} showsVerticalScrollIndicator={false}>
         <View style={styles.band}>
           <View style={styles.topBar}>
-            <View style={{ width: 40 }} />
+            <Pressable style={styles.bell} onPress={openNotifs} hitSlop={10}>
+              <Ionicons name="notifications-outline" size={21} color={COLORS.ink} />
+              {notifs.ready && notifs.unread > 0 ? <View style={styles.bellDot} /> : null}
+            </Pressable>
             <View style={{ flex: 1 }} />
             <Pressable style={styles.gear} onPress={() => setSettingsOpen(true)} hitSlop={10}>
               <Ionicons name="settings-outline" size={21} color={COLORS.ink} />
@@ -195,82 +207,30 @@ export default function YouScreen() {
             ) : null}
           </View>
 
-          <MoodInsightCard />
-        </View>
-
-        {resume.length ? (
-          <View style={[styles.band, styles.bandTint]}>
-            <Text style={styles.sectionLabel}>PICK UP WHERE YOU LEFT OFF</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
-              {resume.map((r) => (
-                <Pressable key={r.key} style={styles.resumeCard} onPress={() => router.push(r.route as any)}>
-                  <Text style={styles.resumeKind}>{r.kind}</Text>
-                  <Text style={styles.resumeTitle} numberOfLines={3}>{r.title}</Text>
-                  <View style={{ flex: 1 }} />
-                  <Text style={styles.resumeMeta}>{r.meta}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        ) : null}
-
-        <View style={styles.band}>
-          <Text style={styles.sectionLabel}>YOUR AI</Text>
-          <Pressable style={styles.aiCard} onPress={() => router.push(loggedIn ? '/your-ai' : '/login')}>
-            <View style={styles.aiIcon}><Ionicons name="sparkles" size={19} color={COLORS.bg} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.aiTitle}>Your AI</Text>
-              <Text style={styles.aiSub}>Think out loud. See what is really going on.</Text>
+          <View style={styles.rhythmStrip}>
+            <View style={styles.rhythmFigure}>
+              <Text style={styles.rhythmNum}>{streakInfo.streak}</Text>
+              <Text style={styles.rhythmUnit}>{streakInfo.streak === 1 ? 'day' : 'days'}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
-          </Pressable>
-        </View>
-
-        <View style={[styles.band, styles.bandTint]}>
-          <Text style={styles.sectionLabel}>YOUR RHYTHM</Text>
-          <View style={styles.streakCard}>
-            <View style={styles.ringWrap}>
-              <View style={styles.ringOuter}>
-                <View style={styles.ringInner}>
-                  <Text style={styles.ringNum}>{streakInfo.streak}</Text>
-                  <Text style={styles.ringUnit}>DAYS</Text>
-                </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rhythmLabel}>CURRENT STREAK</Text>
+              <View style={styles.weekRow}>
+                {WEEK.map((d, i) => {
+                  const on = streakInfo.week[i];
+                  const today = i === streakInfo.todayIndex;
+                  return (
+                    <View key={i} style={styles.dayCol}>
+                      <View style={[styles.dayCircle, on && styles.dayCircleOn, today && styles.dayCircleToday]}>
+                        {on ? <Text style={styles.dayCheck}>{'\u2713'}</Text> : <Text style={[styles.dayLetter, today && styles.dayLetterToday]}>{d}</Text>}
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             </View>
-            <Text style={styles.streakHeadline}>You{'\u2019'}re on a {streakInfo.streak}-day streak</Text>
-            <Text style={styles.streakSubline}>Keep it going{'\u2009\u00B7\u2009'}Your record is {streakInfo.record} days</Text>
-            <View style={styles.weekRow}>
-              {WEEK.map((d, i) => {
-                const on = streakInfo.week[i];
-                const today = i === streakInfo.todayIndex;
-                return (
-                  <View key={i} style={styles.dayCol}>
-                    <View style={[styles.dayCircle, on && styles.dayCircleOn, today && styles.dayCircleToday]}>
-                      {on ? <Text style={styles.dayCheck}>{'\u2713'}</Text> : <Text style={[styles.dayLetter, today && styles.dayLetterToday]}>{d}</Text>}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-            <View style={styles.countRow}>
-              <Count label="Read" value={demo ? DEMO_STATS.reads : String(reads.length)} />
-              <View style={styles.countDiv} />
-              <Count label="Sessions" value={demo ? DEMO_STATS.sessions : String(bookings.length)} />
-              <View style={styles.countDiv} />
-              <Count label="Journals" value={demo ? DEMO_STATS.journals : String(journalEntries.length)} />
-              <View style={styles.countDiv} />
-              <Count label="Workbooks" value={demo ? DEMO_STATS.worksheets : String(worksheetsDone.length)} />
-            </View>
           </View>
 
-          <Pressable style={styles.progressCard} onPress={() => router.push('/progress')}>
-            <View style={styles.progressIcon}><Ionicons name="trending-up" size={20} color={COLORS.bg} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.progressTitle}>Progress & achievements</Text>
-              <Text style={styles.progressSub}>Your journey so far</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-          </Pressable>
+          <MoodInsightCard />
         </View>
 
         <View style={styles.band}>
@@ -311,6 +271,38 @@ export default function YouScreen() {
             )
           )}
         </View>
+
+        {resume.length ? (
+          <View style={[styles.band, styles.bandTint]}>
+            <Text style={styles.sectionLabel}>PICK UP WHERE YOU LEFT OFF</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+              {resume.map((r) => (
+                <Pressable key={r.key} style={styles.resumeCard} onPress={() => router.push(r.route as any)}>
+                  <LinearGradient colors={RESUME_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  <Text style={styles.resumeKind}>{r.kind}</Text>
+                  <Text style={styles.resumeTitle} numberOfLines={3}>{r.title}</Text>
+                  <View style={{ flex: 1 }} />
+                  <View style={styles.resumeRule} />
+                  <Text style={styles.resumeMeta}>{r.meta}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+
+        <View style={styles.band}>
+          <Text style={styles.sectionLabel}>MY COMPANION</Text>
+          <Pressable style={styles.aiCard} onPress={() => router.push(loggedIn ? '/your-ai' : '/login')}>
+            <View style={styles.aiIcon}><Ionicons name="sparkles" size={19} color={COLORS.bg} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.aiTitle}>My Companion</Text>
+              <Text style={styles.aiSub}>Think out loud. See what is really going on.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
+          </Pressable>
+        </View>
+
+
 
         <View style={[styles.band, styles.bandTint]}>
           <Text style={styles.sectionLabel}>YOUR JOURNAL</Text>
@@ -379,6 +371,27 @@ export default function YouScreen() {
             )
           )}
         </View>
+        <View style={[styles.band, styles.bandTint]}>
+          <Text style={styles.sectionLabel}>YOUR PROGRESS</Text>
+          <View style={styles.countRow}>
+            <Count label="Read" value={demo ? DEMO_STATS.reads : String(reads.length)} />
+            <View style={styles.countDiv} />
+            <Count label="Sessions" value={demo ? DEMO_STATS.sessions : String(bookings.length)} />
+            <View style={styles.countDiv} />
+            <Count label="Journals" value={demo ? DEMO_STATS.journals : String(journalEntries.length)} />
+            <View style={styles.countDiv} />
+            <Count label="Workbooks" value={demo ? DEMO_STATS.worksheets : String(worksheetsDone.length)} />
+          </View>
+          <Pressable style={styles.progressCard} onPress={() => router.push('/progress')}>
+            <View style={styles.progressIcon}><Ionicons name="trending-up" size={20} color={COLORS.bg} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.progressTitle}>Progress & achievements</Text>
+              <Text style={styles.progressSub}>Your journey so far</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+          </Pressable>
+        </View>
+
       </ScrollView>
 
       {demo ? (
@@ -395,6 +408,38 @@ export default function YouScreen() {
           </View>
         </View>
       ) : null}
+
+      <Modal visible={notifsOpen} transparent animationType="slide" onRequestClose={() => setNotifsOpen(false)}>
+        <View style={styles.modalRoot}>
+          <Pressable style={styles.backdrop} onPress={() => setNotifsOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Notifications</Text>
+            {notifs.items.length === 0 ? (
+              <Text style={styles.notifEmpty}>Nothing right now. Upcoming sessions and packages waiting to be booked will show up here.</Text>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
+                {notifs.items.map((n) => (
+                  <Pressable
+                    key={n.id}
+                    style={styles.notifRow}
+                    onPress={() => { setNotifsOpen(false); setTimeout(() => router.push(n.route as any), 220); }}
+                  >
+                    <View style={styles.notifIcon}>
+                      <Ionicons name={n.icon as any} size={17} color={COLORS.accent} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.notifTitle} numberOfLines={2}>{n.title}</Text>
+                      <Text style={styles.notifBody} numberOfLines={2}>{n.body}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={settingsOpen} transparent animationType="slide" onRequestClose={() => setSettingsOpen(false)}>
         <View style={styles.modalRoot}>
@@ -476,7 +521,7 @@ function PackagesBlock() {
                       <Text style={styles.pkgNoText}>{b.session_no ?? '\u00B7'}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.pkgWhen}>{b.when_text}</Text>
+                      <Text style={styles.pkgWhen}>{formatWhenLocal(b)}</Text>
                       {b.link && /^https?:\/\//i.test(b.link) ? (
                         <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6}>
                           <Text style={styles.pkgJoin}>Open join link</Text>
@@ -502,18 +547,32 @@ function PackagesBlock() {
   );
 }
 
-function SavedRow({ a, onPress }: { a: { id: string; title: string; category: string }; onPress: () => void }) {
+function SavedRow({ a, onPress }: { a: { id: string; title: string; category: string; image?: any }; onPress: () => void }) {
+  // An article or expert photo arrives as a URL string. A library cover arrives
+  // as a bundled module. Anything without artwork keeps the plain card.
+  const src = typeof a.image === 'string' ? { uri: a.image } : a.image;
+  if (!src) {
+    return (
+      <Pressable style={styles.savedRow} onPress={onPress}>
+        <Text style={styles.savedCat}>{a.category.toUpperCase()}</Text>
+        <Text style={styles.savedTitle}>{a.title}</Text>
+      </Pressable>
+    );
+  }
   return (
-    <Pressable style={styles.savedRow} onPress={onPress}>
-      <Text style={styles.savedCat}>{a.category.toUpperCase()}</Text>
-      <Text style={styles.savedTitle}>{a.title}</Text>
+    <Pressable style={[styles.savedRow, styles.savedRowWithThumb]} onPress={onPress}>
+      <Image source={src} style={styles.savedThumb} resizeMode="cover" />
+      <View style={styles.savedRowBody}>
+        <Text style={styles.savedCat}>{a.category.toUpperCase()}</Text>
+        <Text style={styles.savedTitle} numberOfLines={2}>{a.title}</Text>
+      </View>
     </Pressable>
   );
 }
 
 function MoodInsightCard() {
   const router = useRouter();
-  const { ready, level, keyword, recoKind } = useMoodInsight(3, 14);
+  const { ready, level, keyword, recoKind } = useMoodInsight(2, 14);
   const { articles } = useArticles();
   if (!ready || !level) return null;
   const r = MOOD_RECO[level];
@@ -662,6 +721,13 @@ const styles = StyleSheet.create({
 
   topBar: { flexDirection: 'row', alignItems: 'center' },
   gear: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  bellDot: { position: 'absolute', top: 8, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: '#C0453B', borderWidth: 1.5, borderColor: COLORS.bg },
+  notifEmpty: { fontSize: 14, lineHeight: 21, color: COLORS.muted, paddingVertical: 10, paddingBottom: 22 },
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line },
+  notifIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  notifTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  notifBody: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 2 },
 
   profile: { alignItems: 'center', paddingTop: 4, paddingBottom: 18 },
   avatarWrap: { marginBottom: 14 },
@@ -676,6 +742,11 @@ const styles = StyleSheet.create({
   roleText: { fontSize: 11, letterSpacing: 1.5, color: COLORS.bg },
 
   sectionLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 14 },
+  rhythmStrip: { flexDirection: 'row', alignItems: 'center', gap: 18, backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 18, marginTop: 20 },
+  rhythmFigure: { alignItems: 'center', minWidth: 52 },
+  rhythmNum: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 38, color: COLORS.ink },
+  rhythmUnit: { fontFamily: FONT_ITALIC, fontSize: 15, color: COLORS.muted, marginTop: -2 },
+  rhythmLabel: { fontSize: 9, letterSpacing: 2.2, color: COLORS.muted, marginBottom: 10 },
   h3: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.ink, marginBottom: 10 },
   segRow: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginBottom: 16 },
   seg: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
@@ -684,7 +755,7 @@ const styles = StyleSheet.create({
   segTextOn: { color: COLORS.bg },
   pillRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
-  pillOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  pillOn: { backgroundColor: COLORS.taupe, borderColor: COLORS.accent },
   pillText: { fontSize: 14, color: COLORS.muted },
   pillTextOn: { color: COLORS.bg },
 
@@ -697,7 +768,8 @@ const styles = StyleSheet.create({
   insightRecoSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
 
   strip: { gap: 12, paddingRight: 20 },
-  resumeCard: { width: 208, height: 150, backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
+  resumeCard: { width: 232, height: 158, backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', padding: 18 },
+  resumeRule: { width: 26, height: 1, backgroundColor: COLORS.line, marginBottom: 10 },
   resumeKind: { fontSize: 9, letterSpacing: 1.8, color: COLORS.accent, marginBottom: 8 },
   resumeTitle: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 22, color: COLORS.ink },
   resumeMeta: { fontSize: 12, color: COLORS.muted },
@@ -707,14 +779,6 @@ const styles = StyleSheet.create({
   aiTitle: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.bg },
   aiSub: { fontSize: 13, lineHeight: 18, color: COLORS.bg, opacity: 0.72, marginTop: 3 },
 
-  streakCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 20 },
-  ringWrap: { alignItems: 'center', marginBottom: 16 },
-  ringOuter: { width: 148, height: 148, borderRadius: 74, borderWidth: 12, borderColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  ringInner: { width: 106, height: 106, borderRadius: 53, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
-  ringNum: { fontFamily: FONT_SERIF, fontSize: 48, lineHeight: 52, color: COLORS.bg },
-  ringUnit: { fontSize: 11, letterSpacing: 3, color: COLORS.bg, opacity: 0.85, marginTop: 2 },
-  streakHeadline: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, textAlign: 'center' },
-  streakSubline: { fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, marginBottom: 20 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
   dayCol: { alignItems: 'center', flex: 1 },
   dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: COLORS.line, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
@@ -750,7 +814,7 @@ const styles = StyleSheet.create({
   noteAddText: { fontSize: 13, color: COLORS.accent },
   noteHint: { fontSize: 13, color: COLORS.muted, marginBottom: 12 },
   noteInput: { minHeight: 140, maxHeight: 260, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, fontSize: 15, lineHeight: 22, color: COLORS.ink, textAlignVertical: 'top' },
-  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   noteSaveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.4 },
   pastTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 21, color: COLORS.ink },
   pastMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
@@ -777,10 +841,13 @@ const styles = StyleSheet.create({
   pkgWhen: { fontSize: 14, color: COLORS.ink },
   pkgJoin: { fontSize: 13, color: COLORS.accent, marginTop: 3 },
   pkgWaiting: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   pkgBtnText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
 
   savedRow: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
+  savedRowWithThumb: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12 },
+  savedThumb: { width: 64, height: 64, borderRadius: 12, backgroundColor: COLORS.line },
+  savedRowBody: { flex: 1 },
   savedCat: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 6 },
   savedTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 22, color: COLORS.ink },
   likedTabs: { gap: 8, paddingBottom: 14, paddingRight: 8 },
@@ -800,7 +867,7 @@ const styles = StyleSheet.create({
   lockCard: { width: '100%', backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 24, paddingHorizontal: 22, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 28, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
   lockTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginBottom: 8 },
   lockText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, textAlign: 'center', marginBottom: 18 },
-  lockBtn: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
+  lockBtn: { backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
   lockBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
 
   modalRoot: { flex: 1, justifyContent: 'flex-end' },

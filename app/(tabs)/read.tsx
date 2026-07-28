@@ -12,7 +12,7 @@ import { WORKSHEETS } from '@/constants/worksheets';
 import { useDraft } from '@/lib/worksheets';
 import { useAuth } from '@/lib/auth';
 import { useAppImages, uploadAppImage } from '@/lib/appImages';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 
 type Practice = { key: string; label: string; line: string; icon: any; color: string; route: string };
 
@@ -23,7 +23,25 @@ const PRACTICES: Practice[] = [
   { key: 'practice:affirmations', label: 'Affirmations', line: 'I am', icon: 'sparkles-outline', color: '#9A7B4F', route: '/affirmations' },
 ];
 
-const TINT = '#F1E9DE';
+const TINT = COLORS.wash;
+// Same tint with no alpha, so the gradient fades to nothing rather than to
+// white. rgba is needed because a hex cannot carry the alpha stop.
+const TINT_CLEAR = 'rgba(235,230,223,0)';
+
+// A tinted section whose edges dissolve into the page instead of cutting.
+function TintBand({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={styles.band}>
+      <LinearGradient
+        colors={[TINT_CLEAR, TINT, TINT, TINT_CLEAR]}
+        locations={[0, 0.16, 0.84, 1]}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      {children}
+    </View>
+  );
+}
 
 // Admin only: pick a photo and store it against this key.
 async function pickAndSave(key: string, onBusy: (b: boolean) => void) {
@@ -58,7 +76,7 @@ export default function LibraryScreen() {
           <Text style={styles.sub}>Everything here is yours to use at your own pace.</Text>
         </View>
 
-        <View style={[styles.band, styles.bandTint]}>
+        <TintBand>
           <Text style={styles.sectionLabel}>PRACTICES</Text>
           {isAdmin ? <Text style={styles.adminHint}>Hold a tile to change its image</Text> : null}
           <View style={styles.grid}>
@@ -66,7 +84,7 @@ export default function LibraryScreen() {
               <PracticeTile key={p.key} practice={p} uri={images[p.key]} isAdmin={isAdmin} />
             ))}
           </View>
-        </View>
+        </TintBand>
 
         <View style={styles.band}>
           <Text style={styles.sectionLabel}>READ</Text>
@@ -98,12 +116,12 @@ export default function LibraryScreen() {
         </View>
 
         {ebooks.length ? (
-          <View style={[styles.band, styles.bandTint]}>
+          <TintBand>
             <Text style={styles.shelfTitle}>E-books</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
               {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
             </ScrollView>
-          </View>
+          </TintBand>
         ) : null}
 
         {SOUNDS.length ? (
@@ -120,12 +138,12 @@ export default function LibraryScreen() {
           </View>
         ) : null}
 
-        <View style={[styles.band, styles.bandTint]}>
+        <TintBand>
           <Text style={styles.shelfTitle}>Workbooks</Text>
           <View style={{ marginTop: 4 }}>
             {WORKSHEETS.map((w) => <WorkbookCard key={w.id} item={w} />)}
           </View>
-        </View>
+        </TintBand>
       </ScrollView>
     </SafeAreaView>
   );
@@ -252,7 +270,7 @@ const styles = StyleSheet.create({
   titleRule: { width: 36, height: 1, backgroundColor: COLORS.accent, opacity: 0.5, marginTop: 16, marginBottom: 14 },
   kicker: { fontSize: 11, letterSpacing: 4, color: COLORS.muted, marginBottom: 14 },
   h1: { fontFamily: FONT_SERIF, fontSize: 44, lineHeight: 50, color: COLORS.ink, textAlign: 'center' },
-  sub: { fontFamily: FONT_SERIF, fontStyle: 'italic', fontSize: 16, lineHeight: 23, color: COLORS.accent, textAlign: 'center', paddingHorizontal: 12 },
+  sub: { fontFamily: FONT_ITALIC, fontSize: 16, lineHeight: 23, color: COLORS.accent, textAlign: 'center', paddingHorizontal: 12 },
 
   sectionLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 14 },
   adminHint: { fontSize: 11, color: COLORS.accent, marginTop: -8, marginBottom: 12 },

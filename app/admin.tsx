@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,15 +8,32 @@ import { useAuth } from '@/lib/auth';
 import { setUserRole, useAllProfiles } from '@/lib/admin';
 
 const ROLES = ['user', 'expert', 'admin'];
+const PEOPLE_PAGE = 10;
 
 export default function Admin() {
   const router = useRouter();
   const { role } = useAuth();
   const { profiles, loading, reload } = useAllProfiles();
+
+  const [rolesOpen, setRolesOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState('expert');
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [query, setQuery] = useState('');
+  const [showAll, setShowAll] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return profiles;
+    return profiles.filter((p: any) =>
+      (p.full_name || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q)
+    );
+  }, [profiles, query]);
+
+  const shown = showAll ? filtered : filtered.slice(0, PEOPLE_PAGE);
+  const staff = profiles.filter((p: any) => p.role !== 'user').length;
 
   if (role !== 'admin') {
     return (
@@ -53,82 +70,155 @@ export default function Admin() {
       <BackBar onPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.h1}>Admin</Text>
+        <Text style={styles.sub}>Everything that runs the platform, in one place.</Text>
 
-        <Text style={styles.sectionTitle}>Assign a role</Text>
-        <Text style={styles.fieldLabel}>Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="person@email.com"
-          placeholderTextColor={COLORS.muted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
+        <GroupLabel>Review</GroupLabel>
+        <Row
+          icon="checkmark-done-outline"
+          title="Approvals queue"
+          meta="Profile changes and new offerings waiting on you"
+          onPress={() => router.push('/admin-approvals')}
         />
-        <Text style={[styles.fieldLabel, { marginTop: 14 }]}>Role</Text>
-        <View style={styles.roleRow}>
-          {ROLES.map((r) => {
-            const on = r === newRole;
-            return (
-              <Pressable key={r} onPress={() => setNewRole(r)} style={[styles.roleChip, on && styles.roleChipOn]}>
-                <Text style={[styles.roleChipText, on && styles.roleChipTextOn]}>{r}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <Pressable style={styles.applyBtn} onPress={apply} disabled={busy}>
-          {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.applyText}>Apply role</Text>}
-        </Pressable>
-        {status ? <Text style={styles.status}>{status}</Text> : null}
 
-        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>People</Text>
+        <GroupLabel>Content</GroupLabel>
+        <Row
+          icon="document-text-outline"
+          title="Articles"
+          meta="Edit the text and formatting of anything published"
+          onPress={() => router.push('/admin-articles')}
+        />
+        <Row
+          icon="people-outline"
+          title="Experts"
+          meta="Photos, bios and how each profile reads"
+          onPress={() => router.push('/admin-experts')}
+        />
+        <Row
+          icon="star-outline"
+          title="Featured on home"
+          meta="Choose what leads the homepage this week"
+          onPress={() => router.push('/admin-featured')}
+        />
+
+        <GroupLabel>People</GroupLabel>
+        <Pressable style={styles.foldHead} onPress={() => setRolesOpen((v) => !v)}>
+          <View style={styles.rowIcon}>
+            <Ionicons name="key-outline" size={19} color={COLORS.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowTitle}>Roles and access</Text>
+            <Text style={styles.rowMeta}>
+              {staff} with expert or admin access
+            </Text>
+          </View>
+          <Ionicons name={rolesOpen ? 'chevron-up' : 'chevron-down'} size={18} color={COLORS.muted} />
+        </Pressable>
+
+        {rolesOpen ? (
+          <View style={styles.foldBody}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="person@email.com"
+              placeholderTextColor={COLORS.muted}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              style={styles.input}
+            />
+            <Text style={[styles.fieldLabel, { marginTop: 14 }]}>Role</Text>
+            <View style={styles.roleRow}>
+              {ROLES.map((r) => {
+                const on = r === newRole;
+                return (
+                  <Pressable key={r} onPress={() => setNewRole(r)} style={[styles.roleChip, on && styles.roleChipOn]}>
+                    <Text style={[styles.roleChipText, on && styles.roleChipTextOn]}>{r}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable style={styles.applyBtn} onPress={apply} disabled={busy}>
+              {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.applyText}>Apply role</Text>}
+            </Pressable>
+            {status ? <Text style={styles.status}>{status}</Text> : null}
+            <Text style={styles.foldHint}>Tap anyone below to fill their email in here.</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.searchWrap}>
+          <Ionicons name="search-outline" size={17} color={COLORS.muted} />
+          <TextInput
+            value={query}
+            onChangeText={(t) => { setQuery(t); setShowAll(false); }}
+            placeholder="Search everyone"
+            placeholderTextColor={COLORS.muted}
+            autoCapitalize="none"
+            style={styles.searchInput}
+          />
+          {query ? (
+            <Pressable onPress={() => setQuery('')} hitSlop={10}>
+              <Ionicons name="close-circle" size={17} color={COLORS.muted} />
+            </Pressable>
+          ) : null}
+        </View>
+
         {loading ? (
           <ActivityIndicator color={COLORS.accent} style={{ marginTop: 16 }} />
+        ) : filtered.length === 0 ? (
+          <Text style={styles.emptyText}>No one matches that.</Text>
         ) : (
-          profiles.map((p) => (
-            <Pressable key={p.id} style={styles.personRow} onPress={() => setEmail(p.email || '')}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.personName}>{p.full_name || '(no name)'}</Text>
-                <Text style={styles.personEmail}>{p.email}</Text>
-              </View>
-              <View style={[styles.badge, p.role !== 'user' && styles.badgeStrong]}>
-                <Text style={[styles.badgeText, p.role !== 'user' && styles.badgeTextStrong]}>{p.role}</Text>
-              </View>
-            </Pressable>
-          ))
+          <>
+            {shown.map((p: any) => (
+              <Pressable
+                key={p.id}
+                style={styles.personRow}
+                onPress={() => { setEmail(p.email || ''); setRolesOpen(true); }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.personName}>{p.full_name || '(no name)'}</Text>
+                  <Text style={styles.personEmail}>{p.email}</Text>
+                </View>
+                <View style={[styles.badge, p.role !== 'user' && styles.badgeStrong]}>
+                  <Text style={[styles.badgeText, p.role !== 'user' && styles.badgeTextStrong]}>{p.role}</Text>
+                </View>
+              </Pressable>
+            ))}
+            {filtered.length > PEOPLE_PAGE ? (
+              <Pressable onPress={() => setShowAll((v) => !v)} style={styles.moreBtn}>
+                <Text style={styles.moreText}>
+                  {showAll ? 'Show fewer' : `Show all ${filtered.length}`}
+                </Text>
+              </Pressable>
+            ) : null}
+          </>
         )}
 
-        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Review</Text>
-        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-approvals')}>
-          <Ionicons name="checkmark-done-outline" size={20} color={COLORS.accent} />
-          <Text style={[styles.soonText, { color: COLORS.ink }]}>Approvals queue</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-        </Pressable>
-
-        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Content</Text>
-        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-articles')}>
-          <Ionicons name="document-text-outline" size={20} color={COLORS.accent} />
-          <Text style={[styles.soonText, { color: COLORS.ink }]}>Edit articles (text & formatting)</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-        </Pressable>
-        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-experts')}>
-          <Ionicons name="people-outline" size={20} color={COLORS.accent} />
-          <Text style={[styles.soonText, { color: COLORS.ink }]}>Edit experts (photo & bio)</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-        </Pressable>
-        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-featured')}>
-          <Ionicons name="star-outline" size={20} color={COLORS.accent} />
-          <Text style={[styles.soonText, { color: COLORS.ink }]}>Featured on home</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-        </Pressable>
-        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Payouts</Text>
-        <Pressable style={styles.soonCard} onPress={() => router.push('/admin-payouts')}>
-          <Ionicons name="cash-outline" size={20} color={COLORS.accent} />
-          <Text style={[styles.soonText, { color: COLORS.ink }]}>Expert payouts & splits</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-        </Pressable>
+        <GroupLabel>Money</GroupLabel>
+        <Row
+          icon="cash-outline"
+          title="Payouts and splits"
+          meta="What each expert keeps, their bank details, and how people pay"
+          onPress={() => router.push('/admin-payouts')}
+        />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return <Text style={styles.groupLabel}>{String(children).toUpperCase()}</Text>;
+}
+
+function Row({ icon, title, meta, onPress }: { icon: any; title: string; meta: string; onPress: () => void }) {
+  return (
+    <Pressable style={styles.row} onPress={onPress}>
+      <View style={styles.rowIcon}><Ionicons name={icon} size={19} color={COLORS.accent} /></View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={styles.rowMeta}>{meta}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+    </Pressable>
   );
 }
 
@@ -145,21 +235,36 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
-  content: { paddingHorizontal: 20, paddingBottom: 48 },
-  h1: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginBottom: 8 },
+  content: { paddingHorizontal: 20, paddingBottom: 56 },
+  h1: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginBottom: 6 },
+  sub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginBottom: 8 },
   locked: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingBottom: 60 },
   lockedText: { fontSize: 15, color: COLORS.muted },
-  sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 22, marginBottom: 12 },
+
+  groupLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 30, marginBottom: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
+  rowIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  rowTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  rowMeta: { fontSize: 12, lineHeight: 17, color: COLORS.muted, marginTop: 3 },
+
+  foldHead: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
+  foldBody: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderTopWidth: 0, borderColor: COLORS.line, marginTop: -8, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  foldHint: { fontSize: 12, color: COLORS.muted, marginTop: 14 },
+
   fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
-  input: { backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 13, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
+  input: { backgroundColor: COLORS.bg, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 13, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
   roleRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   roleChip: { paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
   roleChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   roleChipText: { fontSize: 14, color: COLORS.ink },
   roleChipTextOn: { color: COLORS.bg },
-  applyBtn: { marginTop: 18, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  applyBtn: { marginTop: 18, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   applyText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14 },
+
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: COLORS.card, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, paddingHorizontal: 16, paddingVertical: 11, marginTop: 14, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 15, color: COLORS.ink, padding: 0 },
+  emptyText: { fontSize: 14, color: COLORS.muted, paddingVertical: 20, textAlign: 'center' },
   personRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 8 },
   personName: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   personEmail: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
@@ -167,6 +272,6 @@ const styles = StyleSheet.create({
   badgeStrong: { backgroundColor: COLORS.ink },
   badgeText: { fontSize: 12, color: COLORS.ink },
   badgeTextStrong: { color: COLORS.bg },
-  soonCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
-  soonText: { fontSize: 14, color: COLORS.muted, flex: 1 },
+  moreBtn: { alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 20 },
+  moreText: { fontSize: 14, color: COLORS.accent },
 });

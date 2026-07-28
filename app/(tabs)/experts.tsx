@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
 import { FramedImage } from '@/components/FramedImage';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 
 const ALL = 'All';
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 11, letterSpacing: 4, color: COLORS.muted, marginBottom: 16 },
   h1: { fontFamily: FONT_SERIF, fontSize: 46, lineHeight: 54, color: COLORS.ink, textAlign: 'center' },
   heroRule: { width: 36, height: 1, backgroundColor: COLORS.accent, opacity: 0.5, marginTop: 18, marginBottom: 18 },
-  sub: { fontFamily: FONT_SERIF, fontStyle: 'italic', fontSize: 19, color: COLORS.accent, textAlign: 'center' },
+  sub: { fontFamily: FONT_ITALIC, fontSize: 19, color: COLORS.accent, textAlign: 'center' },
   heroNote: { fontSize: 14, lineHeight: 22, color: COLORS.muted, textAlign: 'center', marginTop: 14, paddingHorizontal: 24 },
   cue: { alignItems: 'center', marginTop: 30 },
   cueLine: { width: 1, height: 34, backgroundColor: COLORS.line },

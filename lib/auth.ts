@@ -42,7 +42,7 @@ async function loadProfile(userId: string) {
       profile = data as Profile;
       return;
     }
-    // No profile row yet — create one from the auth user so the account works.
+    // No profile row yet, so create one from the auth user and the account works.
     const { data: u } = await supabase.auth.getUser();
     const email = u?.user?.email ?? null;
     const full_name = (u?.user?.user_metadata as any)?.full_name ?? null;
@@ -165,10 +165,19 @@ export async function deleteAccount() {
   return { error: null };
 }
 
+// Read the store into a plain object. Called on every emit so each update
+// produces a fresh value rather than the same memoized one.
+function snapshot() {
+  return { session, profile, loading };
+}
+
 export function useAuth() {
-  const [, force] = useState(0);
+  // Held as real state on purpose. Returning the module-level variables
+  // directly let the compiler memoize a pre-restore value, which showed the
+  // signed-out prompt to people who were already signed in.
+  const [snap, setSnap] = useState(() => snapshot());
   useEffect(() => {
-    const l = () => force((x) => x + 1);
+    const l = () => setSnap(snapshot());
     listeners.add(l);
     l();
     return () => {
@@ -176,10 +185,10 @@ export function useAuth() {
     };
   }, []);
   return {
-    session,
-    user: session?.user ?? null,
-    profile,
-    role: (profile?.role ?? 'user') as Role,
-    loading,
+    session: snap.session,
+    user: snap.session?.user ?? null,
+    profile: snap.profile,
+    role: (snap.profile?.role ?? 'user') as Role,
+    loading: snap.loading,
   };
 }

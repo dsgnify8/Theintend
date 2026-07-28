@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: COLORS.ink },
   errorBox: { backgroundColor: '#F6E5E0', borderRadius: 12, padding: 14, marginBottom: 8 },
   errorText: { fontSize: 14, lineHeight: 20, color: '#8F4A3B' },
-  btn: { marginTop: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  btn: { marginTop: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 16, letterSpacing: 0.5 },
 });

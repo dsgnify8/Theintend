@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   cardBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: 12 },
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   cardMeta: { fontSize: 13, color: COLORS.muted },
-  startBtn: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
+  startBtn: { backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
   startText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
   sectionLabel: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 30, marginBottom: 14 },
   copyRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },

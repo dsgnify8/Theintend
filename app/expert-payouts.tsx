@@ -6,9 +6,10 @@ import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
-import { useExpertBookings } from '@/lib/bookings';
+import { formatWhenLocal, useExpertBookings } from '@/lib/bookings';
 import { usePayoutDetails, savePayoutDetails } from '@/lib/payouts';
 import { splitFor } from '@/constants/splits';
+import { aed, useExpertEarnings } from '@/lib/earnings';
 import type { Expert } from '@/constants/experts';
 
 export default function ExpertPayouts() {
@@ -22,6 +23,7 @@ export default function ExpertPayouts() {
 
   const { items: bookings } = useExpertBookings(expert?.id);
   const { data: saved } = usePayoutDetails(expert?.id);
+  const earnings = useExpertEarnings(expert?.id, bookings);
 
   const [holder, setHolder] = useState('');
   const [bank, setBank] = useState('');
@@ -98,8 +100,8 @@ export default function ExpertPayouts() {
                 <Text style={styles.earnBig}>You keep {split.online}% of every booking.</Text>
               ) : (
                 <>
-                  <Text style={styles.earnBig}>Online sessions — you keep {split.online}%</Text>
-                  <Text style={styles.earnBig}>In-person sessions — you keep {split.inPerson}%</Text>
+                  <Text style={styles.earnBig}>Online sessions, you keep {split.online}%</Text>
+                  <Text style={styles.earnBig}>In-person sessions, you keep {split.inPerson}%</Text>
                 </>
               )}
               <Text style={styles.earnNoteSmall}>Paid out within the agreed timeframe after each completed session.</Text>
@@ -110,17 +112,34 @@ export default function ExpertPayouts() {
           {bookings.length === 0 ? (
             <Text style={styles.payEmpty}>Payouts will appear here after your first booking.</Text>
           ) : (
-            bookings.slice(0, 8).map((b) => (
-              <View key={b.id} style={styles.payRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.payTitle} numberOfLines={1}>{b.title}</Text>
-                  <Text style={styles.payMeta}>{b.when_text}</Text>
-                </View>
-                <Text style={styles.payShare}>You keep {split.online}%</Text>
+            <>
+              <View style={styles.totalCard}>
+                <Text style={styles.totalLabel}>NEXT PAYOUT</Text>
+                <Text style={styles.totalValue}>{aed(earnings.total)}</Text>
+                <Text style={styles.totalNote}>Across {earnings.priced} booking{earnings.priced === 1 ? '' : 's'}.</Text>
               </View>
-            ))
+              {bookings.slice(0, 8).map((b, i) => {
+                const line = earnings.lines[i];
+                return (
+                  <View key={b.id} style={styles.payRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.payTitle} numberOfLines={1}>{b.title}</Text>
+                      <Text style={styles.payMeta}>{formatWhenLocal(b)}</Text>
+                    </View>
+                    {line && line.payout != null ? (
+                      <View style={styles.payRight}>
+                        <Text style={styles.payAmount}>{aed(line.payout)}</Text>
+                        {line.sharePct != null ? <Text style={styles.payShare}>your {line.sharePct}%</Text> : null}
+                      </View>
+                    ) : (
+                      <Text style={styles.payShare}>{line?.note ?? ''}</Text>
+                    )}
+                  </View>
+                );
+              })}
+            </>
           )}
-          <Text style={styles.payNote}>Amounts are shown once pricing is attached to each booking.</Text>
+          <Text style={styles.payNote}>Amounts are what comes to you. Paid out within the agreed timeframe after each completed session.</Text>
 
           <Pressable style={styles.dropHead} onPress={() => setBankOpen((v) => !v)}>
             <View style={{ flex: 1 }}>
@@ -210,7 +229,7 @@ const styles = StyleSheet.create({
   field: { marginBottom: 16 },
   fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
   input: { backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 12, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
-  saveBtn: { marginTop: 12, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  saveBtn: { marginTop: 12, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14, textAlign: 'center' },
   dropHead: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 8 },
@@ -220,7 +239,13 @@ const styles = StyleSheet.create({
   payRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 8 },
   payTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
   payMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
-  payShare: { fontSize: 13, color: COLORS.accent, marginLeft: 10 },
+  payShare: { fontSize: 12, color: COLORS.muted, marginLeft: 10 },
+  payRight: { alignItems: 'flex-end', marginLeft: 10 },
+  payAmount: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  totalCard: { backgroundColor: COLORS.accentSoft, borderRadius: 16, padding: 18, marginBottom: 12 },
+  totalLabel: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted },
+  totalValue: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginTop: 6 },
+  totalNote: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
   payEmpty: { fontSize: 14, color: COLORS.muted },
   payNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 6, marginBottom: 4 },
 });

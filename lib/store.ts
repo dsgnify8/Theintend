@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './supabase';
 
 export type Booking = {
   refId: string;
@@ -83,22 +84,95 @@ export async function clearAllUserData() {
   try {
     await AsyncStorage.multiRemove([
       READS_KEY, WORK_KEY, LISTEN_KEY, LASTREAD_KEY, SCROLL_KEY, JOURNAL_KEY, SAVED_KEY, LIKED_KEY,
+      // Kept in lib/mood.ts as MOOD_HIDE_KEY. Named here so account deletion
+      // leaves nothing behind.
+      'intend.mood.answeredAt',
+      // Kept in lib/notificationsFeed.ts as NOTIFS_SEEN_KEY.
+      'intend.notifs.seen.v1',
     ]);
   } catch {}
   emit();
 }
 
+// --- Account copy of saved and liked ---
+// The device stays the source of truth for what is on screen, so a tap is
+// instant and works offline. These writes run behind that and are allowed to
+// fail quietly: the local copy is still correct either way.
+
+async function currentUserId(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function pushItem(id: string, kind: 'saved' | 'liked', on: boolean) {
+  const uid = await currentUserId();
+  if (!uid) return; // signed out: the device copy is all there is
+  try {
+    if (on) {
+      await supabase.from('user_items').upsert(
+        { user_id: uid, item_id: id, kind },
+        { onConflict: 'user_id,item_id,kind' },
+      );
+    } else {
+      await supabase.from('user_items').delete().eq('user_id', uid).eq('item_id', id).eq('kind', kind);
+    }
+  } catch {}
+}
+
+// Merges the account copy into whatever is on the device. Union rather than
+// replace, so anything saved while signed out is kept and pushed up.
+export async function hydrateUserItems() {
+  const uid = await currentUserId();
+  if (!uid) return;
+  try {
+    const { data } = await supabase.from('user_items').select('item_id,kind').eq('user_id', uid);
+    const rows = (data as { item_id: string; kind: string }[]) ?? [];
+    const remoteSaved = rows.filter((r) => r.kind === 'saved').map((r) => r.item_id);
+    const remoteLiked = rows.filter((r) => r.kind === 'liked').map((r) => r.item_id);
+
+    const localOnlySaved = savedIds.filter((x) => !remoteSaved.includes(x));
+    const localOnlyLiked = likedIds.filter((x) => !remoteLiked.includes(x));
+
+    savedIds = Array.from(new Set([...remoteSaved, ...savedIds]));
+    likedIds = Array.from(new Set([...remoteLiked, ...likedIds]));
+    AsyncStorage.setItem(SAVED_KEY, JSON.stringify(savedIds)).catch(() => {});
+    AsyncStorage.setItem(LIKED_KEY, JSON.stringify(likedIds)).catch(() => {});
+    emit();
+
+    for (const id of localOnlySaved) pushItem(id, 'saved', true);
+    for (const id of localOnlyLiked) pushItem(id, 'liked', true);
+  } catch {}
+}
+
+// Pull the account copy on load and whenever someone signs in.
+hydrateUserItems();
+try {
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+      hydrateUserItems();
+    }
+  });
+} catch {}
+
 export function toggleSaved(id: string) {
-  savedIds = savedIds.includes(id) ? savedIds.filter((x) => x !== id) : [...savedIds, id];
+  const on = !savedIds.includes(id);
+  savedIds = on ? [...savedIds, id] : savedIds.filter((x) => x !== id);
   AsyncStorage.setItem(SAVED_KEY, JSON.stringify(savedIds)).catch(() => {});
   emit();
+  pushItem(id, 'saved', on);
 }
 export function isSaved(id: string) { return savedIds.includes(id); }
 
 export function toggleLiked(id: string) {
-  likedIds = likedIds.includes(id) ? likedIds.filter((x) => x !== id) : [...likedIds, id];
+  const on = !likedIds.includes(id);
+  likedIds = on ? [...likedIds, id] : likedIds.filter((x) => x !== id);
   AsyncStorage.setItem(LIKED_KEY, JSON.stringify(likedIds)).catch(() => {});
   emit();
+  pushItem(id, 'liked', on);
 }
 export function isLiked(id: string) { return likedIds.includes(id); }
 
@@ -218,7 +292,7 @@ export function useReadStreak() {
 
     let streak = 0;
     let cursor = Date.now();
-    if (!days.has(dayKey(cursor))) cursor -= oneDay; // today not read yet — don't break the streak
+    if (!days.has(dayKey(cursor))) cursor -= oneDay; // today not read yet, so do not break the streak
     while (days.has(dayKey(cursor))) { streak++; cursor -= oneDay; }
 
     // Longest run (record)

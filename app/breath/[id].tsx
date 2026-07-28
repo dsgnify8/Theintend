@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   cueLabel: { fontFamily: FONT_SERIF, fontSize: 24, color: '#FFFFFF' },
   cueCount: { fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 4 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 14 },
-  ctrlBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.accent, paddingVertical: 14, paddingHorizontal: 30, borderRadius: 999 },
+  ctrlBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.taupe, paddingVertical: 14, paddingHorizontal: 30, borderRadius: 999 },
   ctrlText: { color: COLORS.bg, fontSize: 15 },
   muteBtn: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.card },
   note: { fontSize: 13, lineHeight: 20, color: COLORS.muted, textAlign: 'center', paddingHorizontal: 32, marginBottom: 16 },

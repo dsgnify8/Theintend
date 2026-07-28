@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 12, color: COLORS.muted },
   blockTextOn: { color: COLORS.bg },
   status: { fontSize: 14, color: COLORS.accent, marginTop: 14, marginBottom: 4, textAlign: 'center' },
-  saveBtn: { backgroundColor: COLORS.accent, paddingVertical: 16, borderRadius: 999, alignItems: 'center', marginTop: 12 },
+  saveBtn: { backgroundColor: COLORS.taupe, paddingVertical: 16, borderRadius: 999, alignItems: 'center', marginTop: 12 },
   saveOff: { opacity: 0.6 },
   saveText: { color: COLORS.bg, fontSize: 15 },
   note: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 16 },

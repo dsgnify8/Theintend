@@ -150,11 +150,19 @@ export default function BookScreen() {
       .catch(() => setBusyKeys(new Set()));
   }, [id]);
 
-  // Slots already taken by existing bookings (parsed from their stored time).
+  // Slots already taken by existing bookings. starts_at is an absolute instant
+  // so it compares correctly no matter which zone the booking was made in.
+  // when_text is only used for rows written before starts_at existed.
   const takenKeys = useMemo(() => {
     const set = new Set<string>();
     for (const b of bookings) {
-      const d = parseSlot(b.when_text || '');
+      const iso = (b as any).starts_at;
+      let d: Date | null = null;
+      if (iso) {
+        const abs = new Date(iso);
+        if (!isNaN(abs.getTime())) d = abs;
+      }
+      if (!d) d = parseSlot(b.when_text || '');
       if (d) set.add(keyFor(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()));
     }
     return set;
@@ -230,6 +238,11 @@ export default function BookScreen() {
       title: fullTitle,
       when: label, expert: expert.name, expertId: String(id),
       packageId, sessionNo,
+      // Same instant that goes to Google Calendar below, so the two agree.
+      startsAt: slot,
+      durationMin: svc?.durationMin ?? null,
+      timezone: tzId(),
+      serviceId: svc?.id ? String(svc.id) : null,
     });
     if (orderId) {
       markOrderFulfilled(orderId, { bookingId: (created as any)?.id ?? null, packageId });
@@ -328,7 +341,14 @@ export default function BookScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>BOOK A SESSION</Text>
-        <Text style={styles.h1}>{expert ? expert.name : 'The Intend'}</Text>
+        <View style={styles.nameRow}>
+          <Text style={[styles.h1, styles.nameText]}>{expert ? expert.name : 'The Intend'}</Text>
+          {expert ? (
+            <Pressable style={styles.profileLink} onPress={() => router.push(`/expert/${id}`)} hitSlop={12}>
+              <Ionicons name="person-circle-outline" size={22} color={COLORS.muted} />
+            </Pressable>
+          ) : null}
+        </View>
         {expert ? <Text style={styles.sub}>{expert.title}</Text> : null}
 
         {svc ? (
@@ -462,6 +482,9 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginTop: 6, marginBottom: 10 },
   h1: { fontFamily: FONT_SERIF, fontSize: 28, color: COLORS.ink },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  nameText: { flexShrink: 1 },
+  profileLink: { paddingTop: 2 },
   sub: { fontSize: 13, letterSpacing: 1, color: COLORS.muted, marginTop: 6, marginBottom: 8, textTransform: 'uppercase' },
   offerCard: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 16 },
   offerName: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
@@ -490,7 +513,7 @@ const styles = StyleSheet.create({
   slotText: { fontSize: 13, color: COLORS.ink },
   slotTextOn: { color: COLORS.bg },
   tzNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 14 },
-  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   btnOff: { opacity: 0.5 },
   requestText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   tabbyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, marginTop: 4 },

@@ -1,16 +1,27 @@
 import { useMemo, useState } from 'react';
-import { ImageBackground, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
-import { SESSION_CATEGORIES, type SessionClass } from '@/constants/sessions';
+import { SESSION_CATEGORIES } from '@/constants/sessions';
+import { HIGHLIGHTS, type Highlight } from '@/constants/highlights';
 import { useSessions } from '@/lib/sessions';
-import { useServices } from '@/lib/services';
+import { useService, useServices } from '@/lib/services';
 import { EXPERTS } from '@/constants/experts';
-import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 
-const TABS = ['Classes', 'Programs'];
+const TABS = ['One to one', 'Programs'];
+
+// "60 Minute Session (5 sessions)" reads as "60 Minute Session" here, because
+// the count is already shown in the pill above.
+function stripSessionCount(title: string): string {
+  return (title || '').replace(/\s*\(\d+\s*sessions?\)\s*$/i, '').trim();
+}
+
+// A soft wash behind each card, warm at the top and clearing towards the copy.
+const CARD_WASH = ['rgba(107,97,87,0.16)', 'rgba(107,97,87,0.05)', 'rgba(107,97,87,0)'];
 // Seeded demo programs are not shown in the live Programs feed.
 const DEMO_PROGRAM_IDS = ['nervous-system-reset', 'building-self-worth', 'feminine-embodiment'];
 // Only these packages are featured in the public Programs feed.
@@ -29,14 +40,13 @@ type FeedProgram = {
 
 export default function SessionsScreen() {
   const router = useRouter();
-  const [tab, setTab] = useState('Classes');
+  const [tab, setTab] = useState('One to one');
   const [filterOpen, setFilterOpen] = useState(false);
   const [cats, setCats] = useState<string[]>([]);
-  const [maxHours, setMaxHours] = useState(4);
   const [maxSessions, setMaxSessions] = useState(10);
-  const { classes: CLASSES, programs: PROGRAMS } = useSessions();
+  const { programs: PROGRAMS } = useSessions();
   const { services } = useServices();
-  const isClasses = tab === 'Classes';
+  const isOneToOne = tab === 'One to one';
 
   const expertName = (eid: string) => EXPERTS.find((e) => e.id === eid)?.name ?? '';
 
@@ -73,16 +83,12 @@ export default function SessionsScreen() {
   const toggleCat = (c: string) =>
     setCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  const filteredClasses = CLASSES.filter(
-    (c) => (cats.length === 0 || cats.includes(c.category)) && c.durationHours <= maxHours
-  );
   const filteredPrograms = programItems.filter(
     (p) => (cats.length === 0 || (p.category ? cats.includes(p.category) : true)) && p.sessions <= maxSessions
   );
 
   const clearAll = () => {
     setCats([]);
-    setMaxHours(4);
     setMaxSessions(10);
   };
 
@@ -91,13 +97,15 @@ export default function SessionsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <Text style={styles.kicker}>THE INTEND</Text>
-          <Pressable style={styles.filterBtn} onPress={() => setFilterOpen(true)} hitSlop={10}>
-            <Ionicons name="options-outline" size={20} color={COLORS.ink} />
-          </Pressable>
+          {!isOneToOne ? (
+            <Pressable style={styles.filterBtn} onPress={() => setFilterOpen(true)} hitSlop={10}>
+              <Ionicons name="options-outline" size={20} color={COLORS.ink} />
+            </Pressable>
+          ) : null}
         </View>
 
         <Text style={styles.h1}>Sessions</Text>
-        <Text style={styles.sub}>Live classes and guided programs with your experts.</Text>
+        <Text style={styles.sub}>One to one sessions and guided programs with your experts.</Text>
 
         <View style={styles.segment}>
           {TABS.map((t) => {
@@ -110,14 +118,8 @@ export default function SessionsScreen() {
           })}
         </View>
 
-        {isClasses ? (
-          filteredClasses.length > 0 ? (
-            filteredClasses.map((c) => <ClassCard key={c.id} item={c} />)
-          ) : (
-            <View style={styles.noResult}>
-              <Text style={styles.noResultText}>No classes match these filters yet.</Text>
-            </View>
-          )
+        {isOneToOne ? (
+          HIGHLIGHTS.map((h) => <HighlightCard key={h.serviceId} item={h} />)
         ) : filteredPrograms.length > 0 ? (
           filteredPrograms.map((p) => <ProgramCard key={p.key} item={p} />)
         ) : (
@@ -132,7 +134,7 @@ export default function SessionsScreen() {
           <Pressable style={styles.backdrop} onPress={() => setFilterOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Filter {isClasses ? 'classes' : 'programs'}</Text>
+            <Text style={styles.sheetTitle}>Filter programs</Text>
 
             <Text style={styles.filterLabel}>Categories</Text>
             <View style={styles.catWrap}>
@@ -146,21 +148,7 @@ export default function SessionsScreen() {
               })}
             </View>
 
-            {isClasses ? (
-              <View>
-                <Text style={styles.filterLabel}>Duration {'\u00B7'} up to {maxHours}h</Text>
-                <Slider
-                  minimumValue={1}
-                  maximumValue={4}
-                  step={0.5}
-                  value={maxHours}
-                  onValueChange={setMaxHours}
-                  minimumTrackTintColor={COLORS.accent}
-                  maximumTrackTintColor={COLORS.line}
-                  thumbTintColor={COLORS.accent}
-                />
-              </View>
-            ) : (
+            {(
               <View>
                 <Text style={styles.filterLabel}>Sessions {'\u00B7'} up to {maxSessions}</Text>
                 <Slider
@@ -191,22 +179,35 @@ export default function SessionsScreen() {
   );
 }
 
-function ClassCard({ item }: { item: SessionClass }) {
+function HighlightCard({ item }: { item: Highlight }) {
   const router = useRouter();
+  const expert = EXPERTS.find((e) => e.id === item.expertId);
+  const svc = useService(item.serviceId);
+  // "90 minutes with Omar" splits so the duration can sit quietly above the
+  // name, which then gets the display face to itself.
+  const parts = item.title.match(/^(.*?)\s+with\s+(.+)$/i);
+  const lead = item.lead ?? (parts ? parts[1] : null);
+  const name = parts ? parts[2] : item.title;
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/class/${item.id}`)}>
-      <ImageBackground source={item.banner} style={[styles.cover, { backgroundColor: item.color }]} resizeMode="cover">
-        <View style={styles.coverScrim} pointerEvents="none" />
-        <Text style={styles.coverTitle}>{item.title}</Text>
-      </ImageBackground>
-      <View style={styles.cardBody}>
-        <View style={styles.metaRow}>
-          <Text style={styles.pill}>{item.date}</Text>
-          <Text style={styles.pill}>{item.durationHours}h</Text>
-          <Text style={styles.pill}>{item.category}</Text>
-        </View>
-        <Text style={styles.expert}>{item.expertName}</Text>
-        <Text style={styles.going}>{item.going} going {'\u00B7'} Virtual</Text>
+    <Pressable
+      style={styles.hCard}
+      onPress={() => router.push(`/book/${item.expertId}?service=${item.serviceId}`)}
+    >
+      <LinearGradient colors={CARD_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <View style={styles.hHead}>
+        {lead ? <Text style={styles.hLead}>{lead.toUpperCase()}</Text> : null}
+        <Text style={styles.hName}>
+          {parts ? <Text style={styles.hWith}>with </Text> : null}{name}
+        </Text>
+      </View>
+      <Text style={styles.hCopy}>{item.copy}</Text>
+      <View style={styles.hFoot}>
+        <Text style={styles.hExpert}>{expert?.name ?? ''}</Text>
+        {item.free ? (
+          <Text style={styles.freeTag}>FREE</Text>
+        ) : svc?.price ? (
+          <Text style={styles.hPrice}>{svc.price}</Text>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -214,14 +215,15 @@ function ClassCard({ item }: { item: SessionClass }) {
 
 function ProgramCard({ item }: { item: FeedProgram }) {
   return (
-    <Pressable style={styles.card} onPress={item.onPress}>
-      <View style={styles.cardBody}>
-        <View style={styles.metaRow}>
-          {item.pills.map((p, i) => <Text key={i} style={styles.pill}>{p}</Text>)}
-        </View>
-        <Text style={styles.programTitle}>{item.title}</Text>
-        {item.expertName ? <Text style={styles.expert}>{item.expertName}</Text> : null}
-        <Text style={styles.going}>{item.price}</Text>
+    <Pressable style={styles.hCard} onPress={item.onPress}>
+      <LinearGradient colors={CARD_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <View style={styles.metaRow}>
+        {item.pills.map((p, i) => <Text key={i} style={styles.pill}>{p}</Text>)}
+      </View>
+      <Text style={styles.programTitle}>{stripSessionCount(item.title)}</Text>
+      <View style={styles.hFoot}>
+        <Text style={styles.hExpert}>{item.expertName}</Text>
+        <Text style={styles.hPrice}>{item.price}</Text>
       </View>
     </Pressable>
   );
@@ -247,9 +249,19 @@ const styles = StyleSheet.create({
   cardBody: { padding: 18 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   pill: { fontSize: 12, color: COLORS.ink, backgroundColor: COLORS.accentSoft, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden' },
-  programTitle: { fontFamily: FONT_SERIF, fontSize: 20, lineHeight: 25, color: COLORS.ink, marginBottom: 6 },
+  programTitle: { fontFamily: FONT_SERIF, fontSize: 25, lineHeight: 31, color: COLORS.ink, marginTop: 2 },
   expert: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   going: { fontSize: 13, color: COLORS.muted, marginTop: 6 },
+  hCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', padding: 22, marginBottom: 14 },
+  hHead: { marginBottom: 14 },
+  hLead: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 8 },
+  hName: { fontFamily: FONT_SERIF, fontSize: 27, lineHeight: 33, color: COLORS.ink },
+  hWith: { fontFamily: FONT_ITALIC, fontSize: 24, color: COLORS.muted },
+  hCopy: { fontSize: 14, lineHeight: 22, color: COLORS.ink, opacity: 0.8 },
+  hFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 14 },
+  hExpert: { fontSize: 13, color: COLORS.muted },
+  hPrice: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
+  freeTag: { fontSize: 10, letterSpacing: 1.6, color: COLORS.accent, backgroundColor: COLORS.accentSoft, paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, overflow: 'hidden' },
   noResult: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 24, alignItems: 'center' },
   noResultText: { fontSize: 14, color: COLORS.muted },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
@@ -265,6 +277,6 @@ const styles = StyleSheet.create({
   catTextOn: { color: COLORS.bg },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 28 },
   clearText: { fontSize: 15, color: COLORS.muted },
-  applyBtn: { backgroundColor: COLORS.accent, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
+  applyBtn: { backgroundColor: COLORS.taupe, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
   applyText: { color: COLORS.bg, fontSize: 15 },
 });

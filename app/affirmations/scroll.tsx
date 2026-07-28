@@ -10,7 +10,8 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import {
   type Affirmation, type Category,
-  getCategories, getAffirmations, loadOrGenerate, toggleLike, getLiked,
+  getCategories, generateBatch, getLiked, likeItem, loadFeed,
+  LIB_PREFIX, markLibrarySeen,
 } from '@/lib/affirmations';
 
 const { height: H } = Dimensions.get('window');
@@ -44,26 +45,77 @@ export default function AffirmationsScroll() {
       setWarming(false);
       return;
     }
-    // Nothing cached. Try a plain read first, which is fast. Only if that is
-    // empty do we fall through to generation, and that is the only slow path.
+    // The curated pool is public and quick, so this is the normal path and it
+    // does not wait on anything being written for this person.
     setIndex(0);
     setLoading(true);
-    const first = await getAffirmations(user.id, cat);
-    if (first.length) {
-      cacheRef.current[cat] = first;
-      setItems(first);
-      setLoading(false);
-      return;
-    }
-    // Empty category: keep the screen usable and warm it in the background.
-    setItems([]);
-    setLoading(false);
-    setWarming(true);
-    const list = await loadOrGenerate(user.id, cat);
+    const list = await loadFeed(user.id, cat);
     cacheRef.current[cat] = list;
     setItems(list);
-    setWarming(false);
+    setLoading(false);
+    // Only an empty pool leaves us with nothing to show, and only then does
+    // generation become the thing being waited on.
+    if (list.length === 0) {
+      setWarming(true);
+      try {
+        await generateBatch(cat);
+        const grown = await loadFeed(user.id, cat);
+        cacheRef.current[cat] = grown;
+        setItems(grown);
+      } catch {}
+      setWarming(false);
+    }
   }, [user]);
+
+  // Pool lines are recorded as they are reached, so a return visit brings ones
+  // they have not read. Batched, and flushed on leaving so nothing is lost.
+  const pendingSeenRef = useRef<string[]>([]);
+  const flushSeen = useCallback(() => {
+    if (!user) return;
+    const ids = pendingSeenRef.current;
+    if (!ids.length) return;
+    pendingSeenRef.current = [];
+    markLibrarySeen(user.id, ids);
+  }, [user]);
+
+  useEffect(() => {
+    if (likedView || !user) return;
+    const it = items[index];
+    if (!it || !it.id.startsWith(LIB_PREFIX)) return;
+    const libId = it.id.slice(LIB_PREFIX.length);
+    if (pendingSeenRef.current.includes(libId)) return;
+    pendingSeenRef.current.push(libId);
+    if (pendingSeenRef.current.length >= 3) flushSeen();
+  }, [index, items, likedView, user, flushSeen]);
+
+  // Leaving the screen, or switching category, writes whatever is pending.
+  useEffect(() => () => { flushSeen(); }, [flushSeen]);
+  useEffect(() => { flushSeen(); }, [category, flushSeen]);
+
+  // Top up ahead of the person. New lines are appended rather than merged in
+  // place, so nothing they are looking at moves.
+  const toppingRef = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    if (likedView || !user || items.length === 0) return;
+    if (index < items.length - 5) return;
+    if (toppingRef.current[category]) return;
+    toppingRef.current[category] = true;
+    (async () => {
+      try {
+        await generateBatch(category);
+        const fresh = await loadFeed(user.id, category);
+        setItems((prev) => {
+          const have = new Set(prev.map((x) => x.text));
+          const add = fresh.filter((f) => !have.has(f.text));
+          if (!add.length) return prev;
+          const next = [...prev, ...add];
+          cacheRef.current[category] = next;
+          return next;
+        });
+      } catch {}
+      toppingRef.current[category] = false;
+    })();
+  }, [index, items.length, category, likedView, user]);
 
   useEffect(() => { if (!likedView) load(category); }, [category, load, likedView]);
 
@@ -91,12 +143,22 @@ export default function AffirmationsScroll() {
   const catLabel = cats.find((c) => c.id === category)?.label ?? '';
 
   const like = async () => {
-    if (!current) return;
+    if (!current || !user) return;
     const next = !current.liked;
-    setItems((arr) => arr.map((a) => (a.id === current.id ? { ...a, liked: next } : a)));
+    const wasId = current.id;
+    setItems((arr) => arr.map((a) => (a.id === wasId ? { ...a, liked: next } : a)));
     const c = cacheRef.current[category];
-    if (c) cacheRef.current[category] = c.map((a) => (a.id === current.id ? { ...a, liked: next } : a));
-    try { await toggleLike(current.id, next); } catch {}
+    if (c) cacheRef.current[category] = c.map((a) => (a.id === wasId ? { ...a, liked: next } : a));
+    try {
+      // A pool line gets a personal copy on its first like, and takes on the
+      // id of that copy so unliking later works normally.
+      const newId = await likeItem(user.id, current, next);
+      if (newId !== wasId) {
+        setItems((arr) => arr.map((a) => (a.id === wasId ? { ...a, id: newId } : a)));
+        const c2 = cacheRef.current[category];
+        if (c2) cacheRef.current[category] = c2.map((a) => (a.id === wasId ? { ...a, id: newId } : a));
+      }
+    } catch {}
   };
 
   const share = async () => {
@@ -228,7 +290,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   loadingText: { fontSize: 15, color: COLORS.muted, marginTop: 16 },
   emptyText: { fontSize: 15, color: COLORS.muted, textAlign: 'center' },
-  retry: { marginTop: 16, backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 26 },
+  retry: { marginTop: 16, backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 26 },
   retryText: { color: COLORS.bg, fontSize: 14 },
 
   page: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },

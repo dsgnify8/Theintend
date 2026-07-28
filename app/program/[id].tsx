@@ -16,7 +16,7 @@ type Step = 'closed' | 'form' | 'done';
 
 export default function ProgramDetail() {
   const router = useRouter();
-  const { id, fromList } = useLocalSearchParams<{ id: string; fromList?: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { programs: PROGRAMS } = useSessions();
   const item = PROGRAMS.find((p) => p.id === id);
   const { user } = useAuth();
@@ -108,16 +108,10 @@ export default function ProgramDetail() {
         <Text style={styles.body}>{item.description}</Text>
 
         <Text style={styles.sectionTitle}>About the expert</Text>
-        {fromList ? (
-          <Pressable style={styles.expertRow} onPress={() => router.push(`/expert/${item.expertId}`)}>
-            <Text style={styles.expertName}>{item.expertName}</Text>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-          </Pressable>
-        ) : (
-          <View style={styles.expertRow}>
-            <Text style={styles.expertName}>{item.expertName}</Text>
-          </View>
-        )}
+        <Pressable style={styles.expertRow} onPress={() => router.push(`/expert/${item.expertId}`)}>
+          <Text style={styles.expertName}>{item.expertName}</Text>
+          <Ionicons name="person-circle-outline" size={22} color={COLORS.muted} />
+        </Pressable>
 
         <Pressable style={[styles.enrollBtn, saving && styles.enrollOff]} disabled={saving} onPress={startPay}>
           {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.enrollText}>Enroll \u00B7 {item.price}</Text>}
@@ -204,7 +198,7 @@ const styles = StyleSheet.create({
   body: { fontSize: 15, lineHeight: 24, color: COLORS.ink, opacity: 0.88 },
   expertRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
   expertName: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
-  enrollBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  enrollBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   enrollOff: { opacity: 0.6 },
   enrollText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   tabbyLine: { fontSize: 13, color: COLORS.muted, marginTop: 8 },
@@ -220,7 +214,7 @@ const styles = StyleSheet.create({
   fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
   input: { backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 12, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
   inputMulti: { height: 90, textAlignVertical: 'top' },
-  primaryBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.accent, alignItems: 'center' },
+  primaryBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
   primaryText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   doneWrap: { alignItems: 'center', paddingVertical: 12 },
   doneTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginTop: 12, marginBottom: 8 },

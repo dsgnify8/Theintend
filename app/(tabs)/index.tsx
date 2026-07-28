@@ -2,25 +2,30 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { MOODS, levelForKeyword } from '@/constants/mood';
-import { setMoodToday, useTodayMood } from '@/lib/mood';
+import { setMoodToday, useMoodPicker, useTodayMood } from '@/lib/mood';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { COLORS, FONT_SERIF, USER } from '@/constants/brand';
+import { COLORS, FONT_ITALIC, FONT_SERIF, USER } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
 import { EXPERTS } from '@/constants/experts';
 import { useBookings, useProgress, useUpcomingBookings } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
+import { snippetOfDay } from '@/constants/ebookSnippets';
+import { LIBRARY } from '@/constants/library';
+import { quoteOfDay } from '@/lib/quoteOfDay';
 
+// Hours 0 to 4 are late night rather than early morning, so they read as
+// evening. Morning starts at 5.
 function greeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 18) return 'Good afternoon';
   return 'Good evening';
 }
 
-// Every keyword across all levels — you can feel happy and still feel stressed.
+// Every keyword across all levels, since you can feel happy and still feel stressed.
 const ALL_KEYWORDS = MOODS.flatMap((m) => m.keywords);
 
 // A minimal lined face; the mouth goes from a frown (level 0) to a smile (level 4).
@@ -55,6 +60,7 @@ export default function HomeScreen() {
   const loggedIn = !!session;
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : null;
   const todayMood = useTodayMood();
+  const moodPicker = useMoodPicker();
   const [faceIdx, setFaceIdx] = useState<number | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [showChips, setShowChips] = useState(false);
@@ -69,7 +75,7 @@ export default function HomeScreen() {
         const i = MOODS.findIndex((m) => m.key === levelForKeyword(kws[0]));
         if (i >= 0) setFaceIdx(i);
       }
-      setShowChips(false); // already saved today — show only the faces
+      setShowChips(false); // already saved today, so show only the faces
     }
   }, [todayMood]);
   useEffect(() => () => { if (fadeTimer.current) clearTimeout(fadeTimer.current); }, []);
@@ -84,6 +90,7 @@ export default function HomeScreen() {
     }, 10000);
   };
   const pressFace = (i: number) => {
+    moodPicker.markAnswered();
     setFaceIdx(i);
     setShowChips(true);
     chipsOpacity.setValue(1);
@@ -101,6 +108,10 @@ export default function HomeScreen() {
 
   const { map, lastReadId } = useProgress();
   const { articles } = useArticles();
+
+  const snippet = snippetOfDay();
+  const snippetBook = LIBRARY.find((l) => l.id === snippet.bookId);
+  const quote = quoteOfDay();
 
   const upcoming = useUpcomingBookings()[0] ?? null;
   const reading = lastReadId ? articles.find((a) => a.id === lastReadId) : null;
@@ -120,6 +131,7 @@ export default function HomeScreen() {
           </Pressable>
         ) : null}
 
+        {moodPicker.checked && moodPicker.visible ? (
         <View style={styles.moodCard}>
           <Text style={styles.moodQ}>How are you today?</Text>
           <View style={styles.facesRow}>
@@ -143,6 +155,7 @@ export default function HomeScreen() {
             </Animated.View>
           ) : null}
         </View>
+        ) : null}
 
         <Text style={styles.label}>UPCOMING SESSION</Text>
         {upcoming ? (
@@ -181,15 +194,7 @@ export default function HomeScreen() {
               <Text style={styles.pctText}>{pct}% complete</Text>
             </Pressable>
           </View>
-        ) : (
-          <View>
-            <Text style={styles.label}>START A READ</Text>
-            <Pressable style={styles.emptyCard} onPress={() => router.navigate('/read')}>
-              <Text style={styles.emptyText}>Open an article and it picks up right here.</Text>
-              <Text style={styles.emptyLink}>Go to Library</Text>
-            </Pressable>
-          </View>
-        )}
+        ) : null}
 
         {articles.length > 0 ? (
           <View>
@@ -220,21 +225,46 @@ export default function HomeScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expertRow}>
           {EXPERTS.slice(0, 3).map((e) => (
             <Pressable key={e.id} style={styles.expertCard} onPress={() => router.push(`/expert/${e.id}`)}>
-              <View style={styles.expertPhotoWrap}>
-                {e.photo ? (
-                  <Image source={{ uri: e.photo }} style={styles.expertPhoto} resizeMode="cover" />
-                ) : (
-                  <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.accent }]} />
-                )}
+              {e.photo ? (
+                <Image source={{ uri: e.photo }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+              ) : (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.accent }]} />
+              )}
+              {/* Stacked bands stand in for a gradient, so there is no extra dependency. */}
+              <View style={styles.expertShade} pointerEvents="none">
+                {[0.06, 0.12, 0.22, 0.36, 0.52, 0.68].map((o, i) => (
+                  <View key={i} style={[styles.expertShadeBand, { backgroundColor: `rgba(28,24,20,${o})` }]} />
+                ))}
               </View>
-              <View style={styles.expertBody}>
-                <Text style={styles.expertName} numberOfLines={1}>{e.name}</Text>
-                <Text style={styles.expertTitle} numberOfLines={1}>{e.title}</Text>
-                <Text style={styles.expertBlurb} numberOfLines={3}>{e.blurb}</Text>
+              <View style={styles.expertOverlay}>
+                <Text style={styles.expertCat}>{e.category.toUpperCase()}</Text>
+                <Text style={styles.expertName} numberOfLines={2}>{e.name}</Text>
+                <Text style={styles.expertTitle} numberOfLines={2}>{e.title}</Text>
               </View>
             </Pressable>
           ))}
         </ScrollView>
+
+        <Pressable
+          style={styles.snippetBand}
+          onPress={() => router.push(snippetBook ? `/ebook/${snippetBook.id}` : '/read')}
+        >
+          <Text style={styles.snippetKicker}>FROM THE LIBRARY</Text>
+          <Text style={styles.snippetText}>{snippet.passage}</Text>
+          <View style={styles.snippetCtaRow}>
+            <Text style={styles.snippetCta}>{snippet.cta}</Text>
+            <Ionicons name="arrow-forward" size={15} color={COLORS.accent} />
+          </View>
+          {snippetBook ? <Text style={styles.snippetBook}>{snippetBook.title}</Text> : null}
+        </Pressable>
+
+        <Pressable style={styles.quoteCard} onPress={() => router.push('/affirmations')}>
+          <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
+          <Text style={styles.quoteMark}>{'\u201C'}</Text>
+          <Text style={styles.quoteText}>{quote}</Text>
+          <View style={styles.quoteRule} />
+          <Text style={styles.quoteCta}>Start your affirmations</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -280,12 +310,26 @@ const styles = StyleSheet.create({
   featuredName: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, marginTop: 10 },
   featuredKind: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   expertRow: { gap: 16, paddingRight: 8, paddingVertical: 8 },
-  expertCard: { width: 224, backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, shadowColor: '#2B2622', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 4 },
-  expertPhotoWrap: { height: 190, borderTopLeftRadius: 22, borderTopRightRadius: 22, overflow: 'hidden', backgroundColor: COLORS.line },
-  expertPhoto: { width: '100%', height: 250 },
-  expertBody: { padding: 16 },
-  expertName: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.ink },
-  expertTitle: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  expertBlurb: { fontSize: 13, lineHeight: 19, color: COLORS.ink, opacity: 0.8, marginTop: 10 },
+  expertCard: { width: 232, height: 320, borderRadius: 26, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: COLORS.line, shadowColor: '#2B2622', shadowOpacity: 0.16, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6 },
+  expertShade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 200 },
+  expertShadeBand: { flex: 1 },
+  expertOverlay: { padding: 18 },
+  expertCat: { fontSize: 9, letterSpacing: 2, color: 'rgba(255,255,255,0.78)', marginBottom: 7 },
+  expertName: { fontFamily: FONT_SERIF, fontSize: 22, lineHeight: 26, color: '#FFFFFF' },
+  expertTitle: { fontSize: 12, lineHeight: 17, color: 'rgba(255,255,255,0.82)', marginTop: 4 },
+
+  snippetBand: { backgroundColor: COLORS.wash, borderRadius: 22, padding: 22, marginTop: 30 },
+  snippetKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, marginBottom: 14 },
+  snippetText: { fontFamily: FONT_ITALIC, fontSize: 23, lineHeight: 32, color: COLORS.ink },
+  snippetCtaRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 18 },
+  snippetCta: { fontSize: 14, color: COLORS.accent },
+  snippetBook: { fontSize: 11, letterSpacing: 0.6, color: COLORS.muted, marginTop: 10 },
+
+  quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 26, paddingHorizontal: 22, marginTop: 18, alignItems: 'center' },
+  quoteKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted },
+  quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.accent, opacity: 0.14, marginTop: 4 },
+  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.taupe, textAlign: 'center', marginTop: 2 },
+  quoteRule: { width: 34, height: 1, backgroundColor: COLORS.line, marginTop: 20 },
+  quoteCta: { fontSize: 13, color: COLORS.accent, marginTop: 16 },
 });
 

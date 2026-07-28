@@ -6,7 +6,7 @@ import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
-import { useExpertBookings } from '@/lib/bookings';
+import { formatWhenForExpert, useExpertBookings } from '@/lib/bookings';
 import { FramedImage } from '@/components/FramedImage';
 import type { Expert } from '@/constants/experts';
 
@@ -77,7 +77,6 @@ export default function ExpertPanel() {
           </Pressable>
         </View>
 
-        {/* COMING UP — bookings first */}
         <View style={styles.sectionHeadRow}>
           <Text style={styles.sectionTitle}>Coming up</Text>
           {newCount > 0 ? <Text style={styles.newBadge}>{newCount} new</Text> : null}
@@ -101,30 +100,50 @@ export default function ExpertPanel() {
                   <Text style={styles.rowTitle} numberOfLines={1}>{b.title}</Text>
                   {isNew(b.created_at) ? <Text style={styles.newDot}>NEW</Text> : null}
                 </View>
-                <Text style={styles.rowMeta}>{b.when_text}{b.booker_name ? ` · ${b.booker_name}` : ''}</Text>
+                <Text style={styles.rowMeta}>{formatWhenForExpert(b)}{b.booker_name ? ` · ${b.booker_name}` : ''}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
             </Pressable>
           ))
         )}
 
-        {/* AVAILABILITY */}
-        <Text style={styles.sectionTitle}>Your availability</Text>
+        <Text style={styles.groupLabel}>YOUR WORK</Text>
         <Pressable style={styles.row} onPress={() => router.push('/expert-availability')}>
           <View style={styles.rowIcon}><Ionicons name="time-outline" size={18} color={COLORS.accent} /></View>
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle}>{availSummary ? 'Open: ' + availSummary : 'Set your available times'}</Text>
-            <Text style={styles.rowMeta}>{availSummary ? 'Tap to adjust the days and hours you take bookings' : 'Choose the days and hours you take bookings'}</Text>
+            <Text style={styles.rowMeta}>{availSummary ? 'The days and hours people can book you' : 'Choose the days and hours you take bookings'}</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
         </Pressable>
+        <ActionRow
+          icon="add-circle-outline"
+          title="Propose an offering"
+          meta="Submit a new session or program for approval"
+          onPress={() => router.push('/expert-offer-new')}
+        />
 
-        {/* PROFILE & OFFERINGS — separate area */}
-        <Text style={styles.sectionTitle}>Profile & offerings</Text>
-        <ActionRow icon="create-outline" title="Edit profile & photo" meta="Update your bio, photo and details" onPress={() => router.push('/expert-edit')} />
-        <ActionRow icon="add-circle-outline" title="Propose a class or program" meta="Submit a new offering for approval" onPress={() => router.push('/expert-offer-new')} />
-        <Text style={styles.sectionTitle}>Payouts</Text>
-        <ActionRow icon="cash-outline" title="Payouts & analytics" meta="See how your page is doing and add your bank details" onPress={() => router.push('/expert-payouts')} />
+        <Text style={styles.groupLabel}>YOUR PROFILE</Text>
+        <ActionRow
+          icon="create-outline"
+          title="Bio and photo"
+          meta="Changes are reviewed before they go live"
+          onPress={() => router.push('/expert-edit')}
+        />
+        <ActionRow
+          icon="open-outline"
+          title="View your public profile"
+          meta="See exactly what a client sees"
+          onPress={() => router.push(`/expert/${expert.id}`)}
+        />
+
+        <Text style={styles.groupLabel}>YOUR MONEY</Text>
+        <ActionRow
+          icon="cash-outline"
+          title="Payouts"
+          meta="What each booking pays you, and where it is sent"
+          onPress={() => router.push('/expert-payouts')}
+        />
       </ScrollView>
     </Screen>
   );
@@ -172,6 +191,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, marginTop: 4 },
   sectionHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 26, marginBottom: 12 },
   sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 26, marginBottom: 12 },
+  groupLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 30, marginBottom: 12 },
   newBadge: { fontSize: 12, color: COLORS.bg, backgroundColor: COLORS.accent, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden', marginTop: 26 },
   loadingBox: { paddingVertical: 30, alignItems: 'center' },
   emptyBox: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 20, alignItems: 'center', gap: 10 },
