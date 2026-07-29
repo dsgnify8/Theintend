@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   knobOn: { alignSelf: 'flex-end' },
   editFormRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, marginBottom: 6 },
   editFormText: { fontSize: 14, color: COLORS.accent },
-  saveBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  saveBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14, textAlign: 'center' },
 

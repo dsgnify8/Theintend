@@ -7,7 +7,7 @@ import { WebView } from 'react-native-webview';
 import { Asset } from 'expo-asset';
 import { LIBRARY } from '@/constants/library';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { recordBookOpen, saveBookScroll, getBookScroll } from '@/lib/store';
+import { recordBookOpen, saveBookScroll, saveBookPct, getBookScroll } from '@/lib/store';
 
 type Heading = { title: string; top: number };
 
@@ -102,6 +102,9 @@ export default function EbookReader() {
     if (d.type === 'scroll') {
       const y = d.y || 0;
       saveBookScroll(id, y);
+      // How far down the document they are, so the You page can show it.
+      const reach = meta.height - meta.vh;
+      if (reach > 0) saveBookPct(id, y / reach);
       setScrollY(y);
     } else if (d.type === 'meta') {
       setMeta({ height: d.height || 0, vh: d.vh || 1, headings: Array.isArray(d.headings) ? d.headings : [] });

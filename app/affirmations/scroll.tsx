@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   loadingText: { fontSize: 15, color: COLORS.muted, marginTop: 16 },
   emptyText: { fontSize: 15, color: COLORS.muted, textAlign: 'center' },
-  retry: { marginTop: 16, backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 26 },
+  retry: { marginTop: 16, backgroundColor: COLORS.taupeBlue, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 26 },
   retryText: { color: COLORS.bg, fontSize: 14 },
 
   page: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },

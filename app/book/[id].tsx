@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   slotText: { fontSize: 13, color: COLORS.ink },
   slotTextOn: { color: COLORS.bg },
   tzNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 14 },
-  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   btnOff: { opacity: 0.5 },
   requestText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   tabbyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, marginTop: 4 },

@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   expertRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
   expertName: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   expertTitle: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
-  joinBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 12, backgroundColor: COLORS.taupe, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999 },
+  joinBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 12, backgroundColor: COLORS.taupeBlue, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999 },
   joinText: { color: COLORS.bg, fontSize: 14 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
 });

@@ -1,49 +1,34 @@
-import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { EXPERTS } from '@/constants/experts';
-import { LIBRARY } from '@/constants/library';
-import { PROGRAMS } from '@/constants/sessions';
+import { useExperts } from '@/lib/experts';
 import { useArticles } from '@/lib/articles';
-import { clearFeatured, setFeatured, useFeatured } from '@/lib/featured';
+import {
+  SLOT_HOME_ARTICLES, SLOT_HOME_EXPERTS, setFeaturedList, useFeaturedList,
+} from '@/lib/featured';
 
-type Slot = 'expert' | 'ebook' | 'article' | 'program';
+const MAX_ARTICLES = 5;
+const MAX_EXPERTS = 3;
 
 export default function AdminFeatured() {
   const router = useRouter();
   const { role } = useAuth();
-  const featured = useFeatured();
   const { articles } = useArticles();
-  const [open, setOpen] = useState<Slot | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { experts: dbExperts } = useExperts();
 
-  const ebooks = LIBRARY.filter((l) => l.type === 'E-book');
+  const chosenArticles = useFeaturedList(SLOT_HOME_ARTICLES);
+  const chosenExperts = useFeaturedList(SLOT_HOME_EXPERTS);
+  const [busy, setBusy] = useState<string | null>(null);
 
-  const nameFor = (slot: Slot, id?: string): string => {
-    if (!id) return 'Not set';
-    if (slot === 'expert') return EXPERTS.find((e) => e.id === id)?.name ?? id;
-    if (slot === 'ebook') return LIBRARY.find((l) => l.id === id)?.title ?? id;
-    if (slot === 'article') return articles.find((a) => a.id === id)?.title ?? id;
-    return PROGRAMS.find((p: any) => p.id === id)?.title ?? id;
-  };
-
-  const options = (slot: Slot): { id: string; label: string; sub?: string }[] => {
-    if (slot === 'expert') return EXPERTS.map((e) => ({ id: e.id, label: e.name, sub: e.title }));
-    if (slot === 'ebook') return ebooks.map((l) => ({ id: l.id, label: l.title, sub: l.author }));
-    if (slot === 'article') return articles.map((a) => ({ id: a.id, label: a.title, sub: a.category }));
-    return (PROGRAMS as any[]).map((p) => ({ id: p.id, label: p.title, sub: p.expertName }));
-  };
-
-  const pick = async (slot: Slot, id: string) => {
-    setBusy(true);
-    await setFeatured(slot, id);
-    setBusy(false);
-    setOpen(null);
-  };
+  const expertList = useMemo(
+    () => (dbExperts && dbExperts.length ? dbExperts : EXPERTS),
+    [dbExperts]
+  );
 
   if (role !== 'admin') {
     return (
@@ -55,12 +40,20 @@ export default function AdminFeatured() {
     );
   }
 
-  const SLOTS: { slot: Slot; label: string; icon: any }[] = [
-    { slot: 'expert', label: 'Featured expert', icon: 'person-outline' },
-    { slot: 'ebook', label: 'Featured e-book', icon: 'book-outline' },
-    { slot: 'article', label: 'Featured article', icon: 'document-text-outline' },
-    { slot: 'program', label: 'Featured program', icon: 'ribbon-outline' },
-  ];
+  const toggle = async (slot: string, current: string[], id: string, max: number) => {
+    const next = current.includes(id)
+      ? current.filter((x) => x !== id)
+      : current.length >= max ? current : [...current, id];
+    setBusy(slot);
+    await setFeaturedList(slot, next);
+    setBusy(null);
+  };
+
+  const clear = async (slot: string) => {
+    setBusy(slot);
+    await setFeaturedList(slot, []);
+    setBusy(null);
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -68,50 +61,84 @@ export default function AdminFeatured() {
       <Back onPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.h1}>Featured on home</Text>
-        <Text style={styles.sub}>Choose what the homepage highlights. Leave a slot unset and the home page falls back to the newest on its own.</Text>
+        <Text style={styles.sub}>
+          Pick nothing and the homepage shuffles daily on its own. Pick something and it shows
+          exactly that, in the order you choose.
+        </Text>
 
-        {SLOTS.map(({ slot, label, icon }) => (
-          <Pressable key={slot} style={styles.row} onPress={() => setOpen(slot)}>
-            <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={COLORS.accent} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>{label}</Text>
-              <Text style={styles.rowValue} numberOfLines={1}>{nameFor(slot, featured[slot])}</Text>
-            </View>
-            {featured[slot] ? (
-              <Pressable onPress={() => clearFeatured(slot)} hitSlop={10} style={{ marginRight: 6 }}>
-                <Ionicons name="close-circle" size={20} color={COLORS.muted} />
-              </Pressable>
-            ) : null}
-            <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
-          </Pressable>
+        <Section
+          title="What readers are loving"
+          meta={chosenArticles.length ? `${chosenArticles.length} of ${MAX_ARTICLES} chosen` : 'Automatic, shuffles daily'}
+          busy={busy === SLOT_HOME_ARTICLES}
+          onClear={chosenArticles.length ? () => clear(SLOT_HOME_ARTICLES) : undefined}
+        />
+        {articles.length === 0 ? (
+          <Text style={styles.empty}>No articles to choose from yet.</Text>
+        ) : (
+          articles.map((a) => (
+            <Option
+              key={a.id}
+              label={a.title}
+              sub={a.category}
+              position={chosenArticles.indexOf(a.id)}
+              onPress={() => toggle(SLOT_HOME_ARTICLES, chosenArticles, a.id, MAX_ARTICLES)}
+              full={chosenArticles.length >= MAX_ARTICLES && !chosenArticles.includes(a.id)}
+            />
+          ))
+        )}
+
+        <View style={{ height: 14 }} />
+
+        <Section
+          title="This week's expert highlight"
+          meta={chosenExperts.length ? `${chosenExperts.length} of ${MAX_EXPERTS} chosen` : 'Automatic, shuffles daily'}
+          busy={busy === SLOT_HOME_EXPERTS}
+          onClear={chosenExperts.length ? () => clear(SLOT_HOME_EXPERTS) : undefined}
+        />
+        {expertList.map((e: any) => (
+          <Option
+            key={e.id}
+            label={e.name}
+            sub={e.title}
+            position={chosenExperts.indexOf(e.id)}
+            onPress={() => toggle(SLOT_HOME_EXPERTS, chosenExperts, e.id, MAX_EXPERTS)}
+            full={chosenExperts.length >= MAX_EXPERTS && !chosenExperts.includes(e.id)}
+          />
         ))}
       </ScrollView>
-
-      <Modal visible={open !== null} transparent animationType="slide" onRequestClose={() => setOpen(null)}>
-        <View style={styles.modalRoot}>
-          <Pressable style={styles.backdrop} onPress={() => setOpen(null)} />
-          <SafeAreaView edges={['bottom']} style={styles.sheet}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Choose</Text>
-            {busy ? <ActivityIndicator color={COLORS.accent} style={{ marginVertical: 20 }} /> : null}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 440 }}>
-              {open ? options(open).map((o) => {
-                const on = featured[open] === o.id;
-                return (
-                  <Pressable key={o.id} style={styles.opt} onPress={() => pick(open, o.id)}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.optLabel} numberOfLines={1}>{o.label}</Text>
-                      {o.sub ? <Text style={styles.optSub} numberOfLines={1}>{o.sub}</Text> : null}
-                    </View>
-                    {on ? <Ionicons name="checkmark" size={18} color={COLORS.accent} /> : null}
-                  </Pressable>
-                );
-              }) : null}
-            </ScrollView>
-          </SafeAreaView>
-        </View>
-      </Modal>
     </SafeAreaView>
+  );
+}
+
+function Section({ title, meta, busy, onClear }: { title: string; meta: string; busy: boolean; onClear?: () => void }) {
+  return (
+    <View style={styles.sectionRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionMeta}>{meta}</Text>
+      </View>
+      {busy ? <ActivityIndicator color={COLORS.taupeBlue} /> : null}
+      {onClear && !busy ? (
+        <Pressable onPress={onClear} hitSlop={10}>
+          <Text style={styles.clearText}>Automatic</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function Option({ label, sub, position, onPress, full }: { label: string; sub?: string; position: number; onPress: () => void; full: boolean }) {
+  const on = position >= 0;
+  return (
+    <Pressable style={[styles.opt, on && styles.optOn, full && styles.optFull]} onPress={onPress} disabled={full}>
+      <View style={[styles.mark, on && styles.markOn]}>
+        {on ? <Text style={styles.markText}>{position + 1}</Text> : null}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.optLabel} numberOfLines={1}>{label}</Text>
+        {sub ? <Text style={styles.optSub} numberOfLines={1}>{sub}</Text> : null}
+      </View>
+    </Pressable>
   );
 }
 
@@ -128,21 +155,24 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
-  content: { paddingHorizontal: 20, paddingBottom: 48 },
+  content: { paddingHorizontal: 20, paddingBottom: 56 },
   h1: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginBottom: 8 },
-  sub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginBottom: 22 },
+  sub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginBottom: 8 },
   locked: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   lockedText: { fontSize: 15, color: COLORS.muted },
-  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
-  rowIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  rowLabel: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
-  rowValue: { fontSize: 13, color: COLORS.muted, marginTop: 3 },
-  modalRoot: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
-  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 12 },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
-  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 12 },
-  opt: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 15, marginBottom: 8 },
+
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 26, marginBottom: 12 },
+  sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink },
+  sectionMeta: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
+  clearText: { fontSize: 13, color: COLORS.taupeBlue },
+  empty: { fontSize: 14, color: COLORS.muted, paddingVertical: 12 },
+
+  opt: { flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 8 },
+  optOn: { borderColor: COLORS.taupeBlue },
+  optFull: { opacity: 0.45 },
+  mark: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  markOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
+  markText: { color: COLORS.bg, fontSize: 12 },
   optLabel: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
   optSub: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
 });

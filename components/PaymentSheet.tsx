@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   half: { flex: 1 },
   saveRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, marginTop: 2 },
   saveText: { fontSize: 14, color: COLORS.ink },
-  payBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  payBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   payText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   previewNote: { fontSize: 12, color: COLORS.muted, textAlign: 'center', marginTop: 12 },
 });

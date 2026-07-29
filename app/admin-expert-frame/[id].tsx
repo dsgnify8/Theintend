@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   status: { fontSize: 14, color: COLORS.accent, marginTop: 4, marginBottom: 8 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   reset: { fontSize: 15, color: COLORS.muted },
-  saveBtn: { backgroundColor: COLORS.taupe, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
+  saveBtn: { backgroundColor: COLORS.taupeBlue, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
   saveOff: { opacity: 0.6 },
   saveText: { color: COLORS.bg, fontSize: 15 },
 });

@@ -1,15 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { MOODS, levelForKeyword } from '@/constants/mood';
 import { setMoodToday, useMoodPicker, useTodayMood } from '@/lib/mood';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { COLORS, FONT_ITALIC, FONT_SERIF, USER } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
 import { EXPERTS } from '@/constants/experts';
+import { useExperts } from '@/lib/experts';
+import { SLOT_HOME_ARTICLES, SLOT_HOME_EXPERTS, useFeaturedList } from '@/lib/featured';
+import { HIGHLIGHTS } from '@/constants/highlights';
+import { formatWhenLocal } from '@/lib/bookings';
 import { useBookings, useProgress, useUpcomingBookings } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { snippetOfDay } from '@/constants/ebookSnippets';
@@ -25,12 +30,107 @@ function greeting() {
   return 'Good evening';
 }
 
+const SKY = require('@/assets/images/home-sky.jpg');
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const CARD_W = SCREEN_W - 40;
+
+// Every e-book, newest first. Read times are scaled the same way across all
+// three, so they are honest about relative length.
+const BOOKS = [
+  {
+    id: 'quiet-engine',
+    tag: 'GUT HEALTH',
+    time: '25 min read',
+    title: 'The Quiet Engine',
+    blurb: 'What gut health actually means, and how far it reaches into mood, skin and hormones.',
+    cover: require('@/assets/ebooks/covers/cover-quiet-engine.jpg'),
+  },
+  {
+    id: 'longevity',
+    tag: 'LONGEVITY',
+    time: '20 min read',
+    title: 'The Long Way Home to Your Own Body',
+    blurb: 'How the body ages, what genuinely slows it, and the daily choices that carry the most weight.',
+    cover: require('@/assets/ebooks/covers/cover-longevity.jpg'),
+  },
+  {
+    id: 'hormones',
+    tag: 'HORMONES',
+    time: '25 min read',
+    title: 'The Wisdom of Her Body',
+    blurb: 'How the hormonal system works, what shifts it, and how to read your own cycle.',
+    cover: require('@/assets/ebooks/covers/cover-hormones.jpg'),
+  },
+];
+const SKY_FADE = [
+  'rgba(28,24,20,0.42)',
+  'rgba(28,24,20,0.16)',
+  'rgba(247,242,234,0)',
+  'rgba(247,242,234,0.86)',
+  '#F7F2EA',
+];
+const SKY_STOPS = [0, 0.12, 0.68, 0.93, 1];
+
+// A different order each day, the same order all day.
+function shuffleToday<T>(list: T[]): T[] {
+  let h = Math.floor(Date.now() / 86400000) + 2166136261;
+  const out = list.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    const j = Math.abs(h) % (i + 1);
+    const t = out[i]; out[i] = out[j]; out[j] = t;
+  }
+  return out;
+}
+
+// Admin picks win. Nothing picked means shuffle.
+function curate<T extends { id: string }>(all: T[], picked: string[], fallbackCount: number): T[] {
+  if (picked.length) {
+    const byId = new Map(all.map((x) => [x.id, x]));
+    const out = picked.map((id) => byId.get(id)).filter(Boolean) as T[];
+    if (out.length) return out;
+  }
+  return shuffleToday(all).slice(0, fallbackCount);
+}
+
+const WD_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+// The first open hour in the next fortnight, read from what the expert set.
+// Availability only, so it can suggest an hour someone else has already taken.
+// The copy says next available rather than promising it.
+function nextOpenHour(av: any): Date | null {
+  const now = Date.now();
+  for (let d = 0; d < 14; d++) {
+    const day = new Date();
+    day.setDate(day.getDate() + d);
+    const cfg = av ? av[WD_KEY[day.getDay()]] : null;
+    let hours: number[] = [];
+    if (cfg && Array.isArray(cfg.slots)) hours = cfg.slots;
+    else if (cfg && cfg.on !== false) {
+      const from = typeof cfg.start === 'number' ? cfg.start : 9;
+      const to = typeof cfg.end === 'number' ? cfg.end : 17;
+      for (let h = from; h < to; h++) hours.push(h);
+    } else if (!av) {
+      // No availability set at all. Weekdays, mid morning, as a stand-in.
+      if (day.getDay() !== 0 && day.getDay() !== 6) hours = [10];
+    }
+    for (const h of hours) {
+      const t = new Date(day);
+      t.setHours(h, 0, 0, 0);
+      if (t.getTime() > now + 3600000) return t;
+    }
+  }
+  return null;
+}
+
 // Every keyword across all levels, since you can feel happy and still feel stressed.
 const ALL_KEYWORDS = MOODS.flatMap((m) => m.keywords);
 
 // A minimal lined face; the mouth goes from a frown (level 0) to a smile (level 4).
-function Face({ level, active, color }: { level: number; active: boolean; color: string }) {
-  const c = active ? color : COLORS.muted;
+function Face({ level, active, color, dim }: { level: number; active: boolean; color: string; dim?: string }) {
+  const c = active ? color : (dim ?? COLORS.muted);
   const sw = active ? 2.6 : 1.8;
   const cy = 25 + (level - 2) * 5; // 15, 20, 25(flat), 30, 35
   return (
@@ -44,6 +144,7 @@ function Face({ level, active, color }: { level: number; active: boolean; color:
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session, profile, loading: authLoading } = useAuth();
   // Re-read auth when this tab regains focus. Tabs stay mounted in the
   // background, so a sign in or out on another tab does not repaint this screen
@@ -65,6 +166,7 @@ export default function HomeScreen() {
   const [selected, setSelected] = useState<string[]>([]);
   const [showChips, setShowChips] = useState(false);
   const chipsOpacity = useRef(new Animated.Value(1)).current;
+
   const fadeTimer = useRef<any>(null);
 
   useEffect(() => {
@@ -87,7 +189,7 @@ export default function HomeScreen() {
       Animated.timing(chipsOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start(({ finished }) => {
         if (finished) setShowChips(false);
       });
-    }, 10000);
+    }, 5000);
   };
   const pressFace = (i: number) => {
     moodPicker.markAnswered();
@@ -113,13 +215,59 @@ export default function HomeScreen() {
   const snippetBook = LIBRARY.find((l) => l.id === snippet.bookId);
   const quote = quoteOfDay();
 
+  // The e-book rail moves on by itself, and a swipe takes over from there.
+  const bookRef = useRef<ScrollView>(null);
+  const [bookIdx, setBookIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setBookIdx((i) => {
+        const next = (i + 1) % BOOKS.length;
+        bookRef.current?.scrollTo({ x: next * CARD_W, animated: true });
+        return next;
+      });
+    }, 4000);
+    return () => clearInterval(t);
+  }, []);
+
   const upcoming = useUpcomingBookings()[0] ?? null;
+
+  // Nothing booked, so offer something real instead of an empty card. A
+  // different expert each day.
+  const { experts: dbExperts } = useExperts();
+  const pickedArticles = useFeaturedList(SLOT_HOME_ARTICLES);
+  const pickedExperts = useFeaturedList(SLOT_HOME_EXPERTS);
+  const homeArticles = useMemo(() => curate(articles, pickedArticles, 4), [articles, pickedArticles]);
+  const homeExperts = useMemo(() => {
+    const all = dbExperts && dbExperts.length ? dbExperts : EXPERTS;
+    return curate(all as any[], pickedExperts, 3);
+  }, [dbExperts, pickedExperts]);
+  // Moves on by itself. Eight seconds, not four: this one is meant to be read
+  // and tapped, and a card that changes under a finger is worse than a slow one.
+  const [suggestTick, setSuggestTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSuggestTick((n) => n + 1), 8000);
+    return () => clearInterval(t);
+  }, []);
+
+  const suggested = useMemo(() => {
+    if (upcoming) return null;
+    if (!HIGHLIGHTS.length) return null;
+    const h = HIGHLIGHTS[suggestTick % HIGHLIGHTS.length];
+    const live = dbExperts.find((e: any) => e.id === h.expertId);
+    const fallback = EXPERTS.find((e) => e.id === h.expertId);
+    const name = live?.name ?? fallback?.name ?? '';
+    const when = nextOpenHour(live?.availability ?? fallback?.availability ?? null);
+    return { h, name, when };
+  }, [upcoming, dbExperts, suggestTick]);
   const reading = lastReadId ? articles.find((a) => a.id === lastReadId) : null;
   const pct = lastReadId ? Math.round((map[lastReadId] ?? 0) * 100) : 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <View style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.skyBox, { paddingTop: insets.top + 34 }]}>
+          <Image source={SKY} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <LinearGradient colors={SKY_FADE} locations={SKY_STOPS} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <Text style={styles.kicker}>THE INTEND</Text>
         <Text style={styles.greeting}>
           {greeting()}{firstName ? `, ${firstName}` : ''}.
@@ -127,17 +275,16 @@ export default function HomeScreen() {
         {authSettled && !loggedIn && !authLoading ? (
           <Pressable style={styles.signinPrompt} onPress={() => router.push('/login')}>
             <Text style={styles.signinPromptText}>Sign in or create an account to track your journey</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.accent} />
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.94)" />
           </Pressable>
         ) : null}
 
-        {moodPicker.checked && moodPicker.visible ? (
         <View style={styles.moodCard}>
           <Text style={styles.moodQ}>How are you today?</Text>
           <View style={styles.facesRow}>
             {MOODS.map((m, i) => (
               <Pressable key={m.key} onPress={() => pressFace(i)} hitSlop={8} style={styles.faceBtn}>
-                <Face level={i} active={faceIdx === i} color={m.color} />
+                <Face level={i} active={faceIdx === i} color={m.color} dim="rgba(255,255,255,0.62)" />
               </Pressable>
             ))}
           </View>
@@ -155,9 +302,8 @@ export default function HomeScreen() {
             </Animated.View>
           ) : null}
         </View>
-        ) : null}
 
-        <Text style={styles.label}>UPCOMING SESSION</Text>
+        <Text style={[styles.label, styles.labelOn]}>UPCOMING SESSION</Text>
         {upcoming ? (
           <Pressable
             style={styles.sessionCard}
@@ -166,12 +312,29 @@ export default function HomeScreen() {
             }
           >
             <View style={styles.sessionIcon}>
-              <Ionicons name="videocam" size={18} color={COLORS.bg} />
+              <Ionicons name="videocam" size={18} color={COLORS.taupeBlue} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.sessionTitle}>{upcoming.title}</Text>
               <Text style={styles.sessionMeta}>{upcoming.when}</Text>
               <Text style={styles.sessionMeta}>with {upcoming.expert}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+          </Pressable>
+        ) : suggested ? (
+          <Pressable
+            style={styles.sessionCard}
+            onPress={() => router.push(`/book/${suggested.h.expertId}?service=${suggested.h.serviceId}`)}
+          >
+            <View style={styles.sessionIcon}>
+              <Ionicons name="videocam" size={18} color={COLORS.taupeBlue} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sessionTitle}>{suggested.h.title}</Text>
+              <Text style={styles.sessionMeta}>
+                {suggested.when ? `Upcoming ${formatWhenLocal({ starts_at: suggested.when.toISOString() })}` : 'Upcoming soon'}
+              </Text>
+              <Text style={styles.sessionMeta}>with {suggested.name}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
           </Pressable>
@@ -181,6 +344,7 @@ export default function HomeScreen() {
             <Text style={styles.emptyLink}>Browse what's coming up</Text>
           </Pressable>
         )}
+        </View>
 
         {reading ? (
           <View>
@@ -200,7 +364,7 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.section}>What readers are loving</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredRow} style={{ marginBottom: 28 }}>
-              {articles.slice(0, 4).map((a, i) => (
+              {homeArticles.map((a, i) => (
                 <Pressable key={a.id} style={styles.featuredCard} onPress={() => router.push(`/article/${a.id}`)}>
                   <View style={styles.readCover}>
                     {a.image ? (
@@ -221,9 +385,39 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        <Text style={styles.featureHead}>From the library</Text>
+        <Text style={styles.featureSub}>A page from the newest e-book.</Text>
+        <ScrollView
+          ref={bookRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => setBookIdx(Math.round(e.nativeEvent.contentOffset.x / CARD_W))}
+          style={styles.bookRail}
+        >
+          {BOOKS.map((b) => (
+            <Pressable key={b.id} style={styles.bookCard} onPress={() => router.push(`/ebook/${b.id}`)}>
+              <Image source={b.cover} style={styles.bookImage} resizeMode="cover" />
+              <View style={styles.trackRow}>
+                {BOOKS.map((_, i) => (
+                  <View key={i} style={[styles.trackSeg, i === bookIdx && styles.trackSegOn]} />
+                ))}
+              </View>
+              <View style={styles.bookBody}>
+                <View style={styles.bookMetaRow}>
+                  <Text style={styles.bookTag}>{b.tag}</Text>
+                  <Text style={styles.bookTime}>{b.time}</Text>
+                </View>
+                <Text style={styles.bookTitle}>{b.title}</Text>
+                <Text style={styles.bookBlurb}>{b.blurb}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
         <Text style={styles.section}>This week's expert highlight</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expertRow}>
-          {EXPERTS.slice(0, 3).map((e) => (
+          {homeExperts.map((e: any) => (
             <Pressable key={e.id} style={styles.expertCard} onPress={() => router.push(`/expert/${e.id}`)}>
               {e.photo ? (
                 <Image source={{ uri: e.photo }} style={StyleSheet.absoluteFill} resizeMode="cover" />
@@ -266,39 +460,57 @@ export default function HomeScreen() {
           <Text style={styles.quoteCta}>Start your affirmations</Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
-  kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 10 },
-  greeting: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink, marginBottom: 26 },
+  content: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 48 },
+  // Breaks out of the content padding so the photo runs edge to edge, then
+  // puts the padding back on the inside.
+  skyBox: { marginHorizontal: -20, paddingHorizontal: 20, paddingBottom: 26, marginBottom: 6, overflow: 'hidden' },
+  kicker: { fontSize: 12, letterSpacing: 3, color: 'rgba(255,255,255,0.72)', marginBottom: 10 },
+  greeting: { fontFamily: FONT_SERIF, fontSize: 36, lineHeight: 43, color: '#FFFFFF', marginBottom: 26 },
   signinPrompt: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -14, marginBottom: 24 },
-  signinPromptText: { fontSize: 14, color: COLORS.accent },
-  moodCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
-  moodQ: { fontSize: 12, letterSpacing: 1.5, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 14 },
+  signinPromptText: { fontSize: 14, color: 'rgba(255,255,255,0.94)' },
+  moodCard: { backgroundColor: 'rgba(255,255,255,0.13)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.26)', padding: 18, marginBottom: 34 },
+  moodQ: { fontSize: 12, letterSpacing: 1.5, color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', marginBottom: 14 },
   facesRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   faceBtn: { padding: 6 },
   chipsRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 14, marginTop: 16 },
   moodChip: { paddingVertical: 2 },
-  moodChipText: { fontSize: 13, color: COLORS.muted },
+  moodChipText: { fontSize: 13, color: 'rgba(255,255,255,0.88)' },
   label: { fontSize: 12, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 12 },
-  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 28 },
-  sessionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  labelOn: { color: 'rgba(255,255,255,0.86)' },
+  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 16, marginBottom: 28 },
+  sessionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   sessionTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   sessionMeta: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
   emptyCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
   emptyText: { fontSize: 14, color: COLORS.ink, opacity: 0.85 },
   emptyLink: { fontSize: 14, color: COLORS.accent, marginTop: 8 },
-  readCard: { backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 28 },
+  readCard: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 18, marginBottom: 28 },
   readCat: { fontSize: 11, letterSpacing: 1.5, color: COLORS.accent, marginBottom: 8 },
   readTitle: { fontFamily: FONT_SERIF, fontSize: 18, lineHeight: 24, color: COLORS.ink, marginBottom: 14 },
   track: { height: 5, borderRadius: 3, backgroundColor: COLORS.line, overflow: 'hidden' },
   trackFill: { height: 5, backgroundColor: COLORS.accent },
   pctText: { fontSize: 12, color: COLORS.muted, marginTop: 8 },
   section: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
+  featureHead: { fontFamily: FONT_SERIF, fontSize: 24, lineHeight: 30, color: COLORS.ink, marginTop: 4 },
+  featureSub: { fontSize: 14, color: COLORS.muted, marginTop: 6, marginBottom: 16 },
+  bookRail: { marginBottom: 34 },
+  bookCard: { width: CARD_W, backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden' },
+  trackRow: { flexDirection: 'row', height: 2 },
+  trackSeg: { flex: 1, backgroundColor: COLORS.line },
+  trackSegOn: { backgroundColor: COLORS.ink },
+  bookImage: { width: '100%', height: 168, backgroundColor: COLORS.accentSoft },
+  bookBody: { padding: 18, backgroundColor: COLORS.cardMilk },
+  bookMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  bookTag: { fontSize: 9, letterSpacing: 2, color: COLORS.accent },
+  bookTime: { fontSize: 12, color: COLORS.muted },
+  bookTitle: { fontFamily: FONT_SERIF, fontSize: 22, lineHeight: 28, color: COLORS.ink },
+  bookBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.ink, opacity: 0.78, marginTop: 8 },
   featuredRow: { gap: 14, paddingRight: 8 },
   readCover: { height: 150, borderRadius: 16, overflow: 'hidden', justifyContent: 'flex-end' },
   readCoverInner: { padding: 14 },

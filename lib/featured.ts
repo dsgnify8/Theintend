@@ -58,6 +58,34 @@ export async function clearFeatured(slot: string): Promise<void> {
   } catch {}
 }
 
+// A slot holding several ids rather than one, stored as JSON because the
+// column is text. An empty list means automatic.
+export const SLOT_HOME_ARTICLES = 'home_articles';
+export const SLOT_HOME_EXPERTS = 'home_experts';
+
+export function parseList(value?: string): string[] {
+  if (!value) return [];
+  try {
+    const v = JSON.parse(value);
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function useFeaturedList(slot: string): string[] {
+  const map = useFeatured();
+  return parseList(map[slot]);
+}
+
+export async function setFeaturedList(slot: string, ids: string[]): Promise<{ error: any }> {
+  if (!ids.length) {
+    await clearFeatured(slot);
+    return { error: null };
+  }
+  return setFeatured(slot, JSON.stringify(ids));
+}
+
 export async function reloadFeatured() {
   cache = await load();
   emit();

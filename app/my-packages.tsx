@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   dotUsed: { backgroundColor: COLORS.line },
   dotOpen: { backgroundColor: COLORS.accent },
   count: { fontSize: 14, color: COLORS.ink, marginTop: 12 },
-  bookBtn: { marginTop: 18, paddingVertical: 14, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  bookBtn: { marginTop: 18, paddingVertical: 14, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   bookText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   doneTag: { marginTop: 18, paddingVertical: 12, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center' },
   doneTagText: { color: COLORS.muted, fontSize: 14 },

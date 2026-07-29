@@ -277,6 +277,6 @@ const styles = StyleSheet.create({
   catTextOn: { color: COLORS.bg },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 28 },
   clearText: { fontSize: 15, color: COLORS.muted },
-  applyBtn: { backgroundColor: COLORS.taupe, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
+  applyBtn: { backgroundColor: COLORS.taupeBlue, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 999 },
   applyText: { color: COLORS.bg, fontSize: 15 },
 });

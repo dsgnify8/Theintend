@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   stripWrap: { marginTop: 16, marginBottom: 4 },
   strip: { gap: 8, paddingHorizontal: 20, paddingVertical: 4 },
   dayPill: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card, alignItems: 'center', justifyContent: 'center' },
-  dayPillOn: { backgroundColor: COLORS.taupe, borderColor: COLORS.accent },
+  dayPillOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.accent },
   dayPillDone: { backgroundColor: COLORS.accentSoft, borderColor: COLORS.accentSoft },
   dayPillText: { fontSize: 14, color: COLORS.muted },
   dayPillTextOn: { color: COLORS.bg },

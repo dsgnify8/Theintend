@@ -127,7 +127,7 @@ export default function ProgressScreen() {
               return (
                 <View key={a.id} style={styles.badge}>
                   <View style={[styles.badgeCircle, !unlocked && styles.badgeLocked]}>
-                    <Ionicons name={a.icon as any} size={26} color={unlocked ? COLORS.accent : COLORS.muted} />
+                    <Ionicons name={a.icon as any} size={26} color={unlocked ? COLORS.taupeBlue : COLORS.muted} />
                   </View>
                   <Text style={styles.badgeTitle}>{a.title}</Text>
                   <Text style={styles.badgeState}>{unlocked ? 'Unlocked' : a.req ? `${cur} / ${a.req.count}` : 'Locked'}</Text>
@@ -149,7 +149,7 @@ export default function ProgressScreen() {
                 ? <Empty text="No articles read yet." />
                 : readItems.map((r, i) => (
                     <Pressable key={i} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/article/${r.id}`); }}>
-                      <Ionicons name="book-outline" size={18} color={COLORS.accent} />
+                      <Ionicons name="book-outline" size={18} color={COLORS.taupeBlue} />
                       <Text style={styles.itemTitle} numberOfLines={1}>{r.title}</Text>
                       <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                     </Pressable>
@@ -159,7 +159,7 @@ export default function ProgressScreen() {
                 ? <Empty text="No journal entries yet." />
                 : journalEntries.map((e) => (
                     <Pressable key={e.id} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/journaling/entry/${e.id}`); }}>
-                      <Ionicons name="create-outline" size={18} color={COLORS.accent} />
+                      <Ionicons name="create-outline" size={18} color={COLORS.taupeBlue} />
                       <Text style={styles.itemTitle} numberOfLines={1}>{getCategory(e.categoryId)?.title ?? 'Journal'} · {fmtShort(e.createdAt)}</Text>
                       <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                     </Pressable>
@@ -169,7 +169,7 @@ export default function ProgressScreen() {
                 ? <Empty text="No worksheets saved yet." />
                 : worksheetEntries.map((e) => (
                     <Pressable key={e.id} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/worksheet/${e.worksheetId}?entry=${e.id}`); }}>
-                      <Ionicons name="clipboard-outline" size={18} color={COLORS.accent} />
+                      <Ionicons name="clipboard-outline" size={18} color={COLORS.taupeBlue} />
                       <Text style={styles.itemTitle} numberOfLines={1}>{getWorksheet(e.worksheetId)?.title ?? 'Worksheet'} · {fmtShort(e.createdAt)}</Text>
                       <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                     </Pressable>
@@ -179,7 +179,7 @@ export default function ProgressScreen() {
                 ? <Empty text="No sounds listened to yet." />
                 : listenItems.map((r, i) => (
                     <Pressable key={i} style={styles.itemRow} onPress={() => { setDetail(null); router.push(`/sound/${r.id}`); }}>
-                      <Ionicons name="musical-notes-outline" size={18} color={COLORS.accent} />
+                      <Ionicons name="musical-notes-outline" size={18} color={COLORS.taupeBlue} />
                       <Text style={styles.itemTitle} numberOfLines={1}>{r.title}</Text>
                       <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                     </Pressable>
@@ -203,7 +203,7 @@ export default function ProgressScreen() {
 function StatCard({ icon, value, label, onPress }: { icon: any; value: string; label: string; onPress: () => void }) {
   return (
     <Pressable style={styles.statCard} onPress={onPress}>
-      <Ionicons name={icon} size={20} color={COLORS.accent} />
+      <Ionicons name={icon} size={20} color={COLORS.taupeBlue} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={styles.statView}>View</Text>
@@ -235,30 +235,30 @@ const styles = StyleSheet.create({
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   h1: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginBottom: 18 },
-  segment: { flexDirection: 'row', backgroundColor: COLORS.accentSoft, borderRadius: 999, padding: 4, marginBottom: 22 },
+  segment: { flexDirection: 'row', backgroundColor: COLORS.taupeBlueSoft, borderRadius: 999, padding: 4, marginBottom: 22 },
   segItem: { flex: 1, paddingVertical: 10, borderRadius: 999, alignItems: 'center' },
   segItemOn: { backgroundColor: COLORS.ink },
   segText: { fontSize: 14, color: COLORS.ink },
   segTextOn: { color: COLORS.bg },
   streakCard: { backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 16 },
   streakTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  streakBadge: { width: 54, height: 54, borderRadius: 16, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  streakBadge: { width: 54, height: 54, borderRadius: 16, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   streakNum: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.bg },
   streakLabel: { fontSize: 13, letterSpacing: 1.5, color: COLORS.muted },
   streakHint: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
   dot: { width: 38, height: 38, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
-  dotOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  dotOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
   dotText: { fontSize: 13, color: COLORS.muted },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   statCard: { width: '48%', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 12, alignItems: 'center' },
   statValue: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginTop: 8 },
   statLabel: { fontSize: 12, color: COLORS.muted, marginTop: 6, textAlign: 'center' },
-  statView: { fontSize: 11, color: COLORS.accent, marginTop: 8 },
+  statView: { fontSize: 11, color: COLORS.taupeBlue, marginTop: 8 },
   note: { fontSize: 12, color: COLORS.muted, marginTop: 6 },
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   badge: { width: '48%', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14, alignItems: 'center' },
-  badgeCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  badgeCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.taupeBlueSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   badgeLocked: { backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.line },
   badgeTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink, textAlign: 'center' },
   badgeState: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   itemTitle: { flex: 1, fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   itemMeta: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
   bookingItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line, gap: 12 },
-  rebookBtn: { backgroundColor: COLORS.taupe, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
+  rebookBtn: { backgroundColor: COLORS.taupeBlue, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
   rebookText: { color: COLORS.bg, fontSize: 13 },
   empty: { fontSize: 14, color: COLORS.muted, paddingVertical: 20, textAlign: 'center' },
 });

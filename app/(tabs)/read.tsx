@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,23 @@ const PRACTICES: Practice[] = [
   { key: 'practice:journaling', label: 'Journaling', line: 'Think on paper', icon: 'create-outline', color: '#7C6F62', route: '/journaling' },
   { key: 'practice:affirmations', label: 'Affirmations', line: 'I am', icon: 'sparkles-outline', color: '#9A7B4F', route: '/affirmations' },
 ];
+
+// A different order each day, the same order all day. Random on every render
+// would reshuffle the shelf while you scroll it.
+function shuffleToday<T>(list: T[]): T[] {
+  let h = Math.floor(Date.now() / 86400000) + 2166136261;
+  const out = list.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    const j = Math.abs(h) % (i + 1);
+    const t = out[i]; out[i] = out[j]; out[j] = t;
+  }
+  return out;
+}
+
+// Behind the masthead, clearing before the shelves start.
+const PAGE_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 
 const TINT = COLORS.wash;
 // Same tint with no alpha, so the gradient fades to nothing rather than to
@@ -64,10 +81,11 @@ export default function LibraryScreen() {
   const isAdmin = role === 'admin';
   const lead = articles[0];
 
-  const ebooks = LIBRARY.filter((i) => i.type === 'E-book');
+  const ebooks = useMemo(() => shuffleToday(LIBRARY.filter((i) => i.type === 'E-book')), []);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <LinearGradient colors={PAGE_WASH} style={styles.pageWash} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.band, styles.masthead]}>
           <Text style={styles.kicker}>THE INTEND</Text>
@@ -261,6 +279,7 @@ function WorkbookCard({ item }: { item: any }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
+  pageWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 420 },
   content: { paddingBottom: 90 },
 
   band: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 26 },

@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import * as Linking from 'expo-linking';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -128,6 +129,7 @@ export default function RootLayout() {
   if (!fontsReady) return null;
 
   return (
+    <SafeAreaProvider>
     <StripeProvider
       publishableKey={STRIPE_PUBLISHABLE_KEY}
       merchantIdentifier="merchant.com.theintend.app"
@@ -147,6 +149,7 @@ export default function RootLayout() {
         <StatusBar style="auto" />
       </ThemeProvider>
     </StripeProvider>
+    </SafeAreaProvider>
   );
 }
 

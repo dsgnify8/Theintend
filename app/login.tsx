@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 14, lineHeight: 20, color: '#8F4A3B' },
   noticeBox: { backgroundColor: COLORS.accentSoft, borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
   noticeText: { fontSize: 14, lineHeight: 20, color: COLORS.ink },
-  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 16, letterSpacing: 0.5 },
   toggle: { marginTop: 20, alignItems: 'center' },

@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
   date: { fontSize: 13, color: COLORS.muted, marginTop: 6, marginBottom: 20 },
   h: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.ink, marginTop: 22, marginBottom: 8 },
   p: { fontSize: 15, lineHeight: 24, color: COLORS.ink, opacity: 0.9, marginBottom: 10 },
-  mailBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 15, marginTop: 14 },
+  mailBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.taupeBlue, borderRadius: 999, paddingVertical: 15, marginTop: 14 },
   mailText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
 });

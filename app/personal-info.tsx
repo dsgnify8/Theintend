@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   langChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   langText: { fontSize: 14, color: COLORS.ink },
   langTextOn: { color: COLORS.bg },
-  btn: { backgroundColor: COLORS.taupe, paddingVertical: 15, borderRadius: 999, alignItems: 'center', marginTop: 4 },
+  btn: { backgroundColor: COLORS.taupeBlue, paddingVertical: 15, borderRadius: 999, alignItems: 'center', marginTop: 4 },
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.bg, fontSize: 15 },
   msg: { fontSize: 13, color: COLORS.accent, marginTop: 8 },

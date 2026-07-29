@@ -27,6 +27,8 @@ let worksheetsDone: string[] = [];
 let listens: { id: string; t: number }[] = [];
 let lastRead: { id: string; title: string; t: number } | null = null;
 let bookScroll: Record<string, number> = {};
+// How far through a book, 0 to 1. The offset alone says nothing without it.
+let bookPct: Record<string, number> = {};
 let journalDays: number[] = [];
 
 const READS_KEY = 'intend.reads.v1';
@@ -34,6 +36,7 @@ const WORK_KEY = 'intend.worksheets.v1';
 const LISTEN_KEY = 'intend.listens.v1';
 const LASTREAD_KEY = 'intend.lastread.v1';
 const SCROLL_KEY = 'intend.bookscroll.v1';
+const BOOKPCT_KEY = 'intend.bookpct.v1';
 const JOURNAL_KEY = 'intend.journaldays.v1';
 const SAVED_KEY = 'intend.saved.v1';
 const LIKED_KEY = 'intend.liked.v1';
@@ -54,6 +57,8 @@ function emit() { listeners.forEach((l) => l()); }
     if (lr) lastRead = JSON.parse(lr);
     const bs = await AsyncStorage.getItem(SCROLL_KEY);
     if (bs) bookScroll = JSON.parse(bs);
+    const bp = await AsyncStorage.getItem(BOOKPCT_KEY);
+    if (bp) bookPct = JSON.parse(bp);
     const jd = await AsyncStorage.getItem(JOURNAL_KEY);
     if (jd) journalDays = JSON.parse(jd);
     const sv = await AsyncStorage.getItem(SAVED_KEY);
@@ -80,10 +85,11 @@ export async function clearAllUserData() {
   listens = [];
   lastRead = null;
   bookScroll = {};
+  bookPct = {};
   journalDays = [];
   try {
     await AsyncStorage.multiRemove([
-      READS_KEY, WORK_KEY, LISTEN_KEY, LASTREAD_KEY, SCROLL_KEY, JOURNAL_KEY, SAVED_KEY, LIKED_KEY,
+      READS_KEY, WORK_KEY, LISTEN_KEY, LASTREAD_KEY, SCROLL_KEY, BOOKPCT_KEY, JOURNAL_KEY, SAVED_KEY, LIKED_KEY,
       // Kept in lib/mood.ts as MOOD_HIDE_KEY. Named here so account deletion
       // leaves nothing behind.
       'intend.mood.answeredAt',
@@ -276,6 +282,16 @@ export function saveBookScroll(id: string, y: number) {
   AsyncStorage.setItem(SCROLL_KEY, JSON.stringify(bookScroll)).catch(() => {});
 }
 export function getBookScroll(id: string) { return bookScroll[id] ?? 0; }
+
+export function saveBookPct(id: string, pct: number) {
+  const next = Math.min(1, Math.max(0, pct));
+  if (Math.abs((bookPct[id] ?? 0) - next) < 0.01) return; // not worth a write
+  bookPct = { ...bookPct, [id]: next };
+  AsyncStorage.setItem(BOOKPCT_KEY, JSON.stringify(bookPct)).catch(() => {});
+  emit();
+}
+export function getBookPct(id: string) { return bookPct[id] ?? 0; }
+export const useBookPct = () => useStore(() => ({ ...bookPct }));
 export function clearLastRead() {
   lastRead = null;
   AsyncStorage.removeItem(LASTREAD_KEY).catch(() => {});

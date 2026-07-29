@@ -5,6 +5,8 @@ export const COLORS = {
   bg: '#F7F2EA',
   bgAlt: '#E4E2E3',
   card: '#FFFFFF',
+  // Off white, for surfaces where sharp white reads too hard.
+  cardMilk: '#FCFAF6',
   ink: '#2B2622',
   muted: '#8C8278',
   line: '#E6E1DA',
@@ -12,6 +14,8 @@ export const COLORS = {
   accent: '#5C4632',
   // Solid button fills. The deep brown reads heavy at button size.
   taupe: '#6B6157',
+  // Taupe carried toward blue, for marks that sit on the sky images.
+  taupeBlue: '#6E7B85',
   accentSoft: '#EDE7DF',
   // Large tinted sections and washes. Sampled from the website.
   wash: '#EBE6DF',

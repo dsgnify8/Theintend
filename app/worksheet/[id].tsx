@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   sliderBody: { flexDirection: 'row', alignItems: 'center' },
   sliderValue: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.accent, width: 26, textAlign: 'right' },
   savedNote: { fontSize: 13, lineHeight: 20, color: COLORS.accent, marginTop: 4, marginBottom: 4 },
-  saveBtn: { marginTop: 16, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  saveBtn: { marginTop: 16, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   btnOff: { opacity: 0.45 },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14, borderTopWidth: 1, borderTopColor: COLORS.line, backgroundColor: COLORS.bg },

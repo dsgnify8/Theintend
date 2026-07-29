@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -12,10 +12,7 @@ import { LIBRARY } from '@/constants/library';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
-import {
-  useBookings, useLiked, useReads, useReadStreak, useSaved, useWorksheetsDone,
-  useUpcomingBookings, useLastRead, useProgress, type Booking,
-} from '@/lib/store';
+import { type Booking, useBookPct, useBookings, useLastRead, useLiked, useProgress, useReadStreak, useReads, useSaved, useUpcomingBookings, useWorksheetsDone } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
 import { useHydrateBookings, useMyBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
@@ -30,6 +27,11 @@ const TINT = '#F1E9DE';
 
 // Warm at the top, clearing towards the foot of the card.
 const RESUME_WASH = ['rgba(107,97,87,0.15)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
+
+const YOU_SKY = require('@/assets/images/you-sky.jpg');
+// A light image under dark type, so no scrim is needed. Only the fade.
+const YOU_FADE = ['rgba(247,242,234,0.34)', 'rgba(247,242,234,0.18)', 'rgba(247,242,234,0.9)', '#F7F2EA'];
+const YOU_STOPS = [0, 0.55, 0.9, 1];
 const DEMO_STREAK = { streak: 4, record: 5, week: [true, true, true, true, false, false, false], todayIndex: 3 };
 const DEMO_STATS = { reads: '12', sessions: '3', journals: '8', worksheets: '5' };
 const FADE_BANDS = [0.015, 0.03, 0.05, 0.075, 0.105, 0.14, 0.18, 0.225, 0.27, 0.32];
@@ -56,6 +58,7 @@ function pretty(id: string) {
 }
 
 export default function YouScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { session, profile, role } = useAuth();
   const [, setFocusTick] = useState(0);
@@ -73,6 +76,7 @@ export default function YouScreen() {
   const openNotifs = () => { notifs.reload(); setNotifsOpen(true); notifs.markAllSeen(); };
   const [uploading, setUploading] = useState(false);
 
+  const bookPcts = useBookPct();
   const savedIds = useSaved();
   const likedIds = useLiked();
   const reads = useReads();
@@ -108,22 +112,23 @@ export default function YouScreen() {
 
   // Anything worth carrying on with. Only what genuinely exists.
   const resume = useMemo(() => {
-    const out: { key: string; kind: string; title: string; meta: string; route: string; image?: any }[] = [];
+    const out: { key: string; kind: string; title: string; meta: string; route: string; image?: any; pct?: number }[] = [];
     const art = lastReadId ? articles.find((a) => a.id === lastReadId) : undefined;
     if (art) {
       const pct = Math.round((progressMap[art.id] ?? 0) * 100);
-      out.push({ key: 'art', kind: 'READING', title: art.title, meta: pct > 0 ? `${pct}% through` : `${art.readMinutes ?? 5} min read`, route: `/article/${art.id}`, image: art.image ?? null });
+      out.push({ key: 'art', kind: 'READING', title: art.title, meta: pct > 0 ? `${pct}% read` : `${art.readMinutes ?? 5} min read`, route: `/article/${art.id}`, image: art.image ?? null, pct: pct / 100 });
     }
     if (lastRead) {
       const item = LIBRARY.find((l) => l.id === lastRead.id);
-      out.push({ key: 'book', kind: 'E-BOOK', title: lastRead.title, meta: 'Pick up where you stopped', route: item ? libRoute(item) : `/title/${lastRead.id}`, image: item ? (item as any).cover ?? null : null });
+      const bp = Math.round((bookPcts[lastRead.id] ?? 0) * 100);
+      out.push({ key: 'book', kind: 'E-BOOK', title: lastRead.title, meta: bp > 0 ? `${bp}% through` : 'Pick up where you stopped', route: item ? libRoute(item) : `/title/${lastRead.id}`, image: item ? (item as any).cover ?? null : null, pct: bp / 100 });
     }
     const j = journalEntries[0];
     if (j) {
       out.push({ key: 'journal', kind: 'JOURNAL', title: pretty(j.categoryId), meta: `Last written ${shortDate(j.updatedAt || j.createdAt)}`, route: `/journaling/${j.categoryId}` });
     }
     return out;
-  }, [articles, lastReadId, progressMap, lastRead, journalEntries]);
+  }, [articles, lastReadId, progressMap, lastRead, journalEntries, bookPcts]);
 
   const past = useMemo(() => {
     const now = Date.now();
@@ -170,9 +175,12 @@ export default function YouScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <View style={styles.safe}>
       <ScrollView contentContainerStyle={[styles.content, demo && { paddingBottom: 280 }]} showsVerticalScrollIndicator={false}>
-        <View style={styles.band}>
+        <View style={styles.youSkyBox}>
+          <Image source={YOU_SKY} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <LinearGradient colors={YOU_FADE} locations={YOU_STOPS} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <View style={[styles.band, { paddingTop: insets.top + 18 }]}>
           <View style={styles.topBar}>
             <Pressable style={styles.bell} onPress={openNotifs} hitSlop={10}>
               <Ionicons name="notifications-outline" size={21} color={COLORS.ink} />
@@ -197,14 +205,16 @@ export default function YouScreen() {
                 ) : null}
               </View>
               <Pressable style={styles.cameraBadge} onPress={photoOptions} hitSlop={8}>
-                <Ionicons name="camera" size={13} color={COLORS.bg} />
+                <Ionicons name="camera" size={13} color={COLORS.taupeBlue} />
               </Pressable>
             </View>
-            <Text style={styles.name}>{displayName}</Text>
-            {loggedIn ? <Text style={styles.handle}>{profile?.email || 'Your space at The Intend'}</Text> : null}
-            {loggedIn && role !== 'user' ? (
-              <View style={styles.roleBadge}><Text style={styles.roleText}>{role.toUpperCase()}</Text></View>
-            ) : null}
+            <View style={styles.profileText}>
+              <Text style={styles.name} numberOfLines={2}>{displayName}</Text>
+              {loggedIn ? <Text style={styles.handle} numberOfLines={1}>{profile?.email || 'Your space at The Intend'}</Text> : null}
+              {loggedIn && role !== 'user' ? (
+                <View style={styles.roleBadge}><Text style={styles.roleText}>{role.toUpperCase()}</Text></View>
+              ) : null}
+            </View>
           </View>
 
           <View style={styles.rhythmStrip}>
@@ -231,6 +241,7 @@ export default function YouScreen() {
           </View>
 
           <MoodInsightCard />
+        </View>
         </View>
 
         <View style={styles.band}>
@@ -282,7 +293,9 @@ export default function YouScreen() {
                   <Text style={styles.resumeKind}>{r.kind}</Text>
                   <Text style={styles.resumeTitle} numberOfLines={3}>{r.title}</Text>
                   <View style={{ flex: 1 }} />
-                  <View style={styles.resumeRule} />
+                  <View style={styles.resumeTrack}>
+                    <View style={[styles.resumeTrackFill, { width: `${Math.max(2, Math.min(100, Math.round((r.pct ?? 0) * 100)))}%` }]} />
+                  </View>
                   <Text style={styles.resumeMeta}>{r.meta}</Text>
                 </Pressable>
               ))}
@@ -426,7 +439,7 @@ export default function YouScreen() {
                     onPress={() => { setNotifsOpen(false); setTimeout(() => router.push(n.route as any), 220); }}
                   >
                     <View style={styles.notifIcon}>
-                      <Ionicons name={n.icon as any} size={17} color={COLORS.accent} />
+                      <Ionicons name={n.icon as any} size={17} color={COLORS.taupeBlue} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.notifTitle} numberOfLines={2}>{n.title}</Text>
@@ -465,7 +478,7 @@ export default function YouScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -676,7 +689,7 @@ function PastRow({ b }: { b: Booking }) {
         </Pressable>
       ) : (
         <Pressable style={styles.noteAdd} onPress={start} hitSlop={6}>
-          <Ionicons name="create-outline" size={15} color={COLORS.accent} />
+          <Ionicons name="create-outline" size={15} color={COLORS.taupeBlue} />
           <Text style={styles.noteAddText}>Add a note from this session</Text>
         </Pressable>
       )}
@@ -716,6 +729,7 @@ function Empty({ text }: { text: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingBottom: 60 },
+  youSkyBox: { paddingBottom: 10, overflow: 'hidden' },
   band: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 26 },
   bandTint: { backgroundColor: TINT },
 
@@ -729,20 +743,21 @@ const styles = StyleSheet.create({
   notifTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   notifBody: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 2 },
 
-  profile: { alignItems: 'center', paddingTop: 4, paddingBottom: 18 },
-  avatarWrap: { marginBottom: 14 },
+  profile: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 26, paddingBottom: 18 },
+  profileText: { flex: 1 },
+  avatarWrap: {},
   avatar: { width: 92, height: 92, borderRadius: 46, backgroundColor: COLORS.accentSoft, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
   avatarText: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.accent },
   uploadOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
-  cameraBadge: { position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: COLORS.bg },
+  cameraBadge: { position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.85)' },
   name: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink },
-  handle: { fontSize: 14, color: COLORS.muted, marginTop: 4, textAlign: 'center' },
-  roleBadge: { marginTop: 10, backgroundColor: COLORS.ink, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
+  handle: { fontSize: 14, color: COLORS.muted, marginTop: 4 },
+  roleBadge: { alignSelf: 'flex-start', marginTop: 10, backgroundColor: COLORS.ink, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999 },
   roleText: { fontSize: 11, letterSpacing: 1.5, color: COLORS.bg },
 
   sectionLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 14 },
-  rhythmStrip: { flexDirection: 'row', alignItems: 'center', gap: 18, backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 18, marginTop: 20 },
+  rhythmStrip: { flexDirection: 'row', alignItems: 'center', gap: 18, backgroundColor: 'rgba(255,255,255,0.34)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', paddingVertical: 16, paddingHorizontal: 18, marginTop: 20 },
   rhythmFigure: { alignItems: 'center', minWidth: 52 },
   rhythmNum: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 38, color: COLORS.ink },
   rhythmUnit: { fontFamily: FONT_ITALIC, fontSize: 15, color: COLORS.muted, marginTop: -2 },
@@ -755,7 +770,7 @@ const styles = StyleSheet.create({
   segTextOn: { color: COLORS.bg },
   pillRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
-  pillOn: { backgroundColor: COLORS.taupe, borderColor: COLORS.accent },
+  pillOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
   pillText: { fontSize: 14, color: COLORS.muted },
   pillTextOn: { color: COLORS.bg },
 
@@ -768,8 +783,9 @@ const styles = StyleSheet.create({
   insightRecoSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
 
   strip: { gap: 12, paddingRight: 20 },
-  resumeCard: { width: 232, height: 158, backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', padding: 18 },
-  resumeRule: { width: 26, height: 1, backgroundColor: COLORS.line, marginBottom: 10 },
+  resumeCard: { width: 206, height: 140, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', overflow: 'hidden', padding: 16 },
+  resumeTrack: { height: 2, borderRadius: 1, backgroundColor: COLORS.line, overflow: 'hidden', marginBottom: 9 },
+  resumeTrackFill: { height: 2, backgroundColor: COLORS.taupeBlue },
   resumeKind: { fontSize: 9, letterSpacing: 1.8, color: COLORS.accent, marginBottom: 8 },
   resumeTitle: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 22, color: COLORS.ink },
   resumeMeta: { fontSize: 12, color: COLORS.muted },
@@ -781,12 +797,12 @@ const styles = StyleSheet.create({
 
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
   dayCol: { alignItems: 'center', flex: 1 },
-  dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: COLORS.line, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
-  dayCircleOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
-  dayCircleToday: { borderColor: COLORS.accent, borderWidth: 2 },
+  dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.75)', backgroundColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
+  dayCircleOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
+  dayCircleToday: { borderColor: COLORS.taupeBlue, borderWidth: 2 },
   dayCheck: { color: COLORS.bg, fontSize: 15 },
-  dayLetter: { fontSize: 13, color: COLORS.muted },
-  dayLetterToday: { color: COLORS.accent, fontWeight: '600' },
+  dayLetter: { fontSize: 13, color: COLORS.ink, opacity: 0.6 },
+  dayLetterToday: { color: COLORS.taupeBlue, fontWeight: '600' },
 
   countRow: { flexDirection: 'row', alignItems: 'center', marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: COLORS.line },
   count: { flex: 1, alignItems: 'center' },
@@ -795,12 +811,12 @@ const styles = StyleSheet.create({
   countDiv: { width: 1, height: 26, backgroundColor: COLORS.line },
 
   progressCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 12 },
-  progressIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  progressIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   progressTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   progressSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
 
   bookingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
-  bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   bookingLink: { fontSize: 13, color: COLORS.accent },
@@ -814,7 +830,7 @@ const styles = StyleSheet.create({
   noteAddText: { fontSize: 13, color: COLORS.accent },
   noteHint: { fontSize: 13, color: COLORS.muted, marginBottom: 12 },
   noteInput: { minHeight: 140, maxHeight: 260, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, fontSize: 15, lineHeight: 22, color: COLORS.ink, textAlignVertical: 'top' },
-  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   noteSaveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.4 },
   pastTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 21, color: COLORS.ink },
   pastMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
@@ -841,7 +857,7 @@ const styles = StyleSheet.create({
   pkgWhen: { fontSize: 14, color: COLORS.ink },
   pkgJoin: { fontSize: 13, color: COLORS.accent, marginTop: 3 },
   pkgWaiting: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   pkgBtnText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
 
   savedRow: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
@@ -858,7 +874,7 @@ const styles = StyleSheet.create({
 
   empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 10 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
-  cta: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.accent },
+  cta: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.taupeBlue },
   ctaText: { color: COLORS.bg, fontSize: 14 },
 
   lockOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingBottom: 20 },
@@ -867,7 +883,7 @@ const styles = StyleSheet.create({
   lockCard: { width: '100%', backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 24, paddingHorizontal: 22, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 28, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
   lockTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginBottom: 8 },
   lockText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, textAlign: 'center', marginBottom: 18 },
-  lockBtn: { backgroundColor: COLORS.taupe, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
+  lockBtn: { backgroundColor: COLORS.taupeBlue, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
   lockBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
 
   modalRoot: { flex: 1, justifyContent: 'flex-end' },

@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   roleChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   roleChipText: { fontSize: 14, color: COLORS.ink },
   roleChipTextOn: { color: COLORS.bg },
-  applyBtn: { marginTop: 18, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupe, alignItems: 'center' },
+  applyBtn: { marginTop: 18, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   applyText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14 },
 

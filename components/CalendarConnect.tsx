@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   title: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   meta: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  connectBtn: { backgroundColor: COLORS.taupe, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
+  connectBtn: { backgroundColor: COLORS.taupeBlue, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999 },
   connectText: { color: COLORS.bg, fontSize: 13 },
   disconnect: { fontSize: 13, color: COLORS.muted },
   help: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 12 },
