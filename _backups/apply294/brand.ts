@@ -16,8 +16,6 @@ export const COLORS = {
   taupe: '#6B6157',
   // Taupe carried toward blue, for marks that sit on the sky images.
   taupeBlue: '#6E7B85',
-  // Soft yellow for the worksheets. Ink type on it, not cream.
-  pastel: '#E7D5A6',
   accentSoft: '#EDE7DF',
   // Large tinted sections and washes. Sampled from the website.
   wash: '#EBE6DF',

@@ -263,7 +263,7 @@ function WorkbookCard({ item }: { item: any }) {
   return (
     <Pressable style={styles.wbCard} onPress={() => router.push(`/worksheet/${item.id}`)}>
       <View style={styles.wbTop}>
-        <View style={styles.wbBadge}><Ionicons name="compass-outline" size={20} color={COLORS.ink} /></View>
+        <View style={styles.wbBadge}><Ionicons name="compass-outline" size={20} color={COLORS.bg} /></View>
         {inProgress ? <View style={styles.wbPill}><Text style={styles.wbPillText}>In progress</Text></View> : null}
       </View>
       <Text style={styles.wbTitle}>{item.title}</Text>
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
 
   wbCard: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14 },
   wbTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.pastel, alignItems: 'center', justifyContent: 'center' },
+  wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center' },
   wbPill: { backgroundColor: COLORS.accentSoft, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
   wbPillText: { fontSize: 11, letterSpacing: 0.5, color: COLORS.accent },
   wbTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
@@ -336,6 +336,6 @@ const styles = StyleSheet.create({
   wbBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: 12 },
   wbFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   wbMeta: { fontSize: 13, color: COLORS.muted },
-  wbStart: { backgroundColor: COLORS.pastel, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
-  wbStartText: { color: COLORS.ink, fontSize: 14, letterSpacing: 0.5 },
+  wbStart: { backgroundColor: COLORS.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
+  wbStartText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
 });

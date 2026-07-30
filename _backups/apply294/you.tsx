@@ -10,7 +10,7 @@ import { EXPERTS } from '@/constants/experts';
 import { SOUNDS } from '@/constants/sounds';
 import { LIBRARY } from '@/constants/library';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, FONT_ITALIC, FONT_SANS, FONT_SERIF } from '@/constants/brand';
+import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { type Booking, useBookPct, useBookings, useLastRead, useLiked, useProgress, useReadStreak, useReads, useSaved, useUpcomingBookings, useWorksheetsDone } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
@@ -27,8 +27,6 @@ const TINT = '#F1E9DE';
 
 // Warm at the top, clearing towards the foot of the card.
 const RESUME_WASH = ['rgba(107,97,87,0.15)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
-// Behind both sheets, so they are not a flat panel.
-const SHEET_WASH = ['rgba(107,97,87,0.15)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 
 const YOU_SKY = require('@/assets/images/you-sky.jpg');
 // A light image under dark type, so no scrim is needed. Only the fade.
@@ -428,7 +426,6 @@ export default function YouScreen() {
         <View style={styles.modalRoot}>
           <Pressable style={styles.backdrop} onPress={() => setNotifsOpen(false)} />
           <View style={styles.sheet}>
-            <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Notifications</Text>
             {notifs.items.length === 0 ? (
@@ -461,7 +458,6 @@ export default function YouScreen() {
         <View style={styles.modalRoot}>
           <Pressable style={styles.backdrop} onPress={() => setSettingsOpen(false)} />
           <View style={styles.sheet}>
-            <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Settings</Text>
             {loggedIn ? <SettingRow icon="person-outline" label="Personal information" onPress={() => goSettings('/personal-info')} /> : null}
@@ -702,7 +698,6 @@ function PastRow({ b }: { b: Booking }) {
         <KeyboardAvoidingView style={styles.modalRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
           <View style={styles.sheet}>
-            <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Your note</Text>
             <Text style={styles.noteHint}>{b.title}</Text>
@@ -743,10 +738,10 @@ const styles = StyleSheet.create({
   bell: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
   bellDot: { position: 'absolute', top: 8, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: '#C0453B', borderWidth: 1.5, borderColor: COLORS.bg },
   notifEmpty: { fontSize: 14, lineHeight: 21, color: COLORS.muted, paddingVertical: 10, paddingBottom: 22 },
-  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 14, marginBottom: 8 },
-  notifIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line },
+  notifIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
   notifTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
-  notifBody: { fontFamily: FONT_SANS, fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 2 },
+  notifBody: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 2 },
 
   profile: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 26, paddingBottom: 18 },
   profileText: { flex: 1 },
@@ -842,7 +837,7 @@ const styles = StyleSheet.create({
   rebook: { borderWidth: 1, borderColor: COLORS.accent, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
   rebookText: { fontSize: 12, color: COLORS.accent },
 
-  journalRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 14, marginBottom: 10 },
+  journalRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 10 },
   journalDate: { width: 54, alignItems: 'center' },
   journalDateText: { fontFamily: FONT_SERIF, fontSize: 14, color: COLORS.accent },
   journalCat: { fontSize: 10, letterSpacing: 1.4, color: COLORS.muted, marginBottom: 4 },
@@ -893,9 +888,9 @@ const styles = StyleSheet.create({
 
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,38,34,0.35)' },
-  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, overflow: 'hidden' },
+  sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40 },
   sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
-  sheetTitle: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 18, marginTop: 2 },
-  setRow: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', paddingVertical: 16, paddingHorizontal: 16, marginBottom: 8 },
-  setLabel: { flex: 1, fontFamily: FONT_SANS, fontSize: 15, color: COLORS.ink },
+  sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
+  setRow: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 16, paddingHorizontal: 16, marginBottom: 8 },
+  setLabel: { flex: 1, fontSize: 15, color: COLORS.ink },
 });

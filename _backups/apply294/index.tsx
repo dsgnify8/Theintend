@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   featureHead: { fontFamily: FONT_SERIF, fontSize: 24, lineHeight: 30, color: COLORS.ink, marginTop: 4 },
   featureSub: { fontSize: 14, color: COLORS.muted, marginTop: 6, marginBottom: 16 },
   bookRail: { marginBottom: 34 },
-  bookCard: { width: CARD_W, backgroundColor: COLORS.cardMilk, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden' },
+  bookCard: { width: CARD_W, backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden' },
   trackRow: { flexDirection: 'row', height: 2 },
   trackSeg: { flex: 1, backgroundColor: COLORS.line },
   trackSegOn: { backgroundColor: COLORS.ink },

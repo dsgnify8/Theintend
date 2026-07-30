@@ -6,52 +6,6 @@ import { BASE_PROMPT, OPENING } from './prompt.ts';
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
 
-const STOP_WORDS = new Set([
-  'the', 'and', 'that', 'this', 'with', 'for', 'not', 'but', 'you', 'your', 'are',
-  'was', 'have', 'has', 'had', 'she', 'her', 'him', 'his', 'they', 'them', 'what',
-  'when', 'why', 'how', 'can', 'could', 'would', 'should', 'about', 'from', 'just',
-  'like', 'been', 'were', 'them', 'there', 'then', 'than', 'into', 'more', 'some',
-  'very', 'really', 'feel', 'feels', 'feeling', 'know', 'think', 'want', 'get',
-]);
-
-function words(text: string): string[] {
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 3 && !STOP_WORDS.has(w));
-}
-
-// Score a source against what the person said. Keywords are the strongest
-// signal because they are chosen deliberately, topic next, then the written
-// concepts. A lower authority level breaks ties, so guidance beats reflection.
-function scoreSource(src: any, said: string[]): number {
-  if (!said.length) return 0;
-  const set = new Set(said);
-  let score = 0;
-  for (const k of (src.keywords ?? [])) {
-    for (const w of words(k)) if (set.has(w)) score += 5;
-  }
-  for (const w of words(src.topic)) if (set.has(w)) score += 3;
-  for (const w of words(src.subtopic)) if (set.has(w)) score += 2;
-  for (const w of words(src.main_concepts)) if (set.has(w)) score += 1;
-  return score;
-}
-
-function renderSource(src: any): string {
-  const lines = [
-    `SOURCE: ${src.title}${src.author ? `, ${src.author}` : ''}`,
-    `Authority level ${src.authority_level} of 8. ${src.category}.`,
-  ];
-  if (src.main_concepts) lines.push(`What it holds: ${src.main_concepts}`);
-  if (src.key_recommendations) lines.push(`What it recommends: ${src.key_recommendations}`);
-  if (src.may_use) lines.push(`You may use it for: ${src.may_use}`);
-  if (src.must_not_conclude) lines.push(`You must not conclude: ${src.must_not_conclude}`);
-  if (src.limitations) lines.push(`Limits: ${src.limitations}`);
-  if (src.referral_triggers) lines.push(`Points toward a professional: ${src.referral_triggers}`);
-  return lines.join('\n');
-}
-
 Deno.serve(async (req) => {
   try {
     const auth = req.headers.get('Authorization') ?? '';
@@ -109,30 +63,6 @@ Deno.serve(async (req) => {
           : '')
       + (isNewConversation ? OPENING : '');
 
-    // Sources that actually bear on what they said. Approved and active only.
-    let sourceBlock = '';
-    try {
-      const said = words(message);
-      if (said.length) {
-        const { data: sources } = await admin
-          .from('ai_sources')
-          .select('title,author,topic,subtopic,keywords,authority_level,category,main_concepts,key_recommendations,limitations,may_use,must_not_conclude,referral_triggers')
-          .eq('active', true).eq('approved', true);
-        const ranked = (sources ?? [])
-          .map((src: any) => ({ src, score: scoreSource(src, said) }))
-          .filter((x: any) => x.score >= 5)
-          .sort((a: any, b: any) =>
-            b.score - a.score || a.src.authority_level - b.src.authority_level)
-          .slice(0, 4);
-        if (ranked.length) {
-          sourceBlock = '\n\nSOURCES FOR THIS CONVERSATION. Follow these. A must not conclude line is a hard limit.\n\n'
-            + ranked.map((x: any) => renderSource(x.src)).join('\n\n');
-        }
-      }
-    } catch {
-      // A registry problem must never stop someone getting a reply.
-    }
-
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -147,7 +77,7 @@ Deno.serve(async (req) => {
         // per person context is charged in full each time.
         system: [
           { type: 'text', text: BASE_PROMPT, cache_control: { type: 'ephemeral' } },
-          { type: 'text', text: context + sourceBlock },
+          { type: 'text', text: context },
         ],
         messages: msgs,
       }),
