@@ -3,9 +3,13 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { setUserRole, useAllProfiles } from '@/lib/admin';
+
+// Behind the top of the page, matching the library and My Companion.
+const ADMIN_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 
 const ROLES = ['user', 'expert', 'admin'];
 const PEOPLE_PAGE = 10;
@@ -67,6 +71,7 @@ export default function Admin() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      <LinearGradient colors={ADMIN_WASH} style={styles.wash} pointerEvents="none" />
       <BackBar onPress={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.h1}>Admin</Text>
@@ -233,6 +238,7 @@ function BackBar({ onPress }: { onPress: () => void }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
+  wash: { position: 'absolute', top: 0, left: 0, right: 0, height: 420 },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
   content: { paddingHorizontal: 20, paddingBottom: 56 },

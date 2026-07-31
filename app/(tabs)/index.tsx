@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { Animated, Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from '@/components/Img';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { MOODS, levelForKeyword } from '@/constants/mood';
 import { setMoodToday, useMoodPicker, useTodayMood } from '@/lib/mood';
@@ -64,13 +65,13 @@ const BOOKS = [
   },
 ];
 const SKY_FADE = [
-  'rgba(28,24,20,0.42)',
-  'rgba(28,24,20,0.16)',
-  'rgba(247,242,234,0)',
-  'rgba(247,242,234,0.86)',
+  'rgba(28,24,20,0.66)',
+  'rgba(28,24,20,0.56)',
+  'rgba(28,24,20,0.40)',
+  'rgba(247,242,234,0.40)',
   '#F7F2EA',
 ];
-const SKY_STOPS = [0, 0.12, 0.68, 0.93, 1];
+const SKY_STOPS = [0, 0.35, 0.7, 0.92, 1];
 
 // A different order each day, the same order all day.
 function shuffleToday<T>(list: T[]): T[] {

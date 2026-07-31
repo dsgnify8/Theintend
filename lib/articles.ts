@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { type Article, type Block, type Run, FALLBACK_ARTICLES } from '@/constants/articles';
 import { supabase } from './supabase';
+import { readCache, writeCache } from './cache';
 
 async function loadOverrides(): Promise<Record<string, any>> {
   try {
@@ -54,13 +55,23 @@ async function loadFromTable(): Promise<Article[]> {
   }
 }
 
+export const ARTICLES_CACHE_KEY = 'articles.v1';
+
 async function loadArticles(): Promise<Article[]> {
   const overrides = await loadOverrides();
   const rows = await loadFromTable();
-  // Nothing published yet, or the table could not be read. Show the bundled
-  // sample rather than an empty library.
-  if (!rows.length) return FALLBACK_ARTICLES;
-  return rows.map((a) => applyOverride(a, overrides[a.id]));
+  if (rows.length) {
+    const merged = rows.map((a) => applyOverride(a, overrides[a.id]));
+    // A good read is what gets kept, overrides already applied, so the offline
+    // copy is exactly what was on screen.
+    writeCache(ARTICLES_CACHE_KEY, merged);
+    return merged;
+  }
+  // Nothing published, or nothing reachable. Whatever was here last beats the
+  // bundled sample, which is only a few articles.
+  const disk = await readCache<Article[]>(ARTICLES_CACHE_KEY);
+  if (disk && disk.length) return disk;
+  return FALLBACK_ARTICLES;
 }
 
 let cache: Article[] | null = null;
@@ -79,6 +90,13 @@ export function useArticles(): State {
     if (cache) {
       setState({ loading: false, articles: cache, error: null });
     } else {
+      // Show the stored copy at once rather than a spinner, then let the
+      // network replace it. Skipped if the fetch already won the race.
+      readCache<Article[]>(ARTICLES_CACHE_KEY).then((disk) => {
+        if (disk && disk.length && !cache) {
+          setState((st) => (st.loading ? { loading: false, articles: disk, error: null } : st));
+        }
+      });
       inflight = inflight ?? loadArticles();
       inflight
         .then((a) => {

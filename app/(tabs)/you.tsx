@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Linking } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Linking } from 'react-native';
+import { Image } from '@/components/Img';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -104,7 +105,7 @@ export default function YouScreen() {
   const liked = [
     ...articles.filter((a) => likedIds.includes(a.id)).map((a) => ({ id: a.id, title: a.title, category: a.category, image: a.image ?? null, type: 'Articles', route: `/article/${a.id}` })),
     ...LIBRARY.filter((l) => likedIds.includes(l.id)).map((l) => ({ id: l.id, title: l.title, category: l.type, image: (l as any).cover ?? null, type: 'E-books', route: libRoute(l) })),
-    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, image: (sd as any).image ?? (sd as any).cover ?? null, type: 'Sounds', route: `/sound/${sd.id}` })),
+    ...SOUNDS.filter((sd) => likedIds.includes(sd.id)).map((sd) => ({ id: sd.id, title: sd.title, category: sd.category, image: sd.cover ?? null, type: 'Sounds', route: `/sound/${sd.id}` })),
     ...EXPERTS.filter((e) => likedIds.includes(e.id)).map((e) => ({ id: e.id, title: e.name, category: 'Expert', image: (e as any).photo ?? null, type: 'Experts', route: `/expert/${e.id}` })),
   ];
   const LIKED_TYPES = ['Articles', 'Sounds', 'Experts', 'E-books'];

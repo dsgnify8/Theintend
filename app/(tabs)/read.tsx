@@ -39,6 +39,8 @@ function shuffleToday<T>(list: T[]): T[] {
 
 // Behind the masthead, clearing before the shelves start.
 const PAGE_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
+// Light at the top of the shape, settling into the base tone.
+const PASTEL_GRAD = [COLORS.pastelLift, COLORS.pastel];
 
 const TINT = COLORS.wash;
 // Same tint with no alpha, so the gradient fades to nothing rather than to
@@ -237,8 +239,8 @@ function SoundCard({ sound, uri, isAdmin }: { sound: Sound; uri?: string; isAdmi
       delayLongPress={450}
     >
       <View style={styles.soundCover}>
-        {uri ? (
-          <ImageBackground source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        {uri || sound.cover ? (
+          <ImageBackground source={uri ? { uri } : sound.cover} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: sound.color }]} />
         )}
@@ -263,7 +265,10 @@ function WorkbookCard({ item }: { item: any }) {
   return (
     <Pressable style={styles.wbCard} onPress={() => router.push(`/worksheet/${item.id}`)}>
       <View style={styles.wbTop}>
-        <View style={styles.wbBadge}><Ionicons name="compass-outline" size={20} color={COLORS.ink} /></View>
+        <View style={styles.wbBadge}>
+          <LinearGradient colors={PASTEL_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          <Ionicons name="compass-outline" size={20} color={COLORS.ink} />
+        </View>
         {inProgress ? <View style={styles.wbPill}><Text style={styles.wbPillText}>In progress</Text></View> : null}
       </View>
       <Text style={styles.wbTitle}>{item.title}</Text>
@@ -271,7 +276,10 @@ function WorkbookCard({ item }: { item: any }) {
       <Text style={styles.wbBlurb}>{item.blurb}</Text>
       <View style={styles.wbFoot}>
         <Text style={styles.wbMeta}>{item.minutes}</Text>
-        <View style={styles.wbStart}><Text style={styles.wbStartText}>{inProgress ? 'Resume' : 'Start'}</Text></View>
+        <View style={styles.wbStart}>
+          <LinearGradient colors={PASTEL_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          <Text style={styles.wbStartText}>{inProgress ? 'Resume' : 'Start'}</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -328,7 +336,7 @@ const styles = StyleSheet.create({
 
   wbCard: { backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, padding: 20, marginBottom: 14 },
   wbTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.pastel, alignItems: 'center', justifyContent: 'center' },
+  wbBadge: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.pastel, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   wbPill: { backgroundColor: COLORS.accentSoft, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
   wbPillText: { fontSize: 11, letterSpacing: 0.5, color: COLORS.accent },
   wbTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink },
@@ -336,6 +344,6 @@ const styles = StyleSheet.create({
   wbBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: 12 },
   wbFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 },
   wbMeta: { fontSize: 13, color: COLORS.muted },
-  wbStart: { backgroundColor: COLORS.pastel, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 24 },
+  wbStart: { backgroundColor: COLORS.pastel, borderRadius: 999, overflow: 'hidden', paddingVertical: 10, paddingHorizontal: 24 },
   wbStartText: { color: COLORS.ink, fontSize: 14, letterSpacing: 0.5 },
 });

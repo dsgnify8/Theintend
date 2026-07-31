@@ -1,15 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from '@/components/Img';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { SOUNDS, SOUND_CATEGORIES, type Sound } from '@/constants/sounds';
+import { useAppImages } from '@/lib/appImages';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-
-const COVERS: Record<string, any> = {
-  'quantum-focus': require('../assets/images/quantum-focus-cover.jpg'),
-  '432hz-energizer': require('../assets/images/432hz-cover.jpg'),
-};
 
 export default function SoundsScreen() {
   const router = useRouter();
@@ -56,10 +53,14 @@ export default function SoundsScreen() {
 
 function SoundCard({ sound }: { sound: Sound }) {
   const router = useRouter();
+  // Same order as everywhere else: an admin upload wins, the bundled cover is
+  // the fallback, a colour block only when there is neither.
+  const appImages = useAppImages();
+  const art = appImages[`sound:${sound.id}`] ?? sound.cover ?? null;
   return (
     <Pressable style={styles.cardWrap} onPress={() => router.push(`/sound/${sound.id}`)}>
-      {COVERS[sound.id] ? (
-        <Image source={COVERS[sound.id]} style={styles.cardImg} resizeMode="cover" />
+      {art ? (
+        <Image source={typeof art === 'string' ? { uri: art } : art} style={styles.cardImg} resizeMode="cover" />
       ) : (
         <View style={[styles.card, { backgroundColor: sound.color }]}>
           <Ionicons name="musical-notes-outline" size={20} color="rgba(255,255,255,0.85)" />

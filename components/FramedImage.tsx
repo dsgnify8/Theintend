@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Image } from '@/components/Img';
 
 // Shows an image inside a frame with a saved zoom + position so a photo can be
 // re-centred without re-cropping. x and y are fractions (-1..1) of the frame;

@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
+import { readCache, writeCache } from './cache';
 import { EXPERTS as FALLBACK, type Expert } from '@/constants/experts';
 
 let cache: Expert[] | null = null;
@@ -31,13 +32,22 @@ function fromRow(r: any): Expert {
   };
 }
 
+export const EXPERTS_CACHE_KEY = 'experts.v1';
+
+async function fromDisk(): Promise<Expert[]> {
+  const disk = await readCache<Expert[]>(EXPERTS_CACHE_KEY);
+  return disk && disk.length ? disk : FALLBACK;
+}
+
 async function load(): Promise<Expert[]> {
   try {
     const { data, error } = await supabase.from('experts').select('*').order('sort', { ascending: true });
-    if (error || !data || data.length === 0) return FALLBACK;
-    return data.map(fromRow);
+    if (error || !data || data.length === 0) return fromDisk();
+    const mapped = data.map(fromRow);
+    writeCache(EXPERTS_CACHE_KEY, mapped);
+    return mapped;
   } catch {
-    return FALLBACK;
+    return fromDisk();
   }
 }
 
@@ -54,6 +64,9 @@ export function useExperts() {
     if (cache) {
       setState({ experts: cache, loading: false });
     } else {
+      readCache<Expert[]>(EXPERTS_CACHE_KEY).then((disk) => {
+        if (disk && disk.length && !cache) setState({ experts: disk, loading: false });
+      });
       inflight = inflight ?? load();
       inflight.then((e) => { cache = e; emit(); }).catch(() => { cache = FALLBACK; emit(); });
       // Safety net: never let the screen spin forever.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Image } from '@/components/Img';
 import Slider from '@react-native-community/slider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,12 +9,13 @@ import { SOUNDS } from '@/constants/sounds';
 import { recordListen, useLiked, toggleLiked } from '@/lib/store';
 import { playTrack, togglePlay, seekTo, usePlayerStatus } from '@/lib/player';
 import { localUriFor, downloadTrack, removeDownload } from '@/lib/offline';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAppImages } from '@/lib/appImages';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
-const COVERS: Record<string, any> = {
-  'quantum-focus': require('../../assets/images/quantum-focus-cover.jpg'),
-  '432hz-energizer': require('../../assets/images/432hz-cover.jpg'),
-};
+// Rises from the foot of the page rather than falling from the top, since
+// this screen carries its weight low.
+const RISE = ['rgba(107,97,87,0)', 'rgba(107,97,87,0.07)', 'rgba(107,97,87,0.18)'];
 
 function fmt(sec: number) {
   if (!sec || sec < 0 || !isFinite(sec)) return '0:00';
@@ -30,6 +32,10 @@ export default function SoundPlayer() {
   const sound = SOUNDS.find((s) => s.id === id);
 
   const status = usePlayerStatus();
+  // An admin upload wins, the bundled cover is the fallback. Same order as the
+  // library card, so the two never disagree.
+  const appImages = useAppImages();
+  const art = (id ? appImages[`sound:${id}`] : undefined) ?? sound?.cover ?? null;
   const likedIds = useLiked();
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -100,6 +106,7 @@ export default function SoundPlayer() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      <LinearGradient colors={RISE} style={styles.rise} pointerEvents="none" />
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backBar}>
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
@@ -111,8 +118,8 @@ export default function SoundPlayer() {
       </View>
 
       <View style={styles.content}>
-        {COVERS[sound.id] ? (
-          <Image source={COVERS[sound.id]} style={styles.art} resizeMode="cover" />
+        {art ? (
+          <Image source={typeof art === 'string' ? { uri: art } : art} style={styles.art} resizeMode="cover" />
         ) : (
           <View style={[styles.art, { backgroundColor: sound.color }]}>
             <Ionicons name="musical-notes" size={40} color="rgba(255,255,255,0.9)" />
@@ -132,16 +139,16 @@ export default function SoundPlayer() {
               value={position}
               onValueChange={(v) => setSeeking(v)}
               onSlidingComplete={(v) => { seekTo(v); setSeeking(null); }}
-              minimumTrackTintColor={COLORS.accent}
+              minimumTrackTintColor={COLORS.ink}
               maximumTrackTintColor={COLORS.line}
-              thumbTintColor={COLORS.accent}
+              thumbTintColor={COLORS.ink}
             />
             <View style={styles.times}>
               <Text style={styles.time}>{fmt(position)}</Text>
               <Text style={styles.time}>{duration > 0 ? fmt(duration) : sound.duration}</Text>
             </View>
 
-            <Pressable style={styles.playBtn} onPress={toggle}>
+            <Pressable style={[styles.playBtn, playing && styles.playOn]} onPress={toggle}>
               <Ionicons name={playing ? 'pause' : 'play'} size={30} color={COLORS.bg} style={playing ? undefined : { marginLeft: 3 }} />
             </Pressable>
             {isCurrent && !status.isLoaded ? <Text style={styles.status}>Loading…</Text> : null}
@@ -166,7 +173,7 @@ export default function SoundPlayer() {
             <Text style={styles.downloadLabel}>Download for offline</Text>
             <Text style={styles.downloadHint}>{downloading ? `Downloading… ${Math.round(progress * 100)}%` : downloaded ? 'Available offline, no wifi needed' : 'Listen anywhere, no wifi needed'}</Text>
           </View>
-          <Switch value={downloaded || downloading} disabled={downloading} onValueChange={onToggleDownload} trackColor={{ true: COLORS.accent, false: COLORS.line }} />
+          <Switch value={downloaded || downloading} disabled={downloading} onValueChange={onToggleDownload} trackColor={{ true: COLORS.ink, false: COLORS.line }} />
         </View>
       </View>
     </SafeAreaView>
@@ -175,6 +182,7 @@ export default function SoundPlayer() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
+  rise: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '62%' },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 10 },
   backBar: { flexDirection: 'row', alignItems: 'center' },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
@@ -185,13 +193,14 @@ const styles = StyleSheet.create({
   purpose: { fontSize: 15, color: COLORS.ink, opacity: 0.8, marginTop: 10, textAlign: 'center' },
   slider: { width: '100%', marginTop: 22, height: 40 },
   track: { width: '100%', height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginTop: 28, overflow: 'hidden' },
-  trackFill: { width: '0%', height: 4, backgroundColor: COLORS.accent },
+  trackFill: { width: '0%', height: 4, backgroundColor: COLORS.ink },
   times: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginTop: 0 },
   time: { fontSize: 12, color: COLORS.muted },
-  playBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
+  playBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center', marginTop: 24 },
+  playOn: { backgroundColor: 'rgba(43,38,34,0.5)' },
   playOff: { opacity: 0.4 },
   status: { fontSize: 12, color: COLORS.muted, marginTop: 14, textAlign: 'center' },
-  downloadRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 28 },
+  downloadRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 16, marginTop: 28 },
   downloadLabel: { fontSize: 15, color: COLORS.ink },
   downloadHint: { fontSize: 12, color: COLORS.muted, marginTop: 4 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },

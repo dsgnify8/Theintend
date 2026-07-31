@@ -16,8 +16,12 @@ export const COLORS = {
   taupe: '#6B6157',
   // Taupe carried toward blue, for marks that sit on the sky images.
   taupeBlue: '#6E7B85',
+  // The lighter end, for gradients on buttons.
+  taupeBlueLift: '#8B969E',
   // Soft yellow for the worksheets. Ink type on it, not cream.
-  pastel: '#E7D5A6',
+  pastel: '#F1E4BE',
+  // The lighter end of the yellow, for gradients on the workbook card.
+  pastelLift: '#FAF3DE',
   accentSoft: '#EDE7DF',
   // Large tinted sections and washes. Sampled from the website.
   wash: '#EBE6DF',

@@ -1,7 +1,7 @@
 // your-ai: the companion. Loads this conversation only, with earlier ones as themes,
 // the live expert roster, builds the system prompt, calls Claude, stores the turn.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { BASE_PROMPT, OPENING } from './prompt.ts';
+import { BASE_PROMPT, MODULES, OPENING } from './prompt.ts';
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
@@ -109,6 +109,19 @@ Deno.serve(async (req) => {
           : '')
       + (isNewConversation ? OPENING : '');
 
+    // Modules that this conversation calls for. Scored against the whole
+    // thread, since a parent several messages in may only say "he did it again".
+    // Tokenised without the length filter that words() applies, because short
+    // keywords like son, kid, mum and dad would otherwise never match.
+    const conversationText = msgs.map((m: any) => m.content).join(' ');
+    const convWords = new Set(
+      conversationText.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean)
+    );
+    const moduleBlock = MODULES
+      .filter((mod) => mod.keywords.some((k) => convWords.has(k)))
+      .map((mod) => mod.text)
+      .join('\n\n');
+
     // Sources that actually bear on what they said. Approved and active only.
     let sourceBlock = '';
     try {
@@ -147,7 +160,7 @@ Deno.serve(async (req) => {
         // per person context is charged in full each time.
         system: [
           { type: 'text', text: BASE_PROMPT, cache_control: { type: 'ephemeral' } },
-          { type: 'text', text: context + sourceBlock },
+          { type: 'text', text: (moduleBlock ? moduleBlock + '\n\n' : '') + context + sourceBlock },
         ],
         messages: msgs,
       }),

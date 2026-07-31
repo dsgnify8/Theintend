@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { DURATION, EASE, reduceMotion } from '@/constants/motion';
 import { useAuth } from '@/lib/auth';
 import { type AiMessage, type Conversation, conversationTitle, getConversations, newThreadId, sendMessage } from '@/lib/yourAi';
 
@@ -29,6 +30,29 @@ export default function YourAi() {
   const greeting = useRef(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]).current;
   // One conversation per visit, until they start another.
   const [threadId, setThreadId] = useState(() => newThreadId());
+  // Which message is being written out, and how much of it is showing.
+  const [typeState, setTypeState] = useState<{ index: number; shown: number } | null>(null);
+  const [still, setStill] = useState(false);
+  // Messages already on screen when a past conversation is opened. Those do
+  // not animate in, or the whole thread arrives at once.
+  const settledBefore = useRef(0);
+
+  useEffect(() => {
+    let alive = true;
+    reduceMotion().then((on) => { if (alive) setStill(on); });
+    return () => { alive = false; };
+  }, []);
+
+  // Reveals the reply a few characters at a time once it has landed.
+  useEffect(() => {
+    if (!typeState) return;
+    const full = messages[typeState.index]?.content ?? '';
+    if (typeState.shown >= full.length) { setTypeState(null); return; }
+    const t = setTimeout(() => {
+      setTypeState((st) => (st ? { ...st, shown: Math.min(full.length, st.shown + 7) } : null));
+    }, 16);
+    return () => clearTimeout(t);
+  }, [typeState, messages]);
   const scroller = useRef<ScrollView>(null);
 
   // Opens on an empty thread every time. Past conversations live behind the
@@ -42,7 +66,7 @@ export default function YourAi() {
   useEffect(() => {
     const t = setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 60);
     return () => clearTimeout(t);
-  }, [messages, sending]);
+  }, [messages, sending, typeState]);
 
   const send = async () => {
     const text = input.trim();
@@ -54,7 +78,11 @@ export default function YourAi() {
     const res = await sendMessage(text, firstName, threadId);
     setSending(false);
     if (res.ok && res.reply) {
-      setMessages((m) => [...m, { role: 'assistant', content: res.reply! }]);
+      setMessages((m) => {
+        const next = [...m, { role: 'assistant', content: res.reply! }];
+        if (!still) setTypeState({ index: next.length - 1, shown: 0 });
+        return next;
+      });
     } else {
       setMessages((m) => [...m, { role: 'assistant', content: 'I could not reach you just now. Try me again in a moment.' }]);
     }
@@ -90,15 +118,19 @@ export default function YourAi() {
               </View>
             ) : null}
 
-            {messages.map((m, i) => (
-              <View key={i} style={[styles.row, m.role === 'user' ? styles.rowUser : styles.rowAi]}>
-                <View style={[styles.bubble, m.role === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
-                  <Text style={[styles.bubbleText, m.role === 'user' ? styles.bubbleTextUser : styles.bubbleTextAi]}>
-                    {m.content}
-                  </Text>
-                </View>
-              </View>
-            ))}
+            {messages.map((m, i) => {
+              const typingThis = typeState?.index === i;
+              const text = typingThis ? m.content.slice(0, typeState!.shown) : m.content;
+              return (
+                <Appear key={i} animate={!still && i >= settledBefore.current} style={[styles.row, m.role === 'user' ? styles.rowUser : styles.rowAi]}>
+                  <View style={[styles.bubble, m.role === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
+                    <Text style={[styles.bubbleText, m.role === 'user' ? styles.bubbleTextUser : styles.bubbleTextAi]}>
+                      {text}
+                    </Text>
+                  </View>
+                </Appear>
+              );
+            })}
 
             {sending ? (
               <View style={[styles.row, styles.rowAi]}>
@@ -112,7 +144,7 @@ export default function YourAi() {
         )}
 
         {readingPast ? (
-          <Pressable style={styles.backToNew} onPress={() => { setMessages([]); setReadingPast(false); setThreadId(newThreadId()); }}>
+          <Pressable style={styles.backToNew} onPress={() => { settledBefore.current = 0; setMessages([]); setReadingPast(false); setThreadId(newThreadId()); }}>
             <Ionicons name="add" size={16} color={COLORS.taupeBlue} />
             <Text style={styles.backToNewText}>Start a new conversation</Text>
           </Pressable>
@@ -149,6 +181,8 @@ export default function YourAi() {
                     key={c.id}
                     style={styles.histRow}
                     onPress={() => {
+                      settledBefore.current = c.messages.length;
+                      setTypeState(null);
                       setMessages(c.messages.map((m) => ({ role: m.role, content: m.content })));
                       setReadingPast(true);
                       setHistOpen(false);
@@ -194,6 +228,29 @@ function shortWhen(iso: string): string {
   const time = hh + ':' + mm + ' ' + (d.getHours() < 12 ? 'AM' : 'PM');
   if (sameDay) return 'Today, ' + time;
   return d.getDate() + ' ' + MON3[d.getMonth()] + ', ' + time;
+}
+
+// A bubble that arrives rather than appearing. Rendered plain when animation
+// is off, so nothing is left half faded.
+function Appear({ animate, style, children }: { animate: boolean; style?: any; children: any }) {
+  const v = useRef(new Animated.Value(animate ? 0 : 1)).current;
+  useEffect(() => {
+    if (!animate) return;
+    Animated.timing(v, {
+      toValue: 1,
+      duration: DURATION.colour,
+      easing: EASE,
+      useNativeDriver: true,
+    }).start();
+  }, [animate, v]);
+  if (!animate) return <View style={style}>{children}</View>;
+  return (
+    <Animated.View
+      style={[style, { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }]}
+    >
+      {children}
+    </Animated.View>
+  );
 }
 
 function Dot({ delay }: { delay: number }) {
