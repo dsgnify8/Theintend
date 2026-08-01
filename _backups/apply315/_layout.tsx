@@ -13,7 +13,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { usePushRegistration } from '@/lib/notifications';
 import { useAuth } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Splash } from '@/components/Splash';
 import { useFonts } from 'expo-font';
 import {
   PlayfairDisplay_400Regular,
@@ -148,7 +147,6 @@ export default function RootLayout() {
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
-        <Splash />
       </ThemeProvider>
     </StripeProvider>
     </SafeAreaProvider>

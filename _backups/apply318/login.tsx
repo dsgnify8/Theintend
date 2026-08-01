@@ -3,13 +3,8 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleShee
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { signIn, signUp, useAuth, sendPasswordReset } from '@/lib/auth';
-
-// Taller than the wash on other screens, because the form is centred and a
-// short one would stop above it.
-const WELCOME_WASH = ['rgba(107,97,87,0.16)', 'rgba(107,97,87,0.06)', 'rgba(107,97,87,0)'];
 
 export default function Login() {
   const { session, loading } = useAuth();
@@ -91,7 +86,6 @@ export default function Login() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient colors={WELCOME_WASH} style={styles.wash} pointerEvents="none" />
       <View style={styles.topBar}>
         <Pressable onPress={goBack} hitSlop={12}>
           <Text style={styles.skip}>Skip for now</Text>
@@ -128,7 +122,7 @@ export default function Login() {
           ) : null}
 
           <Pressable style={[styles.btn, busy && styles.btnOff]} onPress={submit} disabled={busy}>
-            {busy ? <ActivityIndicator color={COLORS.ink} /> : <Text style={styles.btnText}>{mode === 'in' ? 'Sign in' : 'Create account'}</Text>}
+            {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>{mode === 'in' ? 'Sign in' : 'Create account'}</Text>}
           </Pressable>
 
           <Pressable onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setError(null); setNotice(null); setPassword(''); setName(''); }} style={styles.toggle}>
@@ -177,7 +171,6 @@ function PasswordInput({ value, onChangeText }: { value: string; onChangeText: (
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  wash: { position: 'absolute', top: 0, left: 0, right: 0, height: '62%' },
   flex: { flex: 1 },
   topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 4 },
   skip: { fontSize: 15, color: COLORS.muted },
@@ -192,9 +185,9 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 14, lineHeight: 20, color: '#8F4A3B' },
   noticeBox: { backgroundColor: COLORS.accentSoft, borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
   noticeText: { fontSize: 14, lineHeight: 20, color: COLORS.ink },
-  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.55)', borderWidth: 1, borderColor: 'rgba(43,38,34,0.16)', alignItems: 'center' },
+  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   btnOff: { opacity: 0.6 },
-  btnText: { color: COLORS.ink, fontSize: 16, letterSpacing: 0.5 },
+  btnText: { color: COLORS.bg, fontSize: 16, letterSpacing: 0.5 },
   toggle: { marginTop: 20, alignItems: 'center' },
   forgot: { alignSelf: 'flex-end', marginTop: 10, marginBottom: 2 },
   forgotText: { fontSize: 13, color: COLORS.accent },

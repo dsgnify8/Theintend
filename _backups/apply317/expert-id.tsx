@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   cqCard: { borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 2, paddingBottom: 18 },
   cqMark: { fontFamily: FONT_SERIF, fontSize: 68, lineHeight: 62, color: COLORS.accent, opacity: 0.10 },
   cqText: { fontFamily: FONT_SANS, fontSize: 14, lineHeight: 22, color: COLORS.taupe, marginTop: -20 },
-  bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
+  bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   bookText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   modeText: { fontSize: 14, color: COLORS.ink },
   modeTextOn: { color: COLORS.bg },
   modeLoc: { fontSize: 11, color: COLORS.muted },
-  continueBtn: { marginTop: 20, marginBottom: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
+  continueBtn: { marginTop: 20, marginBottom: 8, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   continueOff: { opacity: 0.5 },
   continueText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
 });

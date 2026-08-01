@@ -155,6 +155,10 @@ export default function HomeScreen() {
   // repaint on auth change: sign in or out while Home is already focused does
   // not fire a focus event, so react to the session value itself.
   useEffect(() => { setAuthTick((t) => t + 1); }, [session]);
+  // On a cold launch the restored session can land after first paint. Hold the
+  // signed-out prompt for a brief settle window so it does not flash or stick.
+  const [authSettled, setAuthSettled] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setAuthSettled(true), 1500); return () => clearTimeout(t); }, []);
   const loggedIn = !!session;
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : null;
   const todayMood = useTodayMood();
@@ -269,7 +273,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>
           {greeting()}{firstName ? `, ${firstName}` : ''}.
         </Text>
-        {!loggedIn && !authLoading ? (
+        {authSettled && !loggedIn && !authLoading ? (
           <Pressable style={styles.signinPrompt} onPress={() => router.push('/login')}>
             <Text style={styles.signinPromptText}>Sign in or create an account to track your journey</Text>
             <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.94)" />

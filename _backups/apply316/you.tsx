@@ -208,7 +208,7 @@ export default function YouScreen() {
                 ) : null}
               </View>
               <Pressable style={styles.cameraBadge} onPress={photoOptions} hitSlop={8}>
-                <Ionicons name="camera" size={13} color={COLORS.ink} />
+                <Ionicons name="camera" size={13} color={COLORS.taupeBlue} />
               </Pressable>
             </View>
             <View style={styles.profileText}>
@@ -443,7 +443,7 @@ export default function YouScreen() {
                     onPress={() => { setNotifsOpen(false); setTimeout(() => router.push(n.route as any), 220); }}
                   >
                     <View style={styles.notifIcon}>
-                      <Ionicons name={n.icon as any} size={17} color={COLORS.ink} />
+                      <Ionicons name={n.icon as any} size={17} color={COLORS.taupeBlue} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.notifTitle} numberOfLines={2}>{n.title}</Text>
@@ -694,7 +694,7 @@ function PastRow({ b }: { b: Booking }) {
         </Pressable>
       ) : (
         <Pressable style={styles.noteAdd} onPress={start} hitSlop={6}>
-          <Ionicons name="create-outline" size={15} color={COLORS.ink} />
+          <Ionicons name="create-outline" size={15} color={COLORS.taupeBlue} />
           <Text style={styles.noteAddText}>Add a note from this session</Text>
         </Pressable>
       )}
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
   segTextOn: { color: COLORS.bg },
   pillRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
-  pillOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
+  pillOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
   pillText: { fontSize: 14, color: COLORS.muted },
   pillTextOn: { color: COLORS.bg },
 
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
   strip: { gap: 12, paddingRight: 20 },
   resumeCard: { width: 206, height: 140, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', overflow: 'hidden', padding: 16 },
   resumeTrack: { height: 2, borderRadius: 1, backgroundColor: COLORS.line, overflow: 'hidden', marginBottom: 9 },
-  resumeTrackFill: { height: 2, backgroundColor: COLORS.ink },
+  resumeTrackFill: { height: 2, backgroundColor: COLORS.taupeBlue },
   resumeKind: { fontSize: 9, letterSpacing: 1.8, color: COLORS.accent, marginBottom: 8 },
   resumeTitle: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 22, color: COLORS.ink },
   resumeMeta: { fontSize: 12, color: COLORS.muted },
@@ -804,11 +804,11 @@ const styles = StyleSheet.create({
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
   dayCol: { alignItems: 'center', flex: 1 },
   dayCircle: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.75)', backgroundColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
-  dayCircleOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
-  dayCircleToday: { borderColor: COLORS.ink, borderWidth: 2 },
+  dayCircleOn: { backgroundColor: COLORS.taupeBlue, borderColor: COLORS.taupeBlue },
+  dayCircleToday: { borderColor: COLORS.taupeBlue, borderWidth: 2 },
   dayCheck: { color: COLORS.bg, fontSize: 15 },
   dayLetter: { fontSize: 13, color: COLORS.ink, opacity: 0.6 },
-  dayLetterToday: { color: COLORS.ink, fontWeight: '600' },
+  dayLetterToday: { color: COLORS.taupeBlue, fontWeight: '600' },
 
   countRow: { flexDirection: 'row', alignItems: 'center', marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: COLORS.line },
   count: { flex: 1, alignItems: 'center' },
@@ -817,12 +817,12 @@ const styles = StyleSheet.create({
   countDiv: { width: 1, height: 26, backgroundColor: COLORS.line },
 
   progressCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 12 },
-  progressIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  progressIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   progressTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   progressSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
 
   bookingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
-  bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   bookingLink: { fontSize: 13, color: COLORS.accent },
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   noteAddText: { fontSize: 13, color: COLORS.accent },
   noteHint: { fontSize: 13, color: COLORS.muted, marginBottom: 12 },
   noteInput: { minHeight: 140, maxHeight: 260, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, fontSize: 15, lineHeight: 22, color: COLORS.ink, textAlignVertical: 'top' },
-  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
+  noteSave: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   noteSaveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.4 },
   pastTitle: { fontFamily: FONT_SERIF, fontSize: 16, lineHeight: 21, color: COLORS.ink },
   pastMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
   pkgWhen: { fontSize: 14, color: COLORS.ink },
   pkgJoin: { fontSize: 13, color: COLORS.accent, marginTop: 3 },
   pkgWaiting: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
+  pkgBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   pkgBtnText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.5 },
 
   savedRow: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
 
   empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 10 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
-  cta: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.ink },
+  cta: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.taupeBlue },
   ctaText: { color: COLORS.bg, fontSize: 14 },
 
   lockOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingBottom: 20 },
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
   lockCard: { width: '100%', backgroundColor: COLORS.card, borderRadius: 24, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 24, paddingHorizontal: 22, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 28, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
   lockTitle: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginBottom: 8 },
   lockText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, textAlign: 'center', marginBottom: 18 },
-  lockBtn: { backgroundColor: COLORS.ink, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
+  lockBtn: { backgroundColor: COLORS.taupeBlue, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 36 },
   lockBtnText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
 
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
