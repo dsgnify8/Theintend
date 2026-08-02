@@ -3,7 +3,6 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useExpert } from '@/lib/experts';
 import { getCalendarBusy, createCalendarEvent } from '@/lib/calendar';
 import { createBooking, useExpertBookings } from '@/lib/bookings';
@@ -13,12 +12,6 @@ import { useService } from '@/lib/services';
 import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
 import { TABBY_ENABLED } from '@/constants/stripe';
 import { payWithTabby, priceToMajorString } from '@/lib/tabby';
-
-// The same wash the library, admin and companion pages carry.
-const PAGE_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
-// Falls across a card rather than down the page, so it has depth without
-// looking like a separate panel.
-const CARD_WASH = ['rgba(107,97,87,0.10)', 'rgba(107,97,87,0.03)', 'rgba(107,97,87,0)'];
 import { TabbyLogo } from '@/components/TabbyLogo';
 import { createPackage, consumePackageSession, getPackage } from '@/lib/packages';
 import { useAuth } from '@/lib/auth';
@@ -341,7 +334,6 @@ export default function BookScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient colors={PAGE_WASH} style={styles.wash} pointerEvents="none" />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
         <Text style={styles.backText}>Back</Text>
@@ -361,9 +353,8 @@ export default function BookScreen() {
 
         {svc ? (
           <View style={styles.offerCard}>
-            <LinearGradient colors={CARD_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
-            <Text style={styles.offerMetaLine}>{isPackageContinue ? 'SESSION FROM YOUR PACKAGE' : svcHeaderMeta(svc)}</Text>
             <Text style={styles.offerName}>{svc.name}</Text>
+            <Text style={styles.offerMetaLine}>{isPackageContinue ? 'SESSION FROM YOUR PACKAGE' : svcHeaderMeta(svc)}</Text>
             {svc.description ? <Text style={styles.offerDesc}>{svc.description}</Text> : null}
           </View>
         ) : null}
@@ -486,21 +477,20 @@ export default function BookScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  wash: { position: 'absolute', top: 0, left: 0, right: 0, height: 420 },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginTop: 6, marginBottom: 10 },
-  h1: { fontFamily: FONT_SERIF, fontSize: 24, lineHeight: 30, color: COLORS.ink },
+  h1: { fontFamily: FONT_SERIF, fontSize: 28, color: COLORS.ink },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   nameText: { flexShrink: 1 },
   profileLink: { paddingTop: 2 },
   sub: { fontSize: 13, letterSpacing: 1, color: COLORS.muted, marginTop: 6, marginBottom: 8, textTransform: 'uppercase' },
-  offerCard: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', overflow: 'hidden', padding: 18, marginTop: 16 },
-  offerName: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 23, color: COLORS.ink },
-  offerMetaLine: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, marginBottom: 8, textTransform: 'uppercase' },
+  offerCard: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 16 },
+  offerName: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
+  offerMetaLine: { fontSize: 12, letterSpacing: 0.5, color: COLORS.accent, marginTop: 4, textTransform: 'uppercase' },
   offerDesc: { fontSize: 14, lineHeight: 21, color: COLORS.ink, opacity: 0.85, marginTop: 10 },
-  pkgLink: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.5)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 15, marginTop: 12 },
+  pkgLink: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.accentSoft, borderRadius: 14, padding: 14, marginTop: 12 },
   pkgLinkText: { flex: 1, fontSize: 13, color: COLORS.ink },
   label: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink, marginTop: 26, marginBottom: 12 },
   typeRow: { flexDirection: 'row', gap: 10 },

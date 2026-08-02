@@ -17,13 +17,11 @@ const TAGLINE = 'Your space to heal, think, and grow';
 // How long the mark is guaranteed to be visible for, whatever the app is
 // doing. The fade out happens after this, so the whole thing is this plus
 // DURATION.reveal.
-const MIN_VISIBLE = 2400;
+const MIN_VISIBLE = 1400;
 
 // The line waits a beat so it reads as arriving rather than as part of the
 // handover.
-// Pushed out to match the longer hold. At 300 the line landed early and then
-// sat there for over a second with nothing happening.
-const LINE_DELAY = 600;
+const LINE_DELAY = 300;
 
 export function Splash({ onDone }: { onDone?: () => void }) {
   const opacity = useRef(new Animated.Value(1)).current;
@@ -127,14 +125,12 @@ const styles = StyleSheet.create({
   mark: { width: 200, height: 84 },
   line: {
     fontFamily: FONT_SERIF,
-    fontSize: 12,
-    lineHeight: 17,
-    letterSpacing: 0.2,
+    fontSize: 16,
+    lineHeight: 22,
     color: COLORS.muted,
     textAlign: 'center',
-    marginTop: 18,
-    // Capped at the width of the mark, so it can never overhang it.
-    maxWidth: 200,
+    marginTop: 20,
+    paddingHorizontal: 40,
   },
 });
 

@@ -22,8 +22,6 @@ function stripSessionCount(title: string): string {
 
 // A soft wash behind each card, warm at the top and clearing towards the copy.
 const CARD_WASH = ['rgba(107,97,87,0.16)', 'rgba(107,97,87,0.05)', 'rgba(107,97,87,0)'];
-// Behind the top of the page, as on the library, admin and companion screens.
-const PAGE_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 // Seeded demo programs are not shown in the live Programs feed.
 const DEMO_PROGRAM_IDS = ['nervous-system-reset', 'building-self-worth', 'feminine-embodiment'];
 // Only these packages are featured in the public Programs feed.
@@ -96,7 +94,6 @@ export default function SessionsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <LinearGradient colors={PAGE_WASH} style={styles.pageWash} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <Text style={styles.kicker}>THE INTEND</Text>
@@ -234,7 +231,6 @@ function ProgramCard({ item }: { item: FeedProgram }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
-  pageWash: { position: 'absolute', top: 0, left: 0, right: 0, height: 420 },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 48 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 10 },
@@ -253,14 +249,14 @@ const styles = StyleSheet.create({
   cardBody: { padding: 18 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   pill: { fontSize: 12, color: COLORS.ink, backgroundColor: COLORS.accentSoft, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden' },
-  programTitle: { fontFamily: FONT_SERIF, fontSize: 22, lineHeight: 28, color: COLORS.ink, marginTop: 2 },
+  programTitle: { fontFamily: FONT_SERIF, fontSize: 25, lineHeight: 31, color: COLORS.ink, marginTop: 2 },
   expert: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   going: { fontSize: 13, color: COLORS.muted, marginTop: 6 },
-  hCard: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', overflow: 'hidden', padding: 22, marginBottom: 14 },
+  hCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden', padding: 22, marginBottom: 14 },
   hHead: { marginBottom: 14 },
   hLead: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 8 },
-  hName: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 29, color: COLORS.ink },
-  hWith: { fontFamily: FONT_ITALIC, fontSize: 21, color: COLORS.muted },
+  hName: { fontFamily: FONT_SERIF, fontSize: 27, lineHeight: 33, color: COLORS.ink },
+  hWith: { fontFamily: FONT_ITALIC, fontSize: 24, color: COLORS.muted },
   hCopy: { fontSize: 14, lineHeight: 22, color: COLORS.ink, opacity: 0.8 },
   hFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 14 },
   hExpert: { fontSize: 13, color: COLORS.muted },
