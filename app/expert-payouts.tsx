@@ -7,10 +7,17 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
 import { formatWhenLocal, useExpertBookings } from '@/lib/bookings';
-import { usePayoutDetails, savePayoutDetails } from '@/lib/payouts';
+import { usePayoutDetails, savePayoutDetails, usePayouts, payableBookings, fromMinor } from '@/lib/payouts';
 import { splitFor } from '@/constants/splits';
 import { aed, useExpertEarnings } from '@/lib/earnings';
 import type { Expert } from '@/constants/experts';
+
+const MON3P = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function sentOn(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getDate()} ${MON3P[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 export default function ExpertPayouts() {
   const router = useRouter();
@@ -24,6 +31,21 @@ export default function ExpertPayouts() {
   const { items: bookings } = useExpertBookings(expert?.id);
   const { data: saved } = usePayoutDetails(expert?.id);
   const earnings = useExpertEarnings(expert?.id, bookings);
+  const payouts = usePayouts(expert?.id);
+
+  // Only what has already been held and not yet sent. A session next week is
+  // not owed, which is what the old total was quietly including.
+  const owed = (() => {
+    const rows = bookings
+      .map((b, i) => ({ b, line: earnings.lines[i] }))
+      .filter(({ b }) => payableBookings([b]).length === 1);
+    return {
+      rows,
+      count: rows.length,
+      total: rows.reduce((sum, r) => sum + (r.line?.payout ?? 0), 0),
+    };
+  })();
+  const upcomingCount = bookings.length - owed.count - bookings.filter((b: any) => b?.payout_id).length;
 
   const [holder, setHolder] = useState('');
   const [bank, setBank] = useState('');
@@ -114,32 +136,59 @@ export default function ExpertPayouts() {
           ) : (
             <>
               <View style={styles.totalCard}>
-                <Text style={styles.totalLabel}>NEXT PAYOUT</Text>
-                <Text style={styles.totalValue}>{aed(earnings.total)}</Text>
-                <Text style={styles.totalNote}>Across {earnings.priced} booking{earnings.priced === 1 ? '' : 's'}.</Text>
+                <Text style={styles.totalLabel}>OWED TO YOU</Text>
+                <Text style={styles.totalValue}>{aed(owed.total)}</Text>
+                <Text style={styles.totalNote}>
+                  {owed.count === 0
+                    ? 'Everything so far has been sent.'
+                    : `Across ${owed.count} session${owed.count === 1 ? '' : 's'} you have already held.`}
+                </Text>
               </View>
-              {bookings.slice(0, 8).map((b, i) => {
-                const line = earnings.lines[i];
-                return (
-                  <View key={b.id} style={styles.payRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.payTitle} numberOfLines={1}>{b.title}</Text>
-                      <Text style={styles.payMeta}>{formatWhenLocal(b)}</Text>
-                    </View>
-                    {line && line.payout != null ? (
-                      <View style={styles.payRight}>
-                        <Text style={styles.payAmount}>{aed(line.payout)}</Text>
-                        {line.sharePct != null ? <Text style={styles.payShare}>your {line.sharePct}%</Text> : null}
-                      </View>
-                    ) : (
-                      <Text style={styles.payShare}>{line?.note ?? ''}</Text>
-                    )}
+
+              {owed.rows.map(({ b, line }) => (
+                <View key={b.id} style={styles.payRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.payTitle} numberOfLines={1}>{b.title}</Text>
+                    <Text style={styles.payMeta}>{formatWhenLocal(b)}</Text>
                   </View>
-                );
-              })}
+                  {line && line.payout != null ? (
+                    <View style={styles.payRight}>
+                      <Text style={styles.payAmount}>{aed(line.payout)}</Text>
+                      {line.sharePct != null ? <Text style={styles.payShare}>your {line.sharePct}%</Text> : null}
+                    </View>
+                  ) : (
+                    <Text style={styles.payShare}>{line?.note ?? ''}</Text>
+                  )}
+                </View>
+              ))}
+
+              {upcomingCount > 0 ? (
+                <Text style={styles.payAside}>
+                  {upcomingCount} session{upcomingCount === 1 ? '' : 's'} booked ahead. Those are added once they have been held.
+                </Text>
+              ) : null}
+
+              <Text style={styles.subHead}>SENT</Text>
+              {payouts.items.length === 0 ? (
+                <Text style={styles.payEmpty}>Nothing has been sent yet.</Text>
+              ) : (
+                payouts.items.map((po) => (
+                  <View key={po.id} style={styles.sentRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sentAmount}>{aed(fromMinor(po.amount_minor))}</Text>
+                      <Text style={styles.payMeta}>
+                        {sentOn(po.paid_at)}
+                        {po.session_count ? ` \u00B7 ${po.session_count} session${po.session_count === 1 ? '' : 's'}` : ''}
+                      </Text>
+                      {po.reference ? <Text style={styles.payMeta}>Reference {po.reference}</Text> : null}
+                    </View>
+                    <Ionicons name="checkmark-circle" size={20} color={COLORS.taupeBlue} />
+                  </View>
+                ))
+              )}
             </>
           )}
-          <Text style={styles.payNote}>Amounts are what comes to you. Paid out within the agreed timeframe after each completed session.</Text>
+          <Text style={styles.payNote}>Amounts are what comes to you. A session is added here once it has been held, and moves to Sent when the payment has gone out.</Text>
 
           <Pressable style={styles.dropHead} onPress={() => setBankOpen((v) => !v)}>
             <View style={{ flex: 1 }}>
@@ -243,6 +292,10 @@ const styles = StyleSheet.create({
   payRight: { alignItems: 'flex-end', marginLeft: 10 },
   payAmount: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   totalCard: { backgroundColor: COLORS.accentSoft, borderRadius: 16, padding: 18, marginBottom: 12 },
+  subHead: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 26, marginBottom: 12 },
+  payAside: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 4 },
+  sentRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 14, marginBottom: 8 },
+  sentAmount: { fontFamily: FONT_SERIF, fontSize: 18, color: COLORS.ink },
   totalLabel: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted },
   totalValue: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginTop: 6 },
   totalNote: { fontSize: 12, color: COLORS.muted, marginTop: 4 },

@@ -6,7 +6,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useExpert } from '@/lib/experts';
 import { getCalendarBusy, createCalendarEvent } from '@/lib/calendar';
-import { createBooking, useExpertBookings } from '@/lib/bookings';
+import { applyNewTime, createBooking, getBookingById, setBookingCalendarEvent, useExpertBookings } from '@/lib/bookings';
 import { createOrder, markOrderPaid, markOrderFulfilled, markOrderFailed } from '@/lib/orders';
 import { sendPushToEmail } from '@/lib/notifications';
 import { useService } from '@/lib/services';
@@ -19,6 +19,8 @@ const PAGE_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,
 // Falls across a card rather than down the page, so it has depth without
 // looking like a separate panel.
 const CARD_WASH = ['rgba(107,97,87,0.10)', 'rgba(107,97,87,0.03)', 'rgba(107,97,87,0)'];
+// Lighter at the top, so a dark button has some depth rather than being flat.
+const INK_GRAD = [COLORS.inkLift, COLORS.ink];
 import { TabbyLogo } from '@/components/TabbyLogo';
 import { createPackage, consumePackageSession, getPackage } from '@/lib/packages';
 import { useAuth } from '@/lib/auth';
@@ -76,7 +78,9 @@ function svcHeaderMeta(s: any) {
 
 export default function BookScreen() {
   const router = useRouter();
-  const { id, service: serviceId, pkg } = useLocalSearchParams<{ id: string; service?: string; pkg?: string }>();
+  const { id, service: serviceId, pkg, reschedule } = useLocalSearchParams<{ id: string; service?: string; pkg?: string; reschedule?: string }>();
+  // Moving a booking that already exists, rather than making one.
+  const isReschedule = !!reschedule;
   const { expert, loading } = useExpert(String(id));
   const { service: svc } = useService(serviceId ? String(serviceId) : undefined);
   const { service: linkedPkg } = useService(svc?.packageId ? String(svc.packageId) : undefined);
@@ -208,6 +212,34 @@ export default function BookScreen() {
     const label = formatSlot(slot);
     setSaving(true);
 
+    // Already paid for, and the package session was already counted when this
+    // was first booked. So this updates the row and touches nothing else.
+    if (isReschedule) {
+      const existing = await getBookingById(String(reschedule));
+      const { error } = await applyNewTime(String(reschedule), {
+        startsAt: slot,
+        whenText: label,
+        durationMin: svc?.durationMin ?? undefined,
+        timezone: tzId(),
+        by: 'client',
+        previousCount: (existing as any)?.reschedule_count ?? 0,
+      });
+      if (!error && (expert as any)?.accountEmail) {
+        sendPushToEmail(
+          (expert as any).accountEmail,
+          'A session has moved',
+          `${bookingTitle()} is now ${label}. Please update the join link or the address if it needs changing.`,
+        );
+      }
+      // No calendar call here. applyNewTime moves the event this booking
+      // already has, and creating one as well would leave two at two times.
+      setChosenLabel(label);
+      setWasRequest(false);
+      setRequested(true);
+      setSaving(false);
+      return;
+    }
+
     // Package accounting: buying creates the package; continuing consumes one
     // credit. Either way we come out knowing which package this belongs to and
     // which session number it is, so the booking can be filed against it.
@@ -265,7 +297,13 @@ export default function BookScreen() {
       description: 'Booked through The Intend.',
       startIso, endIso,
       attendeeEmail: user?.email ?? undefined,
-    }).catch(() => {});
+    })
+      .then((eventId) => {
+        // Kept on the booking, so this event can be moved or removed later.
+        const bid = (created as any)?.id;
+        if (eventId && bid) setBookingCalendarEvent(String(bid), eventId);
+      })
+      .catch(() => {});
     setChosenLabel(label);
     setWasRequest(false);
     setRequested(true);
@@ -420,6 +458,7 @@ export default function BookScreen() {
                   if ((expert as any)?.accountEmail) { sendPushToEmail((expert as any).accountEmail, 'New booking request', `${bookingTitle()} was requested.`); }
                   setChosenLabel('Time to be confirmed'); setWasRequest(true); setRequested(true); setSaving(false);
                 }}>
+                  <LinearGradient colors={INK_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
                   {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.requestText}>Send a request</Text>}
                 </Pressable>
               </>
@@ -451,7 +490,8 @@ export default function BookScreen() {
 
                 <Text style={styles.tzNote}>Times shown in {tzName()}. Busy times from the expert's Google Calendar are hidden.</Text>
 
-                <Pressable style={[styles.requestBtn, hour == null && styles.btnOff]} disabled={hour == null} onPress={() => { if (!requireAuth()) return; (isPackageContinue || isFree) ? finalizeBooking() : (TABBY_ENABLED ? setPayChoiceOpen(true) : startPayment()); }}>
+                <Pressable style={[styles.requestBtn, hour == null && styles.btnOff]} disabled={hour == null} onPress={() => { if (!requireAuth()) return; (isReschedule || isPackageContinue || isFree) ? finalizeBooking() : (TABBY_ENABLED ? setPayChoiceOpen(true) : startPayment()); }}>
+                  <LinearGradient colors={INK_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
                   <Text style={styles.requestText}>{isPackageContinue ? 'Book next session' : 'Book'}</Text>
                 </Pressable>
               </>
@@ -519,11 +559,11 @@ const styles = StyleSheet.create({
   dateOnText: { color: COLORS.bg },
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
   slot: { paddingVertical: 11, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
-  slotOn: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  slotOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   slotText: { fontSize: 13, color: COLORS.ink },
   slotTextOn: { color: COLORS.bg },
   tzNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 14 },
-  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
+  requestBtn: { marginTop: 20, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.ink, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   btnOff: { opacity: 0.5 },
   requestText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   tabbyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, marginTop: 4 },

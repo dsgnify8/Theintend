@@ -6,7 +6,8 @@ import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
-import { submitNewOffering } from '@/lib/submissions';
+import { submitNewOffering, submitServiceEdit } from '@/lib/submissions';
+import { useExpertServices } from '@/lib/services';
 import type { Expert } from '@/constants/experts';
 
 type QType = 'short' | 'long' | 'choice' | 'yesno';
@@ -43,6 +44,65 @@ export default function ExpertOfferNew() {
   const [price, setPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [requiresForm, setRequiresForm] = useState(false);
+  // What the services table needs in order for a session to be bookable.
+  const [tagline, setTagline] = useState('');
+  const [durationMin, setDurationMin] = useState('60');
+  const [online, setOnline] = useState(true);
+  const [inPerson, setInPerson] = useState(false);
+  const [isPackage, setIsPackage] = useState(false);
+  const [sessionsTotal, setSessionsTotal] = useState('5');
+  const [location, setLocation] = useState('');
+
+  // Proposing something new, or changing one that is already live.
+  const [mode, setMode] = useState<'new' | 'edit'>('new');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const { services: mine } = useExpertServices(expert?.id);
+  const editing = mine.find((x: any) => x.id === editingId) ?? null;
+
+  // Filled with what it is now, so a change is a change rather than a rewrite.
+  useEffect(() => {
+    if (!editing) return;
+    setTitle(editing.name ?? '');
+    setTagline(editing.tagline ?? '');
+    setDescription((editing as any).description ?? '');
+    setPrice(editing.price ?? '');
+    setDurationMin(editing.durationMin ? String(editing.durationMin) : '');
+    setOnline(!!editing.online);
+    setInPerson(!!editing.inPerson);
+    setLocation((editing as any).location ?? '');
+  }, [editingId]);
+
+  const submitChange = async () => {
+    if (!expert || !editing) return;
+    setBusy(true);
+    setStatus(null);
+    const { error } = await submitServiceEdit(
+      expert.id,
+      { id: editing.id, name: editing.name },
+      {
+        name: editing.name ?? '',
+        tagline: editing.tagline ?? '',
+        description: (editing as any).description ?? '',
+        price: editing.price ?? '',
+        durationMin: editing.durationMin ?? null,
+        online: !!editing.online,
+        inPerson: !!editing.inPerson,
+        location: (editing as any).location ?? '',
+      },
+      {
+        name: title.trim(),
+        tagline: tagline.trim(),
+        description: description.trim(),
+        price: price.trim(),
+        durationMin: durationMin ? Number(durationMin) : null,
+        online,
+        inPerson,
+        location: inPerson ? location.trim() : '',
+      },
+    );
+    setStatus(error ? `Could not submit: ${error.message}` : 'Sent for approval. It stays as it is until the team says yes.');
+    setBusy(false);
+  };
   // sign-up form builder
   const [formOpen, setFormOpen] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([newQuestion()]);
@@ -107,7 +167,19 @@ export default function ExpertOfferNew() {
             requiresForm: !!form,
             signup_form: form,
           }
-        : { title, description, price, notes: notes.trim() };
+        : {
+            title,
+            description,
+            tagline: tagline.trim(),
+            price,
+            durationMin: durationMin ? Number(durationMin) : null,
+            online,
+            inPerson,
+            kind: isPackage ? 'package' : 'single',
+            sessionsTotal: isPackage && sessionsTotal ? Number(sessionsTotal) : null,
+            location: inPerson ? location.trim() : null,
+            notes: notes.trim(),
+          };
     const { error } = await submitNewOffering(expert.id, expert.name, kind, payload);
     setStatus(error ? `Could not submit: ${error.message}` : 'Submitted. Your new offering is pending admin approval.');
     setBusy(false);
@@ -133,6 +205,7 @@ export default function ExpertOfferNew() {
   };
 
   const onMainSubmit = () => {
+    if (mode === 'edit') { submitChange(); return; }
     if (kind === 'program' && requiresForm) setFormOpen(true);
     else buildAndSubmit(null);
   };
@@ -141,9 +214,46 @@ export default function ExpertOfferNew() {
     <Wrap router={router}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={styles.h1}>Propose an offering</Text>
-          <Text style={styles.sub}>Once approved by the team, it appears on the Sessions page.</Text>
+          <Text style={styles.h1}>{mode === 'edit' ? 'Change an offering' : 'Propose an offering'}</Text>
+          <Text style={styles.sub}>
+            {mode === 'edit'
+              ? 'Anything already booked keeps the price it was booked at. A change applies to new bookings only.'
+              : 'Once approved by the team, it appears on the Sessions page.'}
+          </Text>
 
+          <View style={styles.segment}>
+            {(['new', 'edit'] as const).map((m) => (
+              <Pressable key={m} onPress={() => { setMode(m); setEditingId(null); setStatus(null); }} style={[styles.modeChip, mode === m && styles.modeChipOn]}>
+                <Text style={[styles.modeText, mode === m && styles.modeTextOn]}>
+                  {m === 'new' ? 'Something new' : 'Change one of mine'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {mode === 'edit' ? (
+            mine.length === 0 ? (
+              <Text style={styles.helper}>You do not have any live offerings yet.</Text>
+            ) : (
+              <>
+                <Text style={styles.helper}>Pick the one you want to change.</Text>
+                {mine.map((sv: any) => (
+                  <Pressable key={sv.id} onPress={() => setEditingId(sv.id)} style={[styles.pickRow, editingId === sv.id && styles.pickRowOn]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.pickName}>{sv.name}</Text>
+                      <Text style={styles.pickMeta}>
+                        {sv.price || 'No price set'}
+                        {sv.durationMin ? `  \u00B7  ${sv.durationMin} min` : ''}
+                      </Text>
+                    </View>
+                    {editingId === sv.id ? <Ionicons name="checkmark-circle" size={20} color={COLORS.ink} /> : null}
+                  </Pressable>
+                ))}
+              </>
+            )
+          ) : null}
+
+          {mode === 'new' ? (
           <View style={styles.segment}>
             {(['class', 'program', 'session'] as const).map((k) => {
               const on = k === kind;
@@ -155,7 +265,9 @@ export default function ExpertOfferNew() {
             })}
           </View>
 
-          {kind === 'class' ? (
+          ) : null}
+
+          {mode !== 'new' ? null : kind === 'class' ? (
             <Text style={styles.helper}>Classes are webinars, one-time classes, or live online sessions.</Text>
           ) : kind === 'program' ? (
             <Text style={styles.helper}>Programs are multi-week journeys with several live sessions.</Text>
@@ -166,7 +278,7 @@ export default function ExpertOfferNew() {
           <Field label="Title" value={title} onChangeText={setTitle} />
           <Field label="Description" value={description} onChangeText={setDescription} multiline />
 
-          {kind === 'class' ? (
+          {mode === 'new' && kind === 'class' ? (
             <>
               <Field label="Date (e.g. Thu 10 Jul)" value={date} onChangeText={setDate} />
               <Field label="Time (e.g. 6:00 PM – 7:00 PM GST)" value={time} onChangeText={setTime} />
@@ -180,7 +292,7 @@ export default function ExpertOfferNew() {
               />
               <Text style={styles.fieldHint}>This is shared with people who book, on their upcoming booking.</Text>
             </>
-          ) : kind === 'program' ? (
+          ) : mode === 'new' && kind === 'program' ? (
             <>
               <Field label="Weeks (e.g. 6)" value={weeks} onChangeText={setWeeks} keyboardType="number-pad" />
               <Field label="Number of sessions (e.g. 6)" value={sessions} onChangeText={setSessions} keyboardType="number-pad" />
@@ -207,13 +319,52 @@ export default function ExpertOfferNew() {
             </>
           ) : (
             <>
+              <Field label="Short line under the name (e.g. A first conversation)" value={tagline} onChangeText={setTagline} />
               <Field label="Price (e.g. AED 500)" value={price} onChangeText={setPrice} />
+              <Field label="How long, in minutes (e.g. 60)" value={durationMin} onChangeText={setDurationMin} keyboardType="number-pad" />
+
+              <Pressable style={styles.toggleRow} onPress={() => setOnline((v) => !v)}>
+                <Text style={styles.toggleLabel}>Available online</Text>
+                <View style={[styles.toggle, online && styles.toggleOn]}>
+                  <View style={[styles.knob, online && styles.knobOn]} />
+                </View>
+              </Pressable>
+
+              <Pressable style={styles.toggleRow} onPress={() => setInPerson((v) => !v)}>
+                <Text style={styles.toggleLabel}>Available in person</Text>
+                <View style={[styles.toggle, inPerson && styles.toggleOn]}>
+                  <View style={[styles.knob, inPerson && styles.knobOn]} />
+                </View>
+              </Pressable>
+
+              {inPerson ? (
+                <Field label="Where it happens" value={location} onChangeText={setLocation} />
+              ) : null}
+
+              <Pressable style={styles.toggleRow} onPress={() => setIsPackage((v) => !v)}>
+                <Text style={styles.toggleLabel}>Sold as a package</Text>
+                <View style={[styles.toggle, isPackage && styles.toggleOn]}>
+                  <View style={[styles.knob, isPackage && styles.knobOn]} />
+                </View>
+              </Pressable>
+
+              {isPackage ? (
+                <>
+                  <Field label="How many sessions in the package" value={sessionsTotal} onChangeText={setSessionsTotal} keyboardType="number-pad" />
+                  <Text style={styles.fieldHint}>The price above is for the whole package, not one session.</Text>
+                </>
+              ) : null}
+
+              {!online && !inPerson ? (
+                <Text style={styles.fieldHint}>Choose at least one of online or in person, or nobody can book it.</Text>
+              ) : null}
+
               <Field label="Notes for our team (anything you'd like us to adjust)" value={notes} onChangeText={setNotes} multiline />
             </>
           )}
 
-          <Pressable style={styles.saveBtn} onPress={onMainSubmit} disabled={busy}>
-            {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>{kind === 'program' && requiresForm ? 'Continue to sign-up form' : 'Submit for approval'}</Text>}
+          <Pressable style={[styles.saveBtn, (busy || (mode === 'edit' && !editing)) && { opacity: 0.5 }]} onPress={onMainSubmit} disabled={busy || (mode === 'edit' && !editing)}>
+            {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>{mode === 'edit' ? 'Send the change for approval' : kind === 'program' && requiresForm ? 'Continue to sign-up form' : 'Submit for approval'}</Text>}
           </Pressable>
           {status ? <Text style={styles.status}>{status}</Text> : null}
         </ScrollView>
@@ -348,6 +499,14 @@ const styles = StyleSheet.create({
   segText: { fontSize: 14, color: COLORS.ink },
   segTextOn: { color: COLORS.bg },
   helper: { fontSize: 13, lineHeight: 19, color: COLORS.muted, marginBottom: 18 },
+  modeChip: { flex: 1, paddingVertical: 11, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center' },
+  modeChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
+  modeText: { fontSize: 13, color: COLORS.ink },
+  modeTextOn: { color: COLORS.bg },
+  pickRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 8 },
+  pickRowOn: { borderColor: COLORS.ink },
+  pickName: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
+  pickMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   field: { marginBottom: 16 },
   fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
   fieldHint: { fontSize: 12, lineHeight: 17, color: COLORS.muted, marginTop: -8, marginBottom: 16 },

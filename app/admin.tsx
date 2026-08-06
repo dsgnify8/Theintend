@@ -7,6 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { setUserRole, useAllProfiles } from '@/lib/admin';
+import { usePendingSubmissions } from '@/lib/submissions';
+import { useUnpaidCount } from '@/lib/payouts';
+import { useExperts } from '@/lib/experts';
+import { SLOT_HOME_ARTICLES, useFeaturedList } from '@/lib/featured';
 
 // Behind the top of the page, matching the library and My Companion.
 const ADMIN_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
@@ -17,6 +21,10 @@ const PEOPLE_PAGE = 10;
 export default function Admin() {
   const router = useRouter();
   const { role } = useAuth();
+  const pending = usePendingSubmissions();
+  const unpaid = useUnpaidCount();
+  const expertList = useExperts();
+  const pinnedArticles = useFeaturedList(SLOT_HOME_ARTICLES);
   const { profiles, loading, reload } = useAllProfiles();
 
   const [rolesOpen, setRolesOpen] = useState(false);
@@ -82,7 +90,15 @@ export default function Admin() {
           icon="checkmark-done-outline"
           title="Approvals queue"
           meta="Profile changes and new offerings waiting on you"
+          count={pending.items.length ? String(pending.items.length) : null}
           onPress={() => router.push('/admin-approvals')}
+        />
+
+        <Row
+          icon="calendar-outline"
+          title="Bookings"
+          meta="Everything booked, and the only place to cancel one"
+          onPress={() => router.push('/admin-bookings')}
         />
 
         <GroupLabel>Content</GroupLabel>
@@ -96,12 +112,14 @@ export default function Admin() {
           icon="people-outline"
           title="Experts"
           meta="Photos, bios and how each profile reads"
+          count={expertList.experts.length ? String(expertList.experts.length) : null}
           onPress={() => router.push('/admin-experts')}
         />
         <Row
           icon="star-outline"
           title="Featured on home"
           meta="Choose what leads the homepage this week"
+          count={pinnedArticles.length ? `${pinnedArticles.length} pinned` : 'Automatic'}
           onPress={() => router.push('/admin-featured')}
         />
 
@@ -203,6 +221,7 @@ export default function Admin() {
           icon="cash-outline"
           title="Payouts and splits"
           meta="What each expert keeps, their bank details, and how people pay"
+          count={unpaid ? `${unpaid} to pay` : null}
           onPress={() => router.push('/admin-payouts')}
         />
       </ScrollView>
@@ -214,7 +233,7 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   return <Text style={styles.groupLabel}>{String(children).toUpperCase()}</Text>;
 }
 
-function Row({ icon, title, meta, onPress }: { icon: any; title: string; meta: string; onPress: () => void }) {
+function Row({ icon, title, meta, count, onPress }: { icon: any; title: string; meta: string; count?: string | null; onPress: () => void }) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={styles.rowIcon}><Ionicons name={icon} size={19} color={COLORS.accent} /></View>
@@ -222,6 +241,7 @@ function Row({ icon, title, meta, onPress }: { icon: any; title: string; meta: s
         <Text style={styles.rowTitle}>{title}</Text>
         <Text style={styles.rowMeta}>{meta}</Text>
       </View>
+      {count ? <Text style={styles.countText}>{count}</Text> : null}
       <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
     </Pressable>
   );
@@ -252,6 +272,7 @@ const styles = StyleSheet.create({
   rowIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: COLORS.accentSoft, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   rowTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   rowMeta: { fontSize: 12, lineHeight: 17, color: COLORS.muted, marginTop: 3 },
+  countText: { fontSize: 12, color: COLORS.bg, backgroundColor: COLORS.ink, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, overflow: 'hidden', marginRight: 10 },
 
   foldHead: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16 },
   foldBody: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderTopWidth: 0, borderColor: COLORS.line, marginTop: -8, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },

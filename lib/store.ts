@@ -14,6 +14,11 @@ export type Booking = {
   when: string;
   expert: string;
   link?: string;
+  // Carried from the database row so a booking can be moved from this screen.
+  // Absent on anything written before rescheduling existed.
+  id?: string;
+  startsAt?: string | null;
+  status?: string | null;
 };
 
 let savedIds: string[] = [];
@@ -190,11 +195,33 @@ export function setProgress(id: string, pct: number) {
 }
 export function getProgress(id: string) { return progressMap[id] ?? 0; }
 
+// Takes one out again. This copy only ever grew, so a booking cancelled in the
+// database stayed on the screen until the app was killed.
+export function removeBooking(id: string) {
+  if (!id) return;
+  const next = bookings.filter((x) => x.id !== id);
+  if (next.length === bookings.length) return;
+  bookings = next;
+  emit();
+}
+
 export function addBooking(b: Booking) {
-  if (!bookings.some((x) => x.refId === b.refId && x.when === b.when)) {
+  // Matched on the row id where there is one. Matching on the time text would
+  // treat a moved booking as a new one and show it twice, at both times.
+  const at = b.id
+    ? bookings.findIndex((x) => x.id === b.id)
+    : bookings.findIndex((x) => x.refId === b.refId && x.when === b.when);
+
+  if (at === -1) {
     bookings = [...bookings, b];
     emit();
+    return;
   }
+  // Replace rather than skip, so a time that has changed lands here.
+  const existing = bookings[at];
+  if (existing.when === b.when && existing.status === b.status && existing.link === b.link) return;
+  bookings = bookings.map((x, i) => (i === at ? { ...x, ...b } : x));
+  emit();
 }
 
 // --- Persisted reading activity ---

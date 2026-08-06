@@ -8,6 +8,8 @@ export const COLORS = {
   // Off white, for surfaces where sharp white reads too hard.
   cardMilk: '#FCFAF6',
   ink: '#2B2622',
+  // The lighter end of ink, for gradients on dark buttons.
+  inkLift: '#464039',
   muted: '#8C8278',
   line: '#E6E1DA',
   // Text emphasis, hover states, quotation marks and small marks.

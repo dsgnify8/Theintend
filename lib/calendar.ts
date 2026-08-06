@@ -44,6 +44,40 @@ export async function getCalendarBusy(
   }
 }
 
+// Moves an event that already exists to a new time, rather than adding a
+// second one at the new time and leaving the old one behind.
+export async function updateCalendarEvent(input: {
+  expertId: string;
+  eventId: string;
+  startIso: string;
+  endIso: string;
+  summary?: string;
+}): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('calendar-event-change', {
+      body: { ...input, action: 'update' },
+    });
+    if (error || !data) return false;
+    return !!data.done;
+  } catch {
+    return false;
+  }
+}
+
+// Takes it off the calendar. Best effort everywhere it is called: a booking
+// that has been cancelled stays cancelled whether or not this works.
+export async function deleteCalendarEvent(expertId: string, eventId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('calendar-event-change', {
+      body: { expertId, eventId, action: 'delete' },
+    });
+    if (error || !data) return false;
+    return !!data.done;
+  } catch {
+    return false;
+  }
+}
+
 // Writes a booking onto the expert's Google Calendar via the deployed
 // `calendar-create-event` function. Best-effort; makes the slot show as busy
 // so it disappears for the next client.
@@ -54,13 +88,15 @@ export async function createCalendarEvent(input: {
   startIso: string;
   endIso: string;
   attendeeEmail?: string;
-}): Promise<boolean> {
+}): Promise<string | null> {
   try {
     const { data, error } = await supabase.functions.invoke('calendar-create-event', { body: input });
-    if (error || !data) return false;
-    return !!data.connected;
+    if (error || !data) return null;
+    // The id, not a yes. Without it nothing can move or remove this event
+    // later, which is the whole reason the calendar drifted.
+    return (data.eventId as string) ?? null;
   } catch {
-    return false;
+    return null;
   }
 }
 

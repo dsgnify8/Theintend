@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Dimensions, Modal, NativeScrollEvent, NativeSyntheticEvent,
-  Pressable, ScrollView, Share, StyleSheet, Text, View,
+  ActivityIndicator, Animated, Dimensions, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Share, StyleSheet, Text, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
+import { EASE } from '@/constants/motion';
 import { useAuth } from '@/lib/auth';
 import {
   type Affirmation, type Category,
@@ -142,9 +142,13 @@ export default function AffirmationsScroll() {
   const current = items[index];
   const catLabel = cats.find((c) => c.id === category)?.label ?? '';
 
+  const [burst, setBurst] = useState(0);
+
   const like = async () => {
     if (!current || !user) return;
     const next = !current.liked;
+    // Only on the way in. Nothing celebrates an unlike.
+    if (next) setBurst((n) => n + 1);
     const wasId = current.id;
     setItems((arr) => arr.map((a) => (a.id === wasId ? { ...a, liked: next } : a)));
     const c = cacheRef.current[category];
@@ -222,6 +226,7 @@ export default function AffirmationsScroll() {
               <Ionicons name="share-outline" size={26} color={COLORS.ink} />
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={like} hitSlop={12}>
+              <HeartBurst trigger={burst} />
               <Ionicons name={current?.liked ? 'heart' : 'heart-outline'} size={28} color={current?.liked ? COLORS.accent : COLORS.ink} />
             </Pressable>
           </View>
@@ -285,6 +290,57 @@ function ScrollPager({ items, onScroll }: { items: Affirmation[]; onScroll: (e: 
   );
 }
 
+// Five hearts, staggered, drifting apart as they rise and fade. Sits over the
+// button and takes no touches, so the button underneath still works.
+const FLOAT = [
+  { x: -26, delay: 0, size: 11 },
+  { x: -12, delay: 70, size: 14 },
+  { x: 2, delay: 40, size: 16 },
+  { x: 16, delay: 110, size: 12 },
+  { x: 28, delay: 160, size: 10 },
+];
+
+function HeartBurst({ trigger }: { trigger: number }) {
+  const vals = useRef(FLOAT.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    if (!trigger) return;
+    vals.forEach((v, i) => {
+      v.setValue(0);
+      Animated.timing(v, {
+        toValue: 1,
+        duration: 950,
+        delay: FLOAT[i].delay,
+        easing: EASE,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [trigger, vals]);
+
+  if (!trigger) return null;
+
+  return (
+    <View style={styles.burst} pointerEvents="none">
+      {FLOAT.map((f, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            opacity: vals[i].interpolate({ inputRange: [0, 0.15, 0.75, 1], outputRange: [0, 1, 1, 0] }),
+            transform: [
+              { translateY: vals[i].interpolate({ inputRange: [0, 1], outputRange: [0, -74] }) },
+              { translateX: vals[i].interpolate({ inputRange: [0, 1], outputRange: [0, f.x] }) },
+              { scale: vals[i].interpolate({ inputRange: [0, 0.3, 1], outputRange: [0.4, 1, 0.85] }) },
+            ],
+          }}
+        >
+          <Ionicons name="heart" size={f.size} color={COLORS.accent} />
+        </Animated.View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
@@ -304,6 +360,7 @@ const styles = StyleSheet.create({
 
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center', paddingBottom: 8 },
   actions: { flexDirection: 'row', gap: 44, marginBottom: 18 },
+  burst: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   actionBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   moodBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.card, paddingVertical: 11, paddingHorizontal: 20, borderRadius: 999, shadowColor: '#2B2622', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
   moodText: { fontSize: 14, color: COLORS.ink },

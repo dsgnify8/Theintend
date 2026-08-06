@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { formatWhenForExpert, getBookingById, setBookingLink } from '@/lib/bookings';
+import { canChangeTime, formatWhenForExpert, getBookingById, needsNewTime, requestReschedule, setBookingLink } from '@/lib/bookings';
 import { sendPushTo } from '@/lib/notifications';
 
 export default function ExpertBookingDetail() {
@@ -40,6 +40,48 @@ export default function ExpertBookingDetail() {
         sendPushTo(uid, 'Session details ready', `${booking.title}: your ${label} is ready.`);
       }
     }
+  };
+
+  const [moving, setMoving] = useState(false);
+
+  // The expert does not choose the new time. Only the client knows what works.
+  const requestMove = () => {
+    if (!booking) return;
+    const check = canChangeTime(booking);
+    if (!check.allowed) {
+      Alert.alert('This one needs the team', check.reason);
+      return;
+    }
+    const who = booking.booker_name || 'your client';
+    Alert.alert(
+      'Ask for a new time',
+      `${who} will be asked to choose a time that works. The session is not lost, and if it is part of a package it will not be counted twice.`,
+      [
+        { text: 'Keep it', style: 'cancel' },
+        {
+          text: 'Ask for a new time',
+          onPress: async () => {
+            setMoving(true);
+            const { error } = await requestReschedule(String(id));
+            setMoving(false);
+            if (error) {
+              Alert.alert('That did not save', 'Try again in a moment.');
+              return;
+            }
+            const uid = (booking as any)?.user_id;
+            if (uid) {
+              sendPushTo(
+                uid,
+                'Your session needs a new time',
+                `${booking.expert_name || 'Your expert'} had to move ${booking.title}. Open the app to choose a time that works for you.`,
+              );
+            }
+            const fresh = await getBookingById(String(id));
+            setBooking(fresh);
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -80,6 +122,20 @@ export default function ExpertBookingDetail() {
             <Pressable style={[styles.btn, saving && styles.btnOff]} disabled={saving} onPress={save}>
               {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.btnText}>{saved ? 'Saved' : `Save ${fieldLabel}`}</Text>}
             </Pressable>
+
+            {needsNewTime(booking) ? (
+              <View style={styles.waitCard}>
+                <Text style={styles.waitTitle}>Waiting on a new time</Text>
+                <Text style={styles.waitBody}>
+                  {(booking.booker_name || 'Your client')} has been asked to choose one. You will be told as soon as they have.
+                </Text>
+                <Text style={styles.waitNote}>A short message thanking them for the late notice goes a long way.</Text>
+              </View>
+            ) : (
+              <Pressable style={[styles.moveBtn, moving && styles.btnOff]} disabled={moving} onPress={requestMove}>
+                {moving ? <ActivityIndicator color={COLORS.ink} /> : <Text style={styles.moveText}>I cannot make this time</Text>}
+              </Pressable>
+            )}
           </>
         )}
       </ScrollView>
@@ -97,6 +153,12 @@ const styles = StyleSheet.create({
   kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginTop: 6, marginBottom: 10 },
   h1: { fontFamily: FONT_SERIF, fontSize: 26, lineHeight: 32, color: COLORS.ink },
   meta: { fontSize: 14, color: COLORS.muted, marginTop: 8 },
+  moveBtn: { marginTop: 14, paddingVertical: 15, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center' },
+  moveText: { color: COLORS.ink, fontSize: 15 },
+  waitCard: { marginTop: 18, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 16 },
+  waitTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
+  waitBody: { fontSize: 13, lineHeight: 20, color: COLORS.muted, marginTop: 5 },
+  waitNote: { fontSize: 12, lineHeight: 18, color: COLORS.accent, marginTop: 10 },
   card: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginTop: 20 },
   cardLabel: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, marginBottom: 6 },
   cardValue: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },

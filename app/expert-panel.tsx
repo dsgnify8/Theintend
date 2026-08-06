@@ -6,7 +6,8 @@ import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
-import { formatWhenForExpert, useExpertBookings } from '@/lib/bookings';
+import { useMySubmissions } from '@/lib/submissions';
+import { bookingStartMs, formatWhenForExpert, useExpertBookings } from '@/lib/bookings';
 import { FramedImage } from '@/components/FramedImage';
 import type { Expert } from '@/constants/experts';
 
@@ -34,6 +35,7 @@ export default function ExpertPanel() {
   }, [user?.email]);
 
   const { items: bookings, loading: bookingsLoading } = useExpertBookings(expert?.id);
+  const mySubs = useMySubmissions(expert?.id);
 
   if (role !== 'expert' && role !== 'admin') {
     return <Screen router={router}><View style={styles.center}><Text style={styles.muted}>This area is for experts.</Text></View></Screen>;
@@ -53,7 +55,23 @@ export default function ExpertPanel() {
   }
 
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
-  const newCount = bookings.filter((b) => isNew(b.created_at)).length;
+  const [tab, setTab] = useState<'up' | 'past'>('up');
+
+  // Split on the actual time rather than on when the booking was made. It was
+  // listing everything under Coming up, oldest first.
+  const now = Date.now();
+  const dated = bookings.map((b: any) => ({ b, at: bookingStartMs(b) }));
+  const upcoming = dated
+    .filter((x) => x.at == null || x.at >= now - 3600000)
+    .sort((a, c) => (a.at ?? Infinity) - (c.at ?? Infinity))
+    .map((x) => x.b);
+  const past = dated
+    .filter((x) => x.at != null && x.at < now - 3600000)
+    .sort((a, c) => (c.at ?? 0) - (a.at ?? 0))
+    .map((x) => x.b);
+  const shown = tab === 'up' ? upcoming : past;
+
+  const newCount = upcoming.filter((b: any) => isNew(b.created_at)).length;
   const availSummary = availabilitySummary(expert.availability);
 
   return (
@@ -78,19 +96,33 @@ export default function ExpertPanel() {
         </View>
 
         <View style={styles.sectionHeadRow}>
-          <Text style={styles.sectionTitle}>Coming up</Text>
-          {newCount > 0 ? <Text style={styles.newBadge}>{newCount} new</Text> : null}
+          <Text style={styles.sectionTitle}>Your sessions</Text>
+          {tab === 'up' && newCount > 0 ? <Text style={styles.newBadge}>{newCount} new</Text> : null}
+        </View>
+
+        <View style={styles.tabRow}>
+          {(['up', 'past'] as const).map((t) => (
+            <Pressable key={t} onPress={() => setTab(t)} style={[styles.sessionTab, tab === t && styles.sessionTabOn]}>
+              <Text style={[styles.sessionTabText, tab === t && styles.sessionTabTextOn]}>
+                {t === 'up' ? `Coming up${upcoming.length ? ` (${upcoming.length})` : ''}` : `Past${past.length ? ` (${past.length})` : ''}`}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
         {bookingsLoading ? (
           <View style={styles.loadingBox}><ActivityIndicator color={COLORS.accent} /></View>
-        ) : bookings.length === 0 ? (
+        ) : shown.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="calendar-outline" size={22} color={COLORS.muted} />
-            <Text style={styles.emptyText}>No bookings yet. When someone books a session with you, it shows up here.</Text>
+            <Text style={styles.emptyText}>
+              {tab === 'up'
+                ? 'Nothing booked ahead. When someone books a session with you, it shows up here.'
+                : 'Nothing has happened yet. Sessions move here once they are done.'}
+            </Text>
           </View>
         ) : (
-          bookings.map((b) => (
+          shown.map((b: any) => (
             <Pressable key={b.id} style={styles.bookingRow} onPress={() => router.push(`/expert-booking/${b.id}`)}>
               <View style={styles.rowIcon}>
                 <Ionicons name={b.kind === 'program' ? 'ribbon-outline' : b.kind === 'class' ? 'videocam-outline' : 'person-outline'} size={18} color={COLORS.accent} />
@@ -98,9 +130,14 @@ export default function ExpertPanel() {
               <View style={{ flex: 1 }}>
                 <View style={styles.bookingTitleRow}>
                   <Text style={styles.rowTitle} numberOfLines={1}>{b.title}</Text>
-                  {isNew(b.created_at) ? <Text style={styles.newDot}>NEW</Text> : null}
+                  {tab === 'up' && isNew(b.created_at) ? <Text style={styles.newDot}>NEW</Text> : null}
                 </View>
                 <Text style={styles.rowMeta}>{formatWhenForExpert(b)}{b.booker_name ? ` · ${b.booker_name}` : ''}</Text>
+                {tab === 'past' ? (
+                  <Text style={b.payout_id ? styles.paidTag : styles.owedTag}>
+                    {b.payout_id ? 'Paid' : 'Awaiting payout'}
+                  </Text>
+                ) : null}
               </View>
               <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
             </Pressable>
@@ -122,6 +159,37 @@ export default function ExpertPanel() {
           meta="Submit a new session or program for approval"
           onPress={() => router.push('/expert-offer-new')}
         />
+
+        <Text style={styles.groupLabel}>WHAT YOU HAVE SENT US</Text>
+        {mySubs.items.length === 0 ? (
+          <Text style={styles.emptyText}>Nothing submitted yet. Anything you propose shows here with where it got to.</Text>
+        ) : (
+          mySubs.items.slice(0, 8).map((sub: any) => (
+            <View key={sub.id} style={styles.subRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle} numberOfLines={1}>
+                  {sub.payload?.title ?? (sub.kind === 'profile' ? 'Profile update' : 'Submission')}
+                </Text>
+                <Text style={styles.rowMeta}>
+                  {sub.kind === 'service_edit' ? 'Change to a live offering'
+                    : sub.kind === 'session' ? 'New session'
+                    : sub.kind === 'program' ? 'New program'
+                    : sub.kind === 'class' ? 'New class'
+                    : 'Profile update'}
+                </Text>
+                {sub.status === 'rejected' && sub.review_note ? (
+                  <Text style={styles.subNote}>{sub.review_note}</Text>
+                ) : null}
+              </View>
+              <Text style={[
+                styles.subState,
+                sub.status === 'approved' ? styles.subLive : sub.status === 'rejected' ? styles.subNo : styles.subPending,
+              ]}>
+                {sub.status === 'approved' ? 'Live' : sub.status === 'rejected' ? 'Not yet' : 'With us'}
+              </Text>
+            </View>
+          ))
+        )}
 
         <Text style={styles.groupLabel}>YOUR PROFILE</Text>
         <ActionRow
@@ -192,6 +260,19 @@ const styles = StyleSheet.create({
   sectionHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 26, marginBottom: 12 },
   sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 26, marginBottom: 12 },
   groupLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 30, marginBottom: 12 },
+  tabRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  subRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 8 },
+  subState: { fontSize: 11, letterSpacing: 0.6, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, overflow: 'hidden' },
+  subPending: { color: COLORS.muted, backgroundColor: COLORS.accentSoft },
+  subLive: { color: COLORS.bg, backgroundColor: COLORS.taupeBlue },
+  subNo: { color: COLORS.bg, backgroundColor: '#8F4A3B' },
+  subNote: { fontSize: 12, lineHeight: 18, color: COLORS.accent, marginTop: 5 },
+  sessionTab: { paddingVertical: 9, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
+  sessionTabOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
+  sessionTabText: { fontSize: 13, color: COLORS.ink },
+  sessionTabTextOn: { color: COLORS.bg },
+  paidTag: { fontSize: 11, color: COLORS.taupeBlue, marginTop: 4 },
+  owedTag: { fontSize: 11, color: COLORS.accent, marginTop: 4 },
   newBadge: { fontSize: 12, color: COLORS.bg, backgroundColor: COLORS.accent, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 999, overflow: 'hidden', marginTop: 26 },
   loadingBox: { paddingVertical: 30, alignItems: 'center' },
   emptyBox: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 20, alignItems: 'center', gap: 10 },

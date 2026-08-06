@@ -15,7 +15,7 @@ import { COLORS, FONT_ITALIC, FONT_SANS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
 import { type Booking, useBookPct, useBookings, useLastRead, useLiked, useProgress, useReadStreak, useReads, useSaved, useUpcomingBookings, useWorksheetsDone } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
-import { useHydrateBookings, useMyBookings } from '@/lib/bookings';
+import { canChangeTime, getBookingById, needsNewTime, useHydrateBookings, useMyBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
 import { formatWhenLocal } from '@/lib/bookings';
 import { useNotificationFeed } from '@/lib/notificationsFeed';
@@ -77,6 +77,41 @@ export default function YouScreen() {
   const [notifsOpen, setNotifsOpen] = useState(false);
   const notifs = useNotificationFeed();
   const openNotifs = () => { notifs.reload(); setNotifsOpen(true); notifs.markAllSeen(); };
+
+  // Read fresh rather than from the device copy: service_id is not mirrored,
+  // and the twelve hour check should be made against the real time.
+  const changeTime = async (b: Booking) => {
+    if (!b.id) {
+      Alert.alert('We will move this for you', 'This booking was made before times could be changed here. Message us and we will sort it.');
+      return;
+    }
+    const row: any = await getBookingById(b.id);
+    if (!row) {
+      Alert.alert('We could not open that', 'Try again in a moment.');
+      return;
+    }
+    const check = canChangeTime(row);
+    if (!check.allowed) {
+      Alert.alert('This one needs us', check.reason);
+      return;
+    }
+    const go = () => router.push({
+      pathname: `/book/${row.expert_id ?? b.expertId ?? b.refId}`,
+      params: { service: row.service_id ?? '', reschedule: String(b.id) },
+    });
+    if (check.confirmNeeded) {
+      Alert.alert(
+        'This one is soon',
+        `Your session is in about ${check.hoursAway} hours. Would you still like to move it?`,
+        [
+          { text: 'Leave it', style: 'cancel' },
+          { text: 'Choose a new time', onPress: go },
+        ],
+      );
+      return;
+    }
+    go();
+  };
   const [uploading, setUploading] = useState(false);
 
   const bookPcts = useBookPct();
@@ -270,6 +305,7 @@ export default function YouScreen() {
                     key={`${b.refId}-${b.when}`}
                     b={b}
                     onPress={() => router.push({ pathname: '/booking-info', params: { title: b.title, when: b.when, expert: b.expert ?? '', link: b.link ?? '' } })}
+                    onChange={() => changeTime(b)}
                   />
                 ))
               )}
@@ -631,13 +667,17 @@ function MoodInsightCard() {
   );
 }
 
-function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
+function BookingRow({ b, onPress, onChange }: { b: Booking; onPress: () => void; onChange?: () => void }) {
   return (
     <Pressable style={styles.bookingRow} onPress={onPress}>
       <View style={styles.bookingIcon}><Ionicons name="videocam" size={16} color={COLORS.bg} /></View>
       <View style={{ flex: 1 }}>
         <Text style={styles.bookingTitle}>{b.title}</Text>
-        <Text style={styles.bookingMeta}>{b.when}</Text>
+        {needsNewTime(b) ? (
+          <Text style={styles.bookingMoved}>Your expert had to move this. Choose a new time that suits you.</Text>
+        ) : (
+          <Text style={styles.bookingMeta}>{b.when}</Text>
+        )}
         <Text style={styles.bookingMeta}>with {b.expert}</Text>
         {b.link ? (
           /^https?:\/\//i.test(b.link) ? (
@@ -647,6 +687,11 @@ function BookingRow({ b, onPress }: { b: Booking; onPress: () => void }) {
           ) : (
             <Text style={[styles.bookingMeta, { marginTop: 6 }]}>Location: {b.link}</Text>
           )
+        ) : null}
+        {onChange ? (
+          <Pressable onPress={onChange} hitSlop={8} style={styles.changeWrap}>
+            <Text style={styles.changeLink}>{needsNewTime(b) ? 'Choose a new time' : 'Change time'}</Text>
+          </Pressable>
         ) : null}
       </View>
       <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
@@ -825,6 +870,9 @@ const styles = StyleSheet.create({
   bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  bookingMoved: { fontSize: 12, lineHeight: 17, color: COLORS.accent, marginTop: 3 },
+  changeWrap: { alignSelf: 'flex-start', marginTop: 8 },
+  changeLink: { fontSize: 13, color: COLORS.ink, textDecorationLine: 'underline' },
   bookingLink: { fontSize: 13, color: COLORS.accent },
 
   pastCard: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
@@ -878,7 +926,7 @@ const styles = StyleSheet.create({
   likedTabText: { fontSize: 13, color: COLORS.muted },
   likedTabTextOn: { color: COLORS.bg },
 
-  empty: { backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 18, marginBottom: 10 },
+  empty: { backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 18, marginBottom: 10 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted },
   cta: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, backgroundColor: COLORS.ink },
   ctaText: { color: COLORS.bg, fontSize: 14 },

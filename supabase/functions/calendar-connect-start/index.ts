@@ -12,9 +12,12 @@ Deno.serve(async (req) => {
 
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')!;
     const redirectUri = Deno.env.get('GOOGLE_REDIRECT_URI')!;
+    // Only what is actually used. events writes the booking onto the calendar,
+    // freebusy reads which blocks are taken and nothing else, and email names
+    // the connected account so the expert can see which one it is.
     const scope = [
       'https://www.googleapis.com/auth/calendar.events',
-      'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/calendar.freebusy',
       'https://www.googleapis.com/auth/userinfo.email',
     ].join(' ');
     const state = btoa(JSON.stringify({ expertId, appReturnUrl }));

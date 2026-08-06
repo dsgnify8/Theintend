@@ -13,6 +13,8 @@
       "bundleIdentifier": "com.theintend.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "The Intend uses your microphone so you can speak to your companion instead of typing.",
+        "NSSpeechRecognitionUsageDescription": "What you say is turned into text and put in the message box, so you can read it before you send it.",
         "UIBackgroundModes": [
           "audio"
         ]
@@ -67,7 +69,8 @@
           "color": "#5C4632"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-speech-recognition"
     ],
     "experiments": {
       "typedRoutes": true,

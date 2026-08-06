@@ -6,6 +6,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { reloadExperts } from './experts';
 import { createSession } from './sessions';
+import { reloadServices } from './services';
 import { sendPushTo } from './notifications';
 
 export type Submission = {
@@ -39,7 +40,7 @@ export async function submitProfileChange(expertId: string, payload: { bio?: str
   return { error };
 }
 
-export async function submitNewOffering(expertId: string, expertName: string, kind: 'class' | 'program', payload: any) {
+export async function submitNewOffering(expertId: string, expertName: string, kind: 'class' | 'program' | 'session', payload: any) {
   const { data: u } = await supabase.auth.getUser();
   const { error } = await supabase.from('submissions').insert({
     expert_id: expertId,
@@ -58,6 +59,83 @@ export async function uploadSubmissionImage(base64: string): Promise<string> {
     .upload(path, decode(base64), { contentType: 'image/jpeg', upsert: true });
   if (error) throw error;
   return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+}
+
+// Friendly names on the way in, column names on the way out, so a screen never
+// has to know what the table calls things.
+export type ServiceEditFields = {
+  name?: string;
+  tagline?: string;
+  price?: string;
+  durationMin?: number | null;
+  description?: string;
+  online?: boolean;
+  inPerson?: boolean;
+  location?: string | null;
+};
+
+const SERVICE_COLUMN: Record<keyof ServiceEditFields, string> = {
+  name: 'name',
+  tagline: 'tagline',
+  price: 'price',
+  durationMin: 'duration_min',
+  description: 'description',
+  online: 'online',
+  inPerson: 'in_person',
+  location: 'location',
+};
+
+// Changing something that is already live and bookable. What it was is carried
+// alongside what it should become, so the approval screen can show the change
+// rather than a block of values with no reference point.
+export async function submitServiceEdit(
+  expertId: string,
+  service: { id: string; name: string },
+  before: ServiceEditFields,
+  next: ServiceEditFields,
+) {
+  const patch: Record<string, any> = {};
+  const shown: Record<string, { from: any; to: any }> = {};
+  (Object.keys(next) as (keyof ServiceEditFields)[]).forEach((k) => {
+    if (next[k] === undefined) return;
+    if (next[k] === before[k]) return;
+    patch[SERVICE_COLUMN[k]] = next[k];
+    shown[k as string] = { from: before[k], to: next[k] };
+  });
+
+  if (!Object.keys(patch).length) return { error: { message: 'Nothing has changed.' } };
+
+  const { data: u } = await supabase.auth.getUser();
+  const { error } = await supabase.from('submissions').insert({
+    expert_id: expertId,
+    kind: 'service_edit',
+    payload: { service_id: service.id, title: service.name, patch, changes: shown },
+    status: 'pending',
+    created_by: u?.user?.id,
+  });
+  return { error };
+}
+
+// What this expert has sent, and where each one got to.
+export function useMySubmissions(expertId?: string) {
+  const [items, setItems] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    if (!expertId) { setItems([]); setLoading(false); return; }
+    setLoading(true);
+    const { data } = await supabase
+      .from('submissions')
+      .select('*')
+      .eq('expert_id', expertId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setItems((data as Submission[]) ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [expertId]);
+  return { items, loading, reload: load };
 }
 
 export function usePendingSubmissions() {
@@ -108,6 +186,33 @@ export async function approveSubmission(s: Submission) {
       status: 'live',
       sort: 50,
     });
+  } else if (s.kind === 'session') {
+    // Writes the services row the booking screen actually reads. Without this
+    // an approved session was approved and nowhere.
+    const p = s.payload || {};
+    const id = p.id || `${s.expert_id}-${slug(p.title)}-${Date.now().toString(36)}`;
+    await supabase.from('services').upsert({
+      id,
+      expert_id: s.expert_id,
+      name: p.title,
+      tagline: p.tagline ?? '',
+      duration_min: p.durationMin ? Number(p.durationMin) : null,
+      price: p.price ?? '',
+      online: p.online !== false,
+      in_person: !!p.inPerson,
+      kind: p.kind === 'package' ? 'package' : 'single',
+      sessions_total: p.sessionsTotal ? Number(p.sessionsTotal) : null,
+      description: p.description ?? '',
+      location: p.location ?? null,
+      sort: 100,
+    }, { onConflict: 'id' });
+    await reloadServices();
+  } else if (s.kind === 'service_edit') {
+    const p = s.payload || {};
+    if (p.service_id && p.patch && Object.keys(p.patch).length) {
+      await supabase.from('services').update(p.patch).eq('id', p.service_id);
+      await reloadServices();
+    }
   } else if (s.kind === 'program') {
     const p = s.payload || {};
     await createSession({
@@ -136,7 +241,7 @@ export async function approveSubmission(s: Submission) {
     await reloadExperts();
     const uid = (s as any).created_by;
     if (uid) {
-      const label = s.kind === 'program' ? 'program' : s.kind === 'class' ? 'class' : 'profile update';
+      const label = s.kind === 'program' ? 'program' : s.kind === 'class' ? 'class' : s.kind === 'session' ? 'session' : s.kind === 'service_edit' ? 'change' : 'profile update';
       const title = s.payload?.title ?? 'Your submission';
       sendPushTo(uid, `Your ${label} is live`, s.kind === 'profile' ? 'Your profile update is now live.' : `${title} is now live on The Intend.`);
     }
@@ -144,10 +249,19 @@ export async function approveSubmission(s: Submission) {
   return { error };
 }
 
-export async function rejectSubmission(id: string) {
+export async function rejectSubmission(id: string, reason?: string) {
+  const { data: row } = await supabase.from('submissions').select('*').eq('id', id).maybeSingle();
   const { error } = await supabase
     .from('submissions')
-    .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString(), review_note: reason ?? null })
     .eq('id', id);
+  // Silence reads as being ignored. Better to say so, even briefly.
+  if (!error && row) {
+    const uid = (row as any).created_by;
+    if (uid) {
+      const what = (row as any)?.payload?.title ?? 'Your submission';
+      sendPushTo(uid, 'We could not publish that yet', reason?.trim() || `${what} needs a change before it can go live. We will be in touch.`);
+    }
+  }
   return { error };
 }

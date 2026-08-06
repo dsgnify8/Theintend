@@ -3,12 +3,44 @@
 // it with playTrack / togglePlay / seekTo.
 import { useEffect, useState } from 'react';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { SOUNDS } from '@/constants/sounds';
 
 let player: AudioPlayer | null = null;
 let currentId: string | null = null;
 let currentTitle = '';
 let sub: { remove: () => void } | null = null;
 let isPlaying = false;
+
+// How many times a finished track may start the next one before it stops on
+// its own. Reset by starting something by hand, not by pausing.
+const AUTO_LIMIT = 5;
+let autoPlayed = 0;
+// True only while the player itself is moving on, so playTrack can tell the
+// difference between that and a person choosing something.
+let advancing = false;
+
+function nextTrack(afterId: string | null) {
+  const list = SOUNDS.filter((x) => !!x.url);
+  if (list.length < 2) return null;
+  const i = list.findIndex((x) => x.id === afterId);
+  const next = list[(i + 1) % list.length];
+  return next?.url ? { id: next.id, url: next.url as string, title: next.title } : null;
+}
+
+function advanceFrom(fromId: string | null) {
+  // A listener belonging to a player that has already been replaced.
+  if (!fromId || fromId !== currentId) return;
+  if (autoPlayed >= AUTO_LIMIT) { isPlaying = false; return; }
+  const next = nextTrack(fromId);
+  if (!next) { isPlaying = false; return; }
+  autoPlayed += 1;
+  // Out of this callback first. The old player is torn down inside playTrack
+  // and this is its own listener.
+  setTimeout(() => {
+    advancing = true;
+    try { playTrack(next.id, next.url, next.title); } finally { advancing = false; }
+  }, 0);
+}
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -20,12 +52,15 @@ function attach(p: AudioPlayer) {
   try {
     sub = p.addListener('playbackStatusUpdate', (s: any) => {
       if (typeof s?.playing === 'boolean') isPlaying = s.playing;
+      if (s?.didJustFinish) advanceFrom(currentId);
       emit();
     });
   } catch { sub = null; }
 }
 
 export function playTrack(id: string, url: string, title: string) {
+  // Chosen by a person, so the run starts again from zero.
+  if (!advancing) autoPlayed = 0;
   if (currentId === id && player) {
     player.play();
     isPlaying = true;
@@ -61,6 +96,7 @@ export function seekTo(sec: number) {
 }
 
 export function stopTrack() {
+  autoPlayed = 0;
   if (player) { try { sub?.remove(); } catch {} try { player.remove(); } catch {} player = null; sub = null; }
   currentId = null;
   isPlaying = false;

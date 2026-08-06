@@ -1,4 +1,5 @@
 // My Companion data layer. The route and Edge Function keep the your-ai name.
+import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
 export type AiMessage = { role: 'user' | 'assistant'; content: string };
@@ -50,6 +51,28 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
 }
 
 // The first thing they said, which describes a conversation better than a date.
+// Removes a conversation for good. A threaded one goes by its thread. One
+// written before threads existed goes by the span it covers, which is the same
+// gap rule that grouped it, so it takes that conversation and no other.
+export async function deleteConversation(userId: string, c: Conversation): Promise<boolean> {
+  try {
+    const tid = (c.messages[0] as any)?.thread_id ?? null;
+    let q = supabase.from('ai_messages').delete().eq('user_id', userId);
+    if (tid) {
+      q = q.eq('thread_id', tid);
+    } else {
+      const first = c.messages[0]?.created_at;
+      const last = c.messages[c.messages.length - 1]?.created_at;
+      if (!first || !last) return false;
+      q = q.is('thread_id', null).gte('created_at', first).lte('created_at', last);
+    }
+    const { error } = await q;
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 export function conversationTitle(c: Conversation): string {
   const first = c.messages.find((m) => m.role === 'user');
   const text = (first?.content ?? '').trim();
@@ -70,6 +93,51 @@ export async function sendMessage(message: string, firstName?: string, threadId?
   if (error) return { ok: false, error: error.message };
   if (!data?.ok) return { ok: false, error: data?.error ?? 'Something went wrong.' };
   return { ok: true, reply: data.reply };
+}
+
+// --- The live conversation ---
+// Held here rather than in the screen, so moving to another tab does not end
+// it. Module state lasts as long as the JavaScript context, which means it
+// goes when the app is killed and not before.
+
+export type CompanionSession = {
+  messages: AiMessage[];
+  threadId: string;
+  readingPast: boolean;
+};
+
+let session: CompanionSession = { messages: [], threadId: newThreadId(), readingPast: false };
+const sessionListeners = new Set<() => void>();
+const emitSession = () => sessionListeners.forEach((l) => l());
+
+export function setSession(patch: Partial<CompanionSession>) {
+  session = { ...session, ...patch };
+  emitSession();
+}
+
+// Takes a value or an updater, so the screen can keep appending the way it did.
+export function setSessionMessages(next: AiMessage[] | ((prev: AiMessage[]) => AiMessage[])) {
+  const value = typeof next === 'function' ? (next as (p: AiMessage[]) => AiMessage[])(session.messages) : next;
+  session = { ...session, messages: value };
+  emitSession();
+}
+
+export function startNewConversation() {
+  session = { messages: [], threadId: newThreadId(), readingPast: false };
+  emitSession();
+}
+
+// Snapshotted into state rather than read from the closure. The React Compiler
+// will happily memoize a module variable at whatever it was on first render.
+export function useCompanionSession(): CompanionSession {
+  const [v, setV] = useState(session);
+  useEffect(() => {
+    const l = () => setV(session);
+    sessionListeners.add(l);
+    l();
+    return () => { sessionListeners.delete(l); };
+  }, []);
+  return v;
 }
 
 export async function clearHistory(userId: string): Promise<void> {

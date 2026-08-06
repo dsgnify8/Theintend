@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
-import { addBooking } from './store';
-import { scheduleLocalReminder } from './notifications';
+import { addBooking, removeBooking } from './store';
+import { deleteCalendarEvent, updateCalendarEvent } from './calendar';
+import { scheduleLocalReminder, sendPushToEmail } from './notifications';
 
 export type DBBooking = {
   id: string;
@@ -28,7 +29,229 @@ export type DBBooking = {
   service_id?: string | null;
   status?: string | null;
   created_at: string;
+  rescheduled_at?: string | null;
+  rescheduled_by?: string | null;
+  reschedule_count?: number | null;
 };
+
+// --- Moving a booking ---
+// There is no cancel here on purpose. A booking is moved, never removed, and
+// moving updates the row that already exists. That is what keeps a package
+// session counted once however many times the time changes.
+
+export const CHANGE_CUTOFF_MS = 12 * 60 * 60 * 1000;
+export const CONFIRM_WITHIN_MS = 24 * 60 * 60 * 1000;
+
+export type ChangeCheck =
+  | { allowed: true; confirmNeeded: boolean; hoursAway: number }
+  | { allowed: false; reason: string };
+
+// Whether this booking can still be moved from inside the app, and whether to
+// ask first.
+export function canChangeTime(b: { starts_at?: string | null; when_text?: string | null }): ChangeCheck {
+  const at = bookingStartMs(b);
+  if (at == null) {
+    // No absolute time to measure against, so the team handles it.
+    return { allowed: false, reason: 'This one does not have a set time yet. Message us and we will sort it.' };
+  }
+  const left = at - Date.now();
+  if (left <= 0) {
+    return { allowed: false, reason: 'This session has already started.' };
+  }
+  if (left < CHANGE_CUTOFF_MS) {
+    return { allowed: false, reason: 'This is less than 12 hours away, so it cannot be moved here. Message us and we will help.' };
+  }
+  return {
+    allowed: true,
+    confirmNeeded: left < CONFIRM_WITHIN_MS,
+    hoursAway: Math.round(left / (60 * 60 * 1000)),
+  };
+}
+
+export function needsNewTime(b: { status?: string | null }): boolean {
+  return b?.status === 'awaiting_reschedule';
+}
+
+// The expert cannot make it. The booking stays exactly where it is, still
+// counted, and the client is asked to choose again.
+export async function requestReschedule(bookingId: string): Promise<{ error: any }> {
+  const { error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'awaiting_reschedule',
+      rescheduled_at: new Date().toISOString(),
+      rescheduled_by: 'expert',
+    })
+    .eq('id', bookingId);
+  // The caller refreshes its own list. There is no module level reload here,
+  // only the one each hook returns.
+  return { error };
+}
+
+// --- Cancelling, from admin only ---
+// There is deliberately no client facing version of this. The policy is that
+// someone contacts the team, and this is how the team acts on it.
+
+export type Resolution = 'refund' | 'credit' | 'none';
+
+// What the client is owed, decided by whether the expert has been paid yet.
+// Before the payout a refund is clean. After it, the money has gone out and it
+// has to come back another way.
+export function resolutionFor(b: { payout_id?: string | null }): Resolution {
+  return b?.payout_id ? 'credit' : 'refund';
+}
+
+export function resolutionLabel(r: Resolution): string {
+  return r === 'refund' ? 'Refund'
+    : r === 'credit' ? 'Store credit'
+    : 'Nothing owed';
+}
+
+// Everything, for the admin bookings screen.
+export function useAllBookings() {
+  const [items, setItems] = useState<DBBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    try {
+      const { data } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      setItems((data as DBBooking[]) ?? []);
+    } catch {
+      setItems([]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+  return { items, loading, reload: load };
+}
+
+export async function adminCancelBooking(
+  bookingId: string,
+  opts: { reason: string; resolution: Resolution },
+): Promise<{ error: any; creditReturned: boolean }> {
+  let creditReturned = false;
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    const { data: row } = await supabase.from('bookings').select('*').eq('id', bookingId).maybeSingle();
+    if (!row) return { error: { message: 'That booking is no longer there.' }, creditReturned };
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: u?.user?.id ?? null,
+        cancel_reason: opts.reason.trim() || null,
+        resolution: opts.resolution,
+      })
+      .eq('id', bookingId);
+    if (error) return { error, creditReturned };
+
+    // A package session comes back so it can be booked again. The only count
+    // in the system that goes down, which is why it is admin only.
+    const pkgId = (row as any)?.package_id;
+    if (pkgId) {
+      try {
+        const { data: pkg } = await supabase.from('packages').select('used').eq('id', pkgId).maybeSingle();
+        const used = (pkg as any)?.used;
+        if (typeof used === 'number' && used > 0) {
+          await supabase.from('packages').update({ used: used - 1 }).eq('id', pkgId);
+          creditReturned = true;
+        }
+      } catch {
+        // The cancellation still stands. The credit is put back by hand.
+      }
+    }
+
+    // Off the calendar as well, or it says a session is happening that is not.
+    try {
+      const eventId = (row as any)?.calendar_event_id;
+      const expertIdForCal = (row as any)?.expert_id;
+      if (eventId && expertIdForCal) await deleteCalendarEvent(expertIdForCal, eventId);
+    } catch {}
+
+    // Their time, and they would otherwise be waiting for someone who is not
+    // coming. Best effort: a failed push must not undo a cancellation.
+    try {
+      const expertId = (row as any)?.expert_id;
+      if (expertId) {
+        const { data: ex } = await supabase
+          .from('experts').select('account_email').eq('id', expertId).maybeSingle();
+        const email = (ex as any)?.account_email;
+        if (email) {
+          sendPushToEmail(
+            email,
+            'A session was cancelled',
+            `${(row as any)?.title ?? 'A session'} on ${(row as any)?.when_text ?? 'your calendar'} is no longer going ahead.`,
+          );
+        }
+      }
+    } catch {}
+
+    return { error: null, creditReturned };
+  } catch (e: any) {
+    return { error: e, creditReturned };
+  }
+}
+
+// A new time has been chosen. This updates rather than inserts, which is the
+// whole reason package counts stay right.
+export async function applyNewTime(
+  bookingId: string,
+  opts: {
+    startsAt: Date;
+    whenText: string;
+    durationMin?: number;
+    timezone?: string;
+    by: 'expert' | 'client';
+    previousCount?: number | null;
+  },
+): Promise<{ error: any }> {
+  const patch: Record<string, any> = {
+    starts_at: opts.startsAt.toISOString(),
+    when_text: opts.whenText,
+    status: 'confirmed',
+    rescheduled_at: new Date().toISOString(),
+    rescheduled_by: opts.by,
+    reschedule_count: (opts.previousCount ?? 0) + 1,
+  };
+  if (opts.durationMin) patch.duration_minutes = opts.durationMin;
+  if (opts.timezone) patch.timezone = opts.timezone;
+
+  const { error } = await supabase.from('bookings').update(patch).eq('id', bookingId);
+  if (error) return { error };
+
+  // The event follows the booking. Read from the row rather than passed in, so
+  // no caller can forget, and best effort so a calendar cannot stop a session
+  // being moved.
+  try {
+    const { data: row } = await supabase
+      .from('bookings')
+      .select('expert_id,calendar_event_id,duration_minutes,title')
+      .eq('id', bookingId)
+      .maybeSingle();
+    const eventId = (row as any)?.calendar_event_id;
+    const expertId = (row as any)?.expert_id;
+    if (eventId && expertId) {
+      const mins = opts.durationMin ?? (row as any)?.duration_minutes ?? 60;
+      await updateCalendarEvent({
+        expertId,
+        eventId,
+        startIso: opts.startsAt.toISOString(),
+        endIso: new Date(opts.startsAt.getTime() + mins * 60000).toISOString(),
+      });
+    }
+  } catch {
+    // The booking has moved. The calendar is a second best.
+  }
+
+  return { error: null };
+}
 
 // The instant a booking starts, in ms. Prefers the absolute column and falls
 // back to reading when_text in the local clock for older rows.
@@ -230,6 +453,14 @@ export async function getBookingById(id: string) {
     return (data as DBBooking) ?? null;
   } catch { return null; }
 }
+// Ties a booking to the calendar event it created, so it can be moved or
+// removed later.
+export async function setBookingCalendarEvent(bookingId: string, eventId: string) {
+  try {
+    await supabase.from('bookings').update({ calendar_event_id: eventId }).eq('id', bookingId);
+  } catch {}
+}
+
 export async function setBookingLink(id: string, link: string) {
   try {
     const { error } = await supabase.from('bookings').update({ link }).eq('id', id);
@@ -246,7 +477,21 @@ export function useHydrateBookings() {
         if (!uid) return;
         const { data } = await supabase.from('bookings').select('*').eq('user_id', uid).in('kind', ['class', 'program', 'service']);
         for (const b of (data as DBBooking[]) ?? []) {
-          addBooking({ refId: b.ref_id, kind: b.kind as any, title: b.title, when: b.when_text, expert: b.expert_name ?? '', expertId: b.expert_id, link: (b as any).link ?? undefined });
+          // Gone from their page entirely. They were told when it happened.
+          if (b.status === 'cancelled') { removeBooking(b.id); continue; }
+          addBooking({
+            refId: b.ref_id,
+            kind: b.kind as any,
+            title: b.title,
+            when: b.when_text,
+            expert: b.expert_name ?? '',
+            expertId: b.expert_id,
+            link: (b as any).link ?? undefined,
+            // The three the mirror was dropping.
+            id: b.id,
+            startsAt: b.starts_at ?? null,
+            status: b.status ?? null,
+          });
         }
       } catch {}
     })();

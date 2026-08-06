@@ -3,13 +3,18 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleShee
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Image } from '@/components/Img';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { signIn, signUp, useAuth, sendPasswordReset } from '@/lib/auth';
 
-// Taller than the wash on other screens, because the form is centred and a
-// short one would stop above it.
-const WELCOME_WASH = ['rgba(107,97,87,0.16)', 'rgba(107,97,87,0.06)', 'rgba(107,97,87,0)'];
+const SKY = require('@/assets/images/welcome-sky.jpg');
+
+// Enough to hold white type over the brightest part of the gradient, without
+// flattening the colour out of it. Slightly heavier top and bottom, where the
+// status bar and the button sit.
+const SCRIM = ['rgba(28,24,20,0.40)', 'rgba(28,24,20,0.22)', 'rgba(28,24,20,0.42)'];
 
 export default function Login() {
   const { session, loading } = useAuth();
@@ -89,9 +94,12 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <View style={styles.root}>
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient colors={WELCOME_WASH} style={styles.wash} pointerEvents="none" />
+      <StatusBar style="light" />
+      <Image source={SKY} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      <LinearGradient colors={SCRIM} style={StyleSheet.absoluteFill} pointerEvents="none" />
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <Pressable onPress={goBack} hitSlop={12}>
           <Text style={styles.skip}>Skip for now</Text>
@@ -100,7 +108,7 @@ export default function Login() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.inner}>
           <Text style={styles.kicker}>THE INTEND</Text>
-          <Text style={styles.h1}>{mode === 'in' ? 'Welcome back' : 'Create your space'}</Text>
+          <Text style={styles.h1}>{mode === 'in' ? 'Welcome back' : 'Welcome'}</Text>
           <Text style={styles.sub}>
             {mode === 'in' ? 'Sign in to continue your journey.' : 'A calm home for your practice.'}
           </Text>
@@ -138,7 +146,8 @@ export default function Login() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -147,7 +156,7 @@ function Input(props: any) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput {...rest} placeholderTextColor={COLORS.muted} style={styles.input} />
+      <TextInput {...rest} placeholderTextColor="rgba(255,255,255,0.55)" style={styles.input} />
     </View>
   );
 }
@@ -162,13 +171,13 @@ function PasswordInput({ value, onChangeText }: { value: string; onChangeText: (
           value={value}
           onChangeText={onChangeText}
           placeholder="At least 6 characters"
-          placeholderTextColor={COLORS.muted}
+          placeholderTextColor="rgba(255,255,255,0.55)"
           secureTextEntry={!show}
           autoCapitalize="none"
           style={styles.pwInput}
         />
         <Pressable onPress={() => setShow((v) => !v)} hitSlop={10} style={styles.eyeBtn}>
-          <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color={COLORS.muted} />
+          <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.7)" />
         </Pressable>
       </View>
     </View>
@@ -176,30 +185,38 @@ function PasswordInput({ value, onChangeText }: { value: string; onChangeText: (
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bg },
-  wash: { position: 'absolute', top: 0, left: 0, right: 0, height: '62%' },
+  root: { flex: 1, backgroundColor: COLORS.ink },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 4 },
-  skip: { fontSize: 15, color: COLORS.muted },
+  skip: { fontSize: 15, color: 'rgba(255,255,255,0.8)' },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
-  kicker: { fontSize: 12, letterSpacing: 3, color: COLORS.muted, marginBottom: 12 },
-  h1: { fontFamily: FONT_SERIF, fontSize: 34, lineHeight: 40, color: COLORS.ink },
-  sub: { fontSize: 15, lineHeight: 22, color: COLORS.muted, marginTop: 8, marginBottom: 28 },
-  field: { marginBottom: 16 },
-  fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
-  input: { backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: COLORS.ink },
-  errorBox: { backgroundColor: '#F6E5E0', borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
-  errorText: { fontSize: 14, lineHeight: 20, color: '#8F4A3B' },
-  noticeBox: { backgroundColor: COLORS.accentSoft, borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
-  noticeText: { fontSize: 14, lineHeight: 20, color: COLORS.ink },
-  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.55)', borderWidth: 1, borderColor: 'rgba(43,38,34,0.16)', alignItems: 'center' },
+
+  kicker: { fontSize: 11, letterSpacing: 3, color: 'rgba(255,255,255,0.65)', marginBottom: 14, textAlign: 'center' },
+  h1: { fontFamily: FONT_SERIF, fontSize: 42, lineHeight: 48, color: '#FFFFFF', textAlign: 'center' },
+  sub: { fontSize: 15, lineHeight: 22, color: 'rgba(255,255,255,0.75)', marginTop: 10, marginBottom: 30, textAlign: 'center' },
+
+  // Dim, so they read as fields to fill rather than things to press.
+  field: { marginBottom: 14 },
+  fieldLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
+  input: { backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: '#FFFFFF' },
+  pwWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', paddingRight: 10 },
+  pwInput: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: '#FFFFFF' },
+  eyeBtn: { padding: 6 },
+
+  errorBox: { backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(248,217,208,0.45)', borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
+  errorText: { fontSize: 14, lineHeight: 20, color: '#F8D9D0' },
+  noticeBox: { backgroundColor: 'rgba(255,255,255,0.14)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)', borderRadius: 12, padding: 14, marginTop: 6, marginBottom: 4 },
+  noticeText: { fontSize: 14, lineHeight: 20, color: '#FFFFFF' },
+
+  // Bright frosted with ink type. White type on a light panel measures 3.7 to
+  // 1, under the 4.5 floor, so it could not stay white.
+  btn: { marginTop: 14, paddingVertical: 16, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.55)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)', alignItems: 'center' },
   btnOff: { opacity: 0.6 },
   btnText: { color: COLORS.ink, fontSize: 16, letterSpacing: 0.5 },
-  toggle: { marginTop: 20, alignItems: 'center' },
+
   forgot: { alignSelf: 'flex-end', marginTop: 10, marginBottom: 2 },
-  forgotText: { fontSize: 13, color: COLORS.accent },
-  toggleText: { fontSize: 14, color: COLORS.accent },
-  pwWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingRight: 10 },
-  pwInput: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, fontSize: 16, color: COLORS.ink },
-  eyeBtn: { padding: 6 },
+  forgotText: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  toggle: { marginTop: 20, alignItems: 'center' },
+  toggleText: { fontSize: 14, color: 'rgba(255,255,255,0.85)' },
 });

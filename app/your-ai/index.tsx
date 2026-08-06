@@ -1,16 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
-  StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+// Required rather than imported, inside a try. A native module that is not in
+// the build throws the moment it is imported, which takes the screen with it.
+// This way the screen opens and only the microphone is missing.
+let Speech: any = null;
+let useSpeechEvent: (name: string, handler: (e: any) => void) => void = () => {};
+let speechAvailable = false;
+try {
+  const mod = require('expo-speech-recognition');
+  Speech = mod?.ExpoSpeechRecognitionModule ?? null;
+  if (typeof mod?.useSpeechRecognitionEvent === 'function') {
+    useSpeechEvent = mod.useSpeechRecognitionEvent;
+  }
+  speechAvailable = !!Speech;
+} catch {
+  // Left unavailable. The button says so.
+}
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
+import { CompanionIntro } from '@/components/CompanionIntro';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { DURATION, EASE, reduceMotion } from '@/constants/motion';
 import { useAuth } from '@/lib/auth';
-import { type AiMessage, type Conversation, conversationTitle, getConversations, newThreadId, sendMessage } from '@/lib/yourAi';
+import { type AiMessage, type Conversation, conversationTitle, getConversations, sendMessage, setSession, setSessionMessages, startNewConversation, useCompanionSession, deleteConversation } from '@/lib/yourAi';
 
 export default function YourAi() {
   const router = useRouter();
@@ -19,23 +35,93 @@ export default function YourAi() {
   const user = session?.user ?? null;
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : undefined;
 
-  const [messages, setMessages] = useState<AiMessage[]>([]);
+  // The conversation itself lives outside this screen, so leaving and coming
+  // back picks up where it was.
+  const convo = useCompanionSession();
+  const messages = convo.messages;
+  const setMessages = setSessionMessages;
+  const threadId = convo.threadId;
+  const readingPast = convo.readingPast;
+  const setReadingPast = (v: boolean) => setSession({ readingPast: v });
   const [input, setInput] = useState('');
+  // Speech goes into the box, never straight out. What was already typed is
+  // held so dictation adds to it instead of replacing it.
+  const [listening, setListening] = useState(false);
+  const [voiceNote, setVoiceNote] = useState<string | null>(null);
+  const baseInput = useRef('');
+
+  useSpeechEvent('result', (e: any) => {
+    const said = e?.results?.[0]?.transcript;
+    if (typeof said !== 'string') return;
+    const before = baseInput.current;
+    setInput(before ? `${before} ${said}` : said);
+  });
+  useSpeechEvent('end', () => setListening(false));
+  useSpeechEvent('nomatch', () => {
+    setListening(false);
+    setVoiceNote('I did not catch that. Try again a little closer.');
+  });
+  useSpeechEvent('error', (e: any) => {
+    setListening(false);
+    const code = e?.error;
+    setVoiceNote(
+      code === 'interrupted' ? 'Something interrupted that. Try again.'
+      : code === 'no-speech' ? 'I did not hear anything.'
+      : code === 'not-allowed' ? 'Microphone access is off. You can turn it on in Settings.'
+      : code === 'network' ? 'That needs a connection to work.'
+      : 'Speech is not working just now. You can type instead.',
+    );
+  });
+
+  const startListening = async () => {
+    setVoiceNote(null);
+    const mod: any = Speech;
+    // Checked rather than assumed, so a name that differs in this version
+    // says so instead of taking the app down.
+    if (typeof mod?.start !== 'function') {
+      setVoiceNote('Speaking is not available on this build.');
+      return;
+    }
+    try {
+      if (typeof mod.requestPermissionsAsync === 'function') {
+        const res = await mod.requestPermissionsAsync();
+        if (res && res.granted === false) {
+          setVoiceNote('Microphone access is off. You can turn it on in Settings.');
+          return;
+        }
+      }
+      baseInput.current = input.trim();
+      setListening(true);
+      mod.start({ lang: 'en-US', interimResults: true, continuous: false });
+    } catch {
+      setListening(false);
+      setVoiceNote('Speech is not working just now. You can type instead.');
+    }
+  };
+
+  const stopListening = () => {
+    const mod: any = Speech;
+    try {
+      if (typeof mod?.stop === 'function') mod.stop();
+    } catch {}
+    setListening(false);
+  };
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [thinkLabel, setThinkLabel] = useState('Thinking');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [histOpen, setHistOpen] = useState(false);
-  const [readingPast, setReadingPast] = useState(false);
+  // Only one row sits open at a time.
+  const [openRow, setOpenRow] = useState<string | null>(null);
   const greeting = useRef(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]).current;
-  // One conversation per visit, until they start another.
-  const [threadId, setThreadId] = useState(() => newThreadId());
   // Which message is being written out, and how much of it is showing.
   const [typeState, setTypeState] = useState<{ index: number; shown: number } | null>(null);
   const [still, setStill] = useState(false);
   // Messages already on screen when a past conversation is opened. Those do
   // not animate in, or the whole thread arrives at once.
   const settledBefore = useRef(0);
+  // Coming back to a conversation in progress should not animate it in again.
+  useEffect(() => { settledBefore.current = convo.messages.length; }, []);
 
   useEffect(() => {
     let alive = true;
@@ -88,6 +174,28 @@ export default function YourAi() {
     }
   };
 
+  const askDelete = (c: Conversation) => {
+    Alert.alert(
+      'Delete this conversation',
+      'It will be gone for good, and your companion will no longer have it.',
+      [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user) return;
+            const ok = await deleteConversation(user.id, c);
+            if (ok) {
+              setConversations((list) => list.filter((x) => x.id !== c.id));
+              setOpenRow(null);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const empty = !loading && messages.length === 0;
 
   return (
@@ -98,7 +206,7 @@ export default function YourAi() {
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerBtn}>
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
         </Pressable>
-        <Text style={styles.headerTitle}>My Companion</Text>
+        <Text style={styles.headerTitle}>MY COMPANION</Text>
         <Pressable onPress={() => setHistOpen(true)} hitSlop={12} style={styles.headerBtn}>
           <Ionicons name="time-outline" size={21} color={COLORS.ink} />
         </Pressable>
@@ -144,10 +252,16 @@ export default function YourAi() {
         )}
 
         {readingPast ? (
-          <Pressable style={styles.backToNew} onPress={() => { settledBefore.current = 0; setMessages([]); setReadingPast(false); setThreadId(newThreadId()); }}>
+          <Pressable style={styles.backToNew} onPress={() => { settledBefore.current = 0; startNewConversation(); }}>
             <Ionicons name="add" size={16} color={COLORS.taupeBlue} />
             <Text style={styles.backToNewText}>Start a new conversation</Text>
           </Pressable>
+        ) : null}
+
+        {listening || voiceNote ? (
+          <View style={styles.voiceBar}>
+            <Text style={styles.voiceText}>{listening ? 'Listening, hold to keep going' : voiceNote}</Text>
+          </View>
         ) : null}
 
         <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 10) + 10 }]}>
@@ -160,6 +274,17 @@ export default function YourAi() {
             multiline
             editable={!sending}
           />
+          {speechAvailable ? (
+          <Pressable
+            style={[styles.micBtn, listening && styles.micBtnOn]}
+            onPressIn={startListening}
+            onPressOut={stopListening}
+            disabled={sending}
+            hitSlop={8}
+          >
+            <Ionicons name={listening ? 'mic' : 'mic-outline'} size={20} color={listening ? COLORS.bg : COLORS.ink} />
+          </Pressable>
+          ) : null}
           <Pressable style={[styles.sendBtn, (!input.trim() || sending) && styles.sendBtnOff]} onPress={send} disabled={!input.trim() || sending}>
             <Ionicons name="arrow-up" size={20} color={COLORS.bg} />
           </Pressable>
@@ -177,8 +302,14 @@ export default function YourAi() {
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
                 {conversations.map((c) => (
-                  <Pressable
+                  <SwipeRow
                     key={c.id}
+                    id={c.id}
+                    openRow={openRow}
+                    setOpenRow={setOpenRow}
+                    onDelete={() => askDelete(c)}
+                  >
+                  <Pressable
                     style={styles.histRow}
                     onPress={() => {
                       settledBefore.current = c.messages.length;
@@ -194,18 +325,81 @@ export default function YourAi() {
                     </View>
                     <Ionicons name="chevron-forward" size={16} color={COLORS.muted} />
                   </Pressable>
+                  </SwipeRow>
                 ))}
               </ScrollView>
             )}
           </View>
         </View>
       </Modal>
+
+      <CompanionIntro userId={user?.id} />
     </SafeAreaView>
   );
 }
 
 // Warm at the top, clearing before the thread gets going.
 const AI_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
+
+const ACTION_W = 84;
+
+// Swipe to reveal, tap to delete. PanResponder rather than gesture handler,
+// because this list lives inside a Modal, where gesture handler does not
+// reliably receive touches on iOS.
+function SwipeRow({
+  id, openRow, setOpenRow, onDelete, children,
+}: {
+  id: string;
+  openRow: string | null;
+  setOpenRow: (v: string | null) => void;
+  onDelete: () => void;
+  children: any;
+}) {
+  const x = useRef(new Animated.Value(0)).current;
+  const isOpen = useRef(false);
+  // Read at gesture time rather than captured when the responder was built.
+  const claim = useRef<() => void>(() => {});
+  claim.current = () => setOpenRow(id);
+
+  const snap = (to: number) => {
+    isOpen.current = to !== 0;
+    Animated.timing(x, { toValue: to, duration: 180, easing: EASE, useNativeDriver: true }).start();
+  };
+
+  // Another row opened, so this one closes.
+  useEffect(() => {
+    if (openRow !== id && isOpen.current) snap(0);
+  }, [openRow, id]);
+
+  const pan = useRef(
+    PanResponder.create({
+      // Sideways and deliberate, so the list still scrolls.
+      onMoveShouldSetPanResponder: (_e, g) =>
+        Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.6,
+      onPanResponderGrant: () => claim.current(),
+      onPanResponderMove: (_e, g) => {
+        const base = isOpen.current ? -ACTION_W : 0;
+        x.setValue(Math.min(0, Math.max(-ACTION_W, base + g.dx)));
+      },
+      onPanResponderRelease: (_e, g) => {
+        const base = isOpen.current ? -ACTION_W : 0;
+        snap(base + g.dx < -ACTION_W / 2 ? -ACTION_W : 0);
+      },
+      onPanResponderTerminate: () => snap(0),
+    }),
+  ).current;
+
+  return (
+    <View style={styles.swipeWrap}>
+      <Pressable style={styles.swipeAction} onPress={onDelete}>
+        <Ionicons name="trash-outline" size={19} color="#FFFFFF" />
+      </Pressable>
+      <Animated.View style={[styles.swipeFace, { transform: [{ translateX: x }] }]} {...pan.panHandlers}>
+        {children}
+      </Animated.View>
+    </View>
+  );
+}
 
 const THINK_LABELS = ['Thinking', 'Reflecting', 'Sitting with that'];
 
@@ -285,7 +479,7 @@ const styles = StyleSheet.create({
   wash: { position: 'absolute', top: 0, left: 0, right: 0, height: 420 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(232,225,218,0.6)' },
   headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink },
+  headerTitle: { fontSize: 11, letterSpacing: 2.4, color: COLORS.muted },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   thread: { padding: 16, paddingBottom: 24 },
@@ -309,6 +503,10 @@ const styles = StyleSheet.create({
 
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: COLORS.line, backgroundColor: COLORS.bg },
   input: { flex: 1, maxHeight: 120, backgroundColor: COLORS.card, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, fontSize: 15, color: COLORS.ink },
+  micBtn: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
+  micBtnOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
+  voiceBar: { paddingHorizontal: 18, paddingBottom: 8 },
+  voiceText: { fontSize: 12, color: COLORS.muted },
   sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: COLORS.taupeBlue, alignItems: 'center', justifyContent: 'center' },
   sendBtnOff: { opacity: 0.4 },
 
@@ -324,5 +522,9 @@ const styles = StyleSheet.create({
   histRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line },
   histTitle: { fontSize: 15, lineHeight: 21, color: COLORS.ink },
   histWhen: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
+  swipeWrap: { position: 'relative', overflow: 'hidden' },
+  // Sits behind the row and is only seen once the row moves off it.
+  swipeAction: { position: 'absolute', right: 0, top: 0, bottom: 0, width: ACTION_W, backgroundColor: '#8F4A3B', alignItems: 'center', justifyContent: 'center' },
+  swipeFace: { backgroundColor: COLORS.bg },
 });
 
