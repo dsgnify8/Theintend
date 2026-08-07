@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from '@/components/Img';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { SOUNDS, SOUND_CATEGORIES, type Sound } from '@/constants/sounds';
-import { useAppImages } from '@/lib/appImages';
+import * as ImagePicker from 'expo-image-picker';
+import { useAppImages, uploadAppImage } from '@/lib/appImages';
+import { useAuth } from '@/lib/auth';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function SoundsScreen() {
+  const { role } = useAuth();
+  const isAdmin = role === 'admin';
   const router = useRouter();
   const [active, setActive] = useState('All');
 
@@ -43,7 +47,7 @@ export default function SoundsScreen() {
 
         <View style={styles.grid}>
           {visible.map((s) => (
-            <SoundCard key={s.id} sound={s} />
+            <SoundCard key={s.id} sound={s} isAdmin={isAdmin} />
           ))}
         </View>
       </ScrollView>
@@ -51,14 +55,35 @@ export default function SoundsScreen() {
   );
 }
 
-function SoundCard({ sound }: { sound: Sound }) {
+// The same key the library shelf writes to, so an image set in either place
+// shows in both and on the sound's own screen.
+async function pickAndSave(key: string, onBusy: (b: boolean) => void) {
+  const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.7, base64: true });
+  if (res.canceled || !res.assets?.[0]?.base64) return;
+  onBusy(true);
+  try {
+    await uploadAppImage(key, res.assets[0].base64);
+  } catch (e: any) {
+    Alert.alert('Upload failed', e?.message ?? 'Could not save that image.');
+  }
+  onBusy(false);
+}
+
+function SoundCard({ sound, isAdmin }: { sound: Sound; isAdmin: boolean }) {
   const router = useRouter();
-  // Same order as everywhere else: an admin upload wins, the bundled cover is
-  // the fallback, a colour block only when there is neither.
+  // An admin upload wins, the bundled cover is the fallback, a colour block
+  // only when there is neither.
   const appImages = useAppImages();
   const art = appImages[`sound:${sound.id}`] ?? sound.cover ?? null;
+  const [busy, setBusy] = useState(false);
+
   return (
-    <Pressable style={styles.cardWrap} onPress={() => router.push(`/sound/${sound.id}`)}>
+    <Pressable
+      style={styles.cardWrap}
+      onPress={() => router.push(`/sound/${sound.id}`)}
+      onLongPress={isAdmin ? () => pickAndSave(`sound:${sound.id}`, setBusy) : undefined}
+      delayLongPress={400}
+    >
       {art ? (
         <Image source={typeof art === 'string' ? { uri: art } : art} style={styles.cardImg} resizeMode="cover" />
       ) : (
@@ -66,6 +91,9 @@ function SoundCard({ sound }: { sound: Sound }) {
           <Ionicons name="musical-notes-outline" size={20} color="rgba(255,255,255,0.85)" />
         </View>
       )}
+      {busy ? (
+        <View style={styles.cardBusy}><ActivityIndicator color="#FFFFFF" /></View>
+      ) : null}
       <Text style={styles.cardTitle}>{sound.title}</Text>
       <Text style={styles.cardPurpose}>{sound.purpose}</Text>
       <Text style={styles.cardDuration}>{sound.duration}</Text>
@@ -90,6 +118,7 @@ const styles = StyleSheet.create({
   cardWrap: { width: '48%', marginBottom: 22 },
   card: { height: 130, borderRadius: 18, padding: 14, justifyContent: 'flex-start' },
   cardImg: { width: '100%', height: 130, borderRadius: 18 },
+  cardBusy: { position: 'absolute', top: 0, left: 0, right: 0, height: 130, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(43,38,34,0.35)' },
   cardTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink, marginTop: 10 },
   cardPurpose: { fontSize: 13, lineHeight: 18, color: COLORS.muted, marginTop: 4 },
   cardDuration: { fontSize: 12, color: COLORS.muted, marginTop: 6 },

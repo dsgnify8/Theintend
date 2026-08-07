@@ -13,6 +13,7 @@ import { useDraft } from '@/lib/worksheets';
 import { useAuth } from '@/lib/auth';
 import { useAppImages, uploadAppImage } from '@/lib/appImages';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
+import { HEALTH_PROGRAM_AUTHOR, programCountWord } from '@/constants/healthPrograms';
 
 type Practice = { key: string; label: string; line: string; icon: any; color: string; route: string };
 
@@ -130,6 +131,35 @@ export default function LibraryScreen() {
               <View style={styles.featureCta}>
                 <Text style={styles.featureCtaText}>Enter</Text>
                 <Ionicons name="arrow-forward" size={15} color={COLORS.ink} />
+              </View>
+            </View>
+          </Pressable>
+        </View>
+
+        <View style={styles.band}>
+          <Pressable style={styles.hpPanel} onPress={() => router.push('/health-programs')}>
+            <LinearGradient
+              colors={['#2E2721', '#3A322A', '#241F1B']}
+              locations={[0, 0.55, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={['rgba(241,228,190,0.18)', 'rgba(241,228,190,0.03)', 'rgba(241,228,190,0)']}
+              style={styles.hpHalo}
+              pointerEvents="none"
+            />
+            <View style={styles.hpBody}>
+              <Text style={styles.hpEyebrow}>HEALTH PROGRAMS</Text>
+              <Text style={styles.hpTitle}>
+                {programCountWord()} <Text style={styles.hpTitleAccent}>protocols</Text>
+              </Text>
+              <Text style={styles.hpLine}>
+                Structured week by week, for the things that do not resolve on their own. Written
+                by {HEALTH_PROGRAM_AUTHOR}.
+              </Text>
+              <View style={styles.hpCta}>
+                <Text style={styles.hpCtaText}>Open</Text>
+                <Ionicons name="arrow-forward" size={15} color="#241F1B" />
               </View>
             </View>
           </Pressable>
@@ -319,6 +349,15 @@ const styles = StyleSheet.create({
 
   shelfHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   seeAll: { fontSize: 13, color: COLORS.accent },
+  hpPanel: { height: 250, borderRadius: 22, overflow: 'hidden', justifyContent: 'flex-end' },
+  hpHalo: { position: 'absolute', top: 0, left: 0, right: 0, height: 150 },
+  hpBody: { padding: 22 },
+  hpEyebrow: { fontSize: 10, letterSpacing: 3, color: 'rgba(255,255,255,0.55)', marginBottom: 10 },
+  hpTitle: { fontFamily: FONT_SERIF, fontSize: 32, lineHeight: 38, color: '#FFFFFF' },
+  hpTitleAccent: { fontFamily: FONT_ITALIC, color: COLORS.pastel },
+  hpLine: { fontSize: 13, lineHeight: 20, color: 'rgba(255,255,255,0.62)', marginTop: 10 },
+  hpCta: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: COLORS.pastel, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 18, marginTop: 16 },
+  hpCtaText: { fontSize: 13, color: '#241F1B', letterSpacing: 0.3 },
   shelfTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
   shelf: { gap: 16, paddingRight: 20 },
   shelfCard: { width: 142 },

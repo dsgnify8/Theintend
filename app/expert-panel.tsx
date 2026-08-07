@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail } from '@/lib/experts';
@@ -230,9 +230,9 @@ function Screen({ children, router }: { children: any; router: any }) {
   );
 }
 
-function ActionRow({ icon, title, meta, onPress }: { icon: any; title: string; meta: string; onPress: () => void }) {
+function ActionRow({ icon, title, meta, onPress, targetRef, onLayout }: { icon: any; title: string; meta: string; onPress: () => void; targetRef?: any; onLayout?: (e: any) => void }) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
+    <Pressable ref={targetRef} onLayout={onLayout} style={styles.row} onPress={onPress}>
       <View style={styles.rowIcon}><Ionicons name={icon} size={18} color={COLORS.accent} /></View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>{title}</Text>

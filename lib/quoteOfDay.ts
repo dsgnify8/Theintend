@@ -5,11 +5,15 @@
 export const QUOTES: string[] = [
   'The privilege of a lifetime is to become who you truly are',
   'I go where I am loved and bring love where I go',
-  'The blueprint is believing in yourself.',
+  'The blueprint is believing in yourself',
   'Both fear and faith ask you to believe in something you can’t see',
   'What is done with love, is done well',
   'It’s the thoughts we water each day that become the garden we live in',
   'By believing passionately in something that still does not exist, we create it',
+  'The amount of good things in your life depends on your ability to notice them',
+  'Be less impressed and more involved',
+  'Judge your success not by the harvest you reap but by the seeds you plant',
+  'The universe meets you at your level of audacity',
 ];
 
 // The same line all day, the next one tomorrow.

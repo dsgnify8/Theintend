@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
@@ -16,7 +16,7 @@ import { SLOT_HOME_ARTICLES, useFeaturedList } from '@/lib/featured';
 const ADMIN_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 
 const ROLES = ['user', 'expert', 'admin'];
-const PEOPLE_PAGE = 10;
+const PEOPLE_PAGE = 3;
 
 export default function Admin() {
   const router = useRouter();
@@ -45,6 +45,16 @@ export default function Admin() {
   }, [profiles, query]);
 
   const shown = showAll ? filtered : filtered.slice(0, PEOPLE_PAGE);
+
+  // Suggestions for the role field. Nothing until two characters, and nothing
+  // once the address already matches exactly.
+  const emailMatches = useMemo(() => {
+    const q = email.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const list = (profiles as any[]).filter((p) => (p.email || '').toLowerCase().includes(q));
+    if (list.length === 1 && (list[0].email || '').toLowerCase() === q) return [];
+    return list.slice(0, 5);
+  }, [profiles, email]);
   const staff = profiles.filter((p: any) => p.role !== 'user').length;
 
   if (role !== 'admin') {
@@ -81,7 +91,9 @@ export default function Admin() {
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={ADMIN_WASH} style={styles.wash} pointerEvents="none" />
       <BackBar onPress={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.h1}>Admin</Text>
         <Text style={styles.sub}>Everything that runs the platform, in one place.</Text>
 
@@ -123,7 +135,9 @@ export default function Admin() {
           onPress={() => router.push('/admin-featured')}
         />
 
-        <GroupLabel>People</GroupLabel>
+        <View>
+          <GroupLabel>People</GroupLabel>
+        </View>
         <Pressable style={styles.foldHead} onPress={() => setRolesOpen((v) => !v)}>
           <View style={styles.rowIcon}>
             <Ionicons name="key-outline" size={19} color={COLORS.accent} />
@@ -146,9 +160,23 @@ export default function Admin() {
               placeholder="person@email.com"
               placeholderTextColor={COLORS.muted}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="email-address"
               style={styles.input}
             />
+            {emailMatches.length ? (
+              <View style={styles.suggestBox}>
+                {emailMatches.map((m: any) => (
+                  <Pressable key={m.id} style={styles.suggestRow} onPress={() => setEmail(m.email)}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggestEmail}>{m.email}</Text>
+                      {m.full_name ? <Text style={styles.suggestName}>{m.full_name}</Text> : null}
+                    </View>
+                    <Text style={styles.suggestRole}>{m.role}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
             <Text style={[styles.fieldLabel, { marginTop: 14 }]}>Role</Text>
             <View style={styles.roleRow}>
               {ROLES.map((r) => {
@@ -206,13 +234,11 @@ export default function Admin() {
                 </View>
               </Pressable>
             ))}
-            {filtered.length > PEOPLE_PAGE ? (
-              <Pressable onPress={() => setShowAll((v) => !v)} style={styles.moreBtn}>
-                <Text style={styles.moreText}>
-                  {showAll ? 'Show fewer' : `Show all ${filtered.length}`}
-                </Text>
-              </Pressable>
-            ) : null}
+            <Pressable onPress={() => router.push('/admin-people')} style={styles.moreBtn}>
+              <Text style={styles.moreText}>
+                {`See all ${profiles.length}`}
+              </Text>
+            </Pressable>
           </>
         )}
 
@@ -225,6 +251,7 @@ export default function Admin() {
           onPress={() => router.push('/admin-payouts')}
         />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -233,9 +260,9 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   return <Text style={styles.groupLabel}>{String(children).toUpperCase()}</Text>;
 }
 
-function Row({ icon, title, meta, count, onPress }: { icon: any; title: string; meta: string; count?: string | null; onPress: () => void }) {
+function Row({ icon, title, meta, count, onPress, targetRef, onLayout }: { icon: any; title: string; meta: string; count?: string | null; onPress: () => void; targetRef?: any; onLayout?: (e: any) => void }) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
+    <Pressable ref={targetRef} onLayout={onLayout} style={styles.row} onPress={onPress}>
       <View style={styles.rowIcon}><Ionicons name={icon} size={19} color={COLORS.accent} /></View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>{title}</Text>
@@ -280,6 +307,11 @@ const styles = StyleSheet.create({
 
   fieldLabel: { fontSize: 13, color: COLORS.muted, marginBottom: 6 },
   input: { backgroundColor: COLORS.bg, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 13, paddingHorizontal: 14, fontSize: 15, color: COLORS.ink },
+  suggestBox: { backgroundColor: COLORS.bg, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, marginTop: 8, overflow: 'hidden' },
+  suggestRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 13, borderBottomWidth: 1, borderBottomColor: COLORS.line },
+  suggestEmail: { fontSize: 14, color: COLORS.ink },
+  suggestName: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  suggestRole: { fontSize: 11, color: COLORS.muted },
   roleRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   roleChip: { paddingVertical: 9, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
   roleChipOn: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },

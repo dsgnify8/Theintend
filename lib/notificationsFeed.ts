@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { bookingStartMs, useMyBookings } from './bookings';
 import { useMyPackages } from './packages';
+import { useAuth } from './auth';
 
 export const NOTIFS_SEEN_KEY = 'intend.notifs.seen.v1';
 const SEEN_CAP = 200;
@@ -28,6 +29,7 @@ function bookingRoute(b: any): string {
 }
 
 export function useNotificationFeed() {
+  const { role } = useAuth();
   const { items: bookings, reload: reloadBookings } = useMyBookings();
   const { items: packages, reload: reloadPackages } = useMyPackages();
   const [seen, setSeen] = useState<string[] | null>(null);
@@ -48,6 +50,19 @@ export function useNotificationFeed() {
   const items = useMemo<FeedItem[]>(() => {
     const out: FeedItem[] = [];
     const now = Date.now();
+
+    if (role === 'expert' || role === 'admin') {
+      const expert = role === 'expert';
+      out.push({
+        id: `role:guide:${role}`,
+        icon: expert ? 'briefcase-outline' : 'grid-outline',
+        title: expert ? 'You are now an expert' : 'You are now an admin',
+        body: expert
+          ? 'Press here to go to your expert panel.'
+          : 'Press here to go to your admin panel.',
+        route: expert ? '/expert-panel' : '/admin',
+      });
+    }
 
     // Sessions still ahead of us, soonest first.
     const upcoming = bookings
@@ -85,7 +100,7 @@ export function useNotificationFeed() {
     }
 
     return out;
-  }, [bookings, packages]);
+  }, [bookings, packages, role]);
 
   const unread = useMemo(() => {
     if (seen === null) return 0;

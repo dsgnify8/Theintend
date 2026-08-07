@@ -18,6 +18,11 @@ export const COLORS = {
   taupe: '#6B6157',
   // Taupe carried toward blue, for marks that sit on the sky images.
   taupeBlue: '#6E7B85',
+  // A dark sage for titles on the library shelf, so the books read as their
+  // own thing without leaving the palette.
+  sage: '#5F6B57',
+  // For the quote on the homepage. Warmer than accent and darker than pastel.
+  gold: '#826D37',
   // The lighter end, for gradients on buttons.
   taupeBlueLift: '#8B969E',
   // Soft yellow for the worksheets. Ink type on it, not cream.

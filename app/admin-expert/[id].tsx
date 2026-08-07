@@ -68,8 +68,16 @@ export default function AdminExpertEdit() {
     try {
       const url = await uploadExpertImage(expert.id, res.assets[0].base64);
       setPhoto(url);
-    } catch (e) {
-      setStatus('Photo upload failed.');
+
+      // Written straight away rather than waiting for Save changes. Holding it
+      // in state meant a photo could look uploaded, then be gone on leaving
+      // the screen, which is what happened before.
+      const { error } = await updateExpert(expert.id, { photo: url });
+      setStatus(error ? `Photo uploaded but not saved: ${error.message}` : 'Photo saved. It is live everywhere now.');
+    } catch (e: any) {
+      // The real reason, not a generic line. A permissions problem and a
+      // network problem need different answers.
+      setStatus(`Photo upload failed: ${e?.message ?? 'unknown error'}`);
     }
     setUploading(false);
   };

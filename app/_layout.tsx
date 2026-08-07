@@ -25,6 +25,11 @@ import {
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond';
 import { PinyonScript_400Regular } from '@expo-google-fonts/pinyon-script';
+import { startIap, stopIap } from '@/lib/iap';
+import { wireProgramPurchases } from '@/lib/programs';
+import * as Notifications from 'expo-notifications';
+import { scheduleArticleDigest } from '@/lib/articleDigest';
+import { useArticles } from '@/lib/articles';
 
 // Keep the native splash up until the app is ready, then lift it. No animated
 // intro: the app opens straight to the tabs. The login screen is shown once, on
@@ -51,6 +56,45 @@ function paramsFromUrl(url: string): Record<string, string> {
 }
 
 export default function RootLayout() {
+  const digestRouter = useRouter();
+  const { items: digestArticles } = useArticles();
+
+  // Any notification carrying a route goes there when tapped.
+  useEffect(() => {
+    const open = (res: any) => {
+      const route = res?.notification?.request?.content?.data?.route;
+      if (typeof route === 'string' && route.startsWith('/')) {
+        setTimeout(() => { try { digestRouter.push(route as any); } catch {} }, 60);
+      }
+    };
+
+    // One that arrives while the app is running.
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
+
+    // And one that opened the app from cold, which has already been delivered
+    // by the time we start listening.
+    Notifications.getLastNotificationResponseAsync().then((res) => { if (res) open(res); });
+
+    return () => { sub.remove(); };
+  }, [digestRouter]);
+
+  // A month of them, refreshed whenever the app opens, so the newest article is
+  // the one that comes up next.
+  useEffect(() => {
+    if (!digestArticles?.length) return;
+    scheduleArticleDigest(
+      digestArticles.slice(0, 12).map((a: any) => ({ id: a.id, title: a.title, excerpt: a.excerpt })),
+    );
+  }, [digestArticles?.length]);
+
+  // Before anyone can buy, and early enough to catch a purchase that finished
+  // while the app was closed.
+  useEffect(() => {
+    wireProgramPurchases();
+    startIap();
+    return () => { stopIap(); };
+  }, []);
+
   const colorScheme = useColorScheme();
   const router = useRouter();
   usePushRegistration();

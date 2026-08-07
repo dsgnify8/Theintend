@@ -13,7 +13,7 @@ import { LIBRARY } from '@/constants/library';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_ITALIC, FONT_SANS, FONT_SERIF } from '@/constants/brand';
 import { useArticles } from '@/lib/articles';
-import { type Booking, useBookPct, useBookings, useLastRead, useLiked, useProgress, useReadStreak, useReads, useSaved, useUpcomingBookings, useWorksheetsDone } from '@/lib/store';
+import { type Booking, useBookPct, useBookings, useLastProgram, useLastRead, useLiked, useProgramPct, useProgress, useReadStreak, useReads, useSaved, useUpcomingBookings, useWorksheetsDone } from '@/lib/store';
 import { useAllJournalEntries } from '@/lib/journal';
 import { canChangeTime, getBookingById, needsNewTime, useHydrateBookings, useMyBookings } from '@/lib/bookings';
 import { useMyPackages } from '@/lib/packages';
@@ -115,6 +115,8 @@ export default function YouScreen() {
   const [uploading, setUploading] = useState(false);
 
   const bookPcts = useBookPct();
+  const lastProgram = useLastProgram();
+  const programPcts = useProgramPct();
   const savedIds = useSaved();
   const likedIds = useLiked();
   const reads = useReads();
@@ -165,8 +167,21 @@ export default function YouScreen() {
     if (j) {
       out.push({ key: 'journal', kind: 'JOURNAL', title: pretty(j.categoryId), meta: `Last written ${shortDate(j.updatedAt || j.createdAt)}`, route: `/journaling/${j.categoryId}` });
     }
+    if (lastProgram) {
+      const pp = Math.round((programPcts[lastProgram.id] ?? 0) * 100);
+      out.push({
+        key: 'prog',
+        kind: 'PROGRAM',
+        title: lastProgram.title,
+        meta: pp > 0 ? `${pp}% through` : 'Pick up where you stopped',
+        route: `/health-program/${lastProgram.id}`,
+        image: null,
+        pct: pp / 100,
+      });
+    }
+
     return out;
-  }, [articles, lastReadId, progressMap, lastRead, journalEntries, bookPcts]);
+  }, [articles, lastReadId, progressMap, lastRead, journalEntries, bookPcts, lastProgram, programPcts]);
 
   const past = useMemo(() => {
     const now = Date.now();
@@ -838,7 +853,7 @@ const styles = StyleSheet.create({
   resumeTrack: { height: 2, borderRadius: 1, backgroundColor: COLORS.line, overflow: 'hidden', marginBottom: 9 },
   resumeTrackFill: { height: 2, backgroundColor: COLORS.ink },
   resumeKind: { fontSize: 9, letterSpacing: 1.8, color: COLORS.accent, marginBottom: 8 },
-  resumeTitle: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 22, color: COLORS.ink },
+  resumeTitle: { fontFamily: FONT_SERIF, fontSize: 14, lineHeight: 19, color: COLORS.ink, marginBottom: 6 },
   resumeMeta: { fontSize: 12, color: COLORS.muted },
 
   aiCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.ink, borderRadius: 20, paddingVertical: 18, paddingHorizontal: 18 },

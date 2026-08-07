@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth';
 import { snippetOfDay } from '@/constants/ebookSnippets';
 import { LIBRARY } from '@/constants/library';
 import { quoteOfDay } from '@/lib/quoteOfDay';
+import { HEALTH_PROGRAMS, HEALTH_PROGRAM_PRICE_USD } from '@/constants/healthPrograms';
 
 // Hours 0 to 4 are late night rather than early morning, so they read as
 // evening. Morning starts at 5.
@@ -401,6 +402,11 @@ export default function HomeScreen() {
                 ))}
               </View>
               <View style={styles.bookBody}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']}
+                  style={styles.bookGloss}
+                  pointerEvents="none"
+                />
                 <View style={styles.bookMetaRow}>
                   <Text style={styles.bookTag}>{b.tag}</Text>
                   <Text style={styles.bookTime}>{b.time}</Text>
@@ -449,6 +455,50 @@ export default function HomeScreen() {
           {snippetBook ? <Text style={styles.snippetBook}>{snippetBook.title}</Text> : null}
         </Pressable>
 
+        <View style={styles.hpHead}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.hpLabel}>HEALTH PROGRAMS</Text>
+            <Text style={styles.featureHead}>
+              Followed <Text style={styles.featureHeadItalic}>week by week</Text>
+            </Text>
+          </View>
+          <Pressable onPress={() => router.push('/health-programs')} hitSlop={8}>
+            <Text style={styles.hpAll}>All {HEALTH_PROGRAMS.length} {'\u203A'}</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hpRow}>
+          {HEALTH_PROGRAMS.map((hp, i) => (
+            <Pressable key={hp.id} style={styles.hpCard} onPress={() => router.push(`/health-program/${hp.id}`)}>
+              <LinearGradient
+                colors={['#2E2721', '#3A322A', '#241F1B']}
+                locations={[0, 0.6, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={['rgba(241,228,190,0.2)', 'rgba(241,228,190,0.04)', 'rgba(241,228,190,0)']}
+                style={styles.hpCardHalo}
+                pointerEvents="none"
+              />
+
+              {/* Title at the top here, where everything else in the app puts
+                  it at the foot of an image. */}
+              <View style={styles.hpCardTop}>
+                <Text style={styles.hpNum}>{String(i + 1).padStart(2, '0')}</Text>
+                <Text style={styles.hpCardTitle} numberOfLines={3}>{hp.title}</Text>
+              </View>
+
+              <View style={{ flex: 1 }} />
+              <View style={styles.hpCardRule} />
+              <Text style={styles.hpCardFocus} numberOfLines={2}>{hp.focus}</Text>
+              <View style={styles.hpCardFoot}>
+                <Text style={styles.hpCardPrice}>${HEALTH_PROGRAM_PRICE_USD}</Text>
+                <Text style={styles.hpCardWeeks}>{hp.weeks}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
         <Pressable style={styles.quoteCard} onPress={() => router.push('/affirmations')}>
           <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
           <Text style={styles.quoteMark}>{'\u201C'}</Text>
@@ -495,6 +545,21 @@ const styles = StyleSheet.create({
   pctText: { fontSize: 12, color: COLORS.muted, marginTop: 8 },
   section: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
   featureHead: { fontFamily: FONT_SERIF, fontSize: 24, lineHeight: 30, color: COLORS.ink, marginTop: 4 },
+  featureHeadItalic: { fontFamily: FONT_ITALIC, color: COLORS.ink },
+  hpHead: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginTop: 34 },
+  hpLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 6 },
+  hpAll: { fontSize: 13, color: COLORS.ink },
+  hpRow: { gap: 12, paddingVertical: 16, paddingRight: 8 },
+  hpCard: { width: 208, height: 198, borderRadius: 20, overflow: 'hidden', padding: 18 },
+  hpCardHalo: { position: 'absolute', top: 0, left: 0, right: 0, height: 110 },
+  hpCardTop: { gap: 8 },
+  hpNum: { fontFamily: FONT_SERIF, fontSize: 12, color: COLORS.pastel, opacity: 0.75 },
+  hpCardTitle: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 24, color: '#FFFFFF' },
+  hpCardRule: { height: 1, backgroundColor: 'rgba(255,255,255,0.14)', marginBottom: 10 },
+  hpCardFocus: { fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.55)' },
+  hpCardFoot: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 10 },
+  hpCardPrice: { fontSize: 15, color: COLORS.pastel },
+  hpCardWeeks: { fontSize: 11, color: 'rgba(255,255,255,0.45)' },
   featureSub: { fontSize: 14, color: COLORS.muted, marginTop: 6, marginBottom: 16 },
   bookRail: { marginBottom: 34 },
   bookCard: { width: CARD_W, backgroundColor: COLORS.cardMilk, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, overflow: 'hidden' },
@@ -502,11 +567,12 @@ const styles = StyleSheet.create({
   trackSeg: { flex: 1, backgroundColor: COLORS.line },
   trackSegOn: { backgroundColor: COLORS.ink },
   bookImage: { width: '100%', height: 168, backgroundColor: COLORS.accentSoft },
-  bookBody: { padding: 18, backgroundColor: COLORS.cardMilk },
+  bookBody: { padding: 18, backgroundColor: COLORS.cardMilk, overflow: 'hidden' },
+  bookGloss: { position: 'absolute', top: 0, left: 0, right: 0, height: 64 },
   bookMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   bookTag: { fontSize: 9, letterSpacing: 2, color: COLORS.accent },
   bookTime: { fontSize: 12, color: COLORS.muted },
-  bookTitle: { fontFamily: FONT_SERIF, fontSize: 22, lineHeight: 28, color: COLORS.ink },
+  bookTitle: { fontFamily: FONT_SERIF, fontSize: 22, lineHeight: 28, color: COLORS.sage },
   bookBlurb: { fontSize: 14, lineHeight: 21, color: COLORS.ink, opacity: 0.78, marginTop: 8 },
   featuredRow: { gap: 14, paddingRight: 8 },
   readCover: { height: 150, borderRadius: 16, overflow: 'hidden', justifyContent: 'flex-end' },
@@ -535,10 +601,10 @@ const styles = StyleSheet.create({
   snippetBook: { fontSize: 11, letterSpacing: 0.6, color: COLORS.muted, marginTop: 10 },
 
   quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 26, paddingHorizontal: 22, marginTop: 18, alignItems: 'center' },
-  quoteKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted },
-  quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.accent, opacity: 0.14, marginTop: 4 },
-  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.taupe, textAlign: 'center', marginTop: 2 },
+  quoteKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, textAlign: 'center', alignSelf: 'stretch' },
+  quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.gold, opacity: 0.18, marginTop: 4 },
+  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.gold, textAlign: 'center', marginTop: 2, alignSelf: 'stretch' },
   quoteRule: { width: 34, height: 1, backgroundColor: COLORS.line, marginTop: 20 },
-  quoteCta: { fontSize: 13, color: COLORS.accent, marginTop: 16 },
+  quoteCta: { fontSize: 13, color: COLORS.accent, marginTop: 16, textAlign: 'center', alignSelf: 'stretch' },
 });
 

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acne &amp; Skin Restoration Protocol | The Intend</title>
+<script>document.documentElement.className+=' js';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --paper:#F4F3F1;
+  --panel:#EBE9E6;
+  --panel-2:#E3E1DD;
+  --ink:#17191A;
+  --ink-2:#4E5254;
+  --muted:#8B8D8E;
+  --rule:#D6D4D0;
+  --hair:#C9C7C2;
+  --accent:#9E4726;
+  --accent-2:#BC6742;
+  --tint:#F5E4DA;
+  --tint-2:#FAEFE8;
+  --serif:'Fraunces',Georgia,serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --rail:150px;
+  --pad:76px;
+}
+
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:#DDDBD7;
+  font-family:var(--sans);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  padding:26px 14px 60px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─────────── NAV ─────────── */
+.nav{
+  position:sticky;top:0;z-index:300;
+  max-width:1000px;margin:0 auto;
+  background:var(--ink);
+  display:flex;align-items:center;gap:2px;
+  padding:0 14px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.nav::-webkit-scrollbar{display:none}
+.nav-brand{
+  font-size:8.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--paper);padding-right:13px;margin-right:4px;white-space:nowrap;
+  border-right:1px solid #ffffff22;line-height:44px;
+}
+.nav a{
+  font-size:9px;font-weight:500;letter-spacing:.085em;text-transform:uppercase;
+  color:#B8BDBC;text-decoration:none;white-space:nowrap;
+  padding:0 8px;line-height:44px;
+  border-bottom:2px solid transparent;
+  transition:color .18s,border-color .18s;
+}
+.nav a:hover,.nav a:focus-visible{color:var(--paper);border-bottom-color:var(--accent-2)}
+
+/* ─────────── SHELL ─────────── */
+.doc{max-width:1000px;margin:0 auto;background:var(--paper)}
+
+section{
+  display:grid;
+  grid-template-columns:var(--rail) 1fr;
+  border-top:1px solid var(--rule);
+  padding:56px var(--pad) 60px 0;
+}
+.rail{
+  padding-left:var(--pad);
+  display:flex;flex-direction:column;gap:16px;
+  position:relative;
+}
+.rail::after{
+  content:'';position:absolute;left:var(--pad);top:74px;bottom:-60px;
+  width:1px;background:var(--hair);
+}
+section:last-of-type .rail::after{display:none}
+.rail-num{
+  font-size:10px;font-weight:600;letter-spacing:.16em;
+  color:var(--accent);font-variant-numeric:tabular-nums;
+}
+.rail-glyph{width:34px;height:34px;color:var(--accent);position:relative;z-index:2;background:var(--paper);padding-top:2px}
+.rail-glyph svg{display:block;width:32px;height:32px}
+.body-col{min-width:0}
+
+/* ─────────── TYPE ─────────── */
+.eyebrow{
+  font-size:9.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);
+}
+.eyebrow-accent{color:var(--accent)}
+h1,h2,h3{font-family:var(--serif);font-weight:300;letter-spacing:-.015em;line-height:1.12}
+h2{font-size:34px;margin:8px 0 0}
+h3{font-size:19px;font-weight:400;letter-spacing:-.01em}
+.lede{font-size:14.5px;line-height:1.75;color:var(--ink-2);font-weight:300;max-width:60ch}
+p.txt{font-size:13.5px;line-height:1.75;color:var(--ink-2);font-weight:300}
+.rule{height:1px;background:var(--rule);margin:22px 0}
+.rule-tight{height:1px;background:var(--rule);margin:14px 0}
+.rule-ink{height:1px;background:var(--ink);opacity:.85;margin:20px 0}
+
+/* ─────────── COVER ─────────── */
+.cover{
+  display:block;border-top:none;
+  padding:0;
+}
+.cover-inner{padding:78px var(--pad) 66px}
+.cover-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+.cover-mark{width:158px;height:158px;color:var(--accent);flex-shrink:0;margin-top:6px}
+.cover-mark svg{width:100%;height:100%;display:block}
+h1{font-size:52px;font-weight:300;line-height:1.06;margin:30px 0 0;max-width:15ch}
+h1 em{font-style:italic;font-weight:300;color:var(--accent)}
+.cover-sub{
+  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);margin-top:20px;
+}
+.cover-body{max-width:62ch;font-size:14.5px;line-height:1.8;color:var(--ink-2);font-weight:300;margin-top:26px}
+
+.meta-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);
+  margin-top:40px;
+}
+.meta{padding:18px 22px 20px;border-right:1px solid var(--rule)}
+.meta:last-child{border-right:none}
+.meta-k{font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px}
+.meta-v{font-family:var(--serif);font-size:23px;font-weight:400;line-height:1.15;display:block}
+.meta-v small{font-family:var(--sans);font-size:11px;font-weight:400;color:var(--ink-2);display:block;margin-top:5px;letter-spacing:.01em}
+
+/* ─────────── TIMELINE ─────────── */
+.tl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:20px;padding-bottom:6px}
+.tl-wrap svg{display:block;min-width:700px;width:100%;height:auto}
+.tl-key{display:flex;flex-wrap:wrap;gap:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.tl-key div{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink-2);font-weight:400}
+.sw{width:26px;height:11px;flex-shrink:0}
+.sw-a{background:var(--tint);border:1px solid var(--accent)}
+.sw-b{background:#E7C3AD;border:1px solid var(--accent);
+  background-image:repeating-linear-gradient(90deg,transparent,transparent 7px,#9E472660 7px,#9E472660 8px)}
+.sw-c{background:transparent;border:1px dashed var(--accent)}
+.scroll-hint{display:none;font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:10px}
+
+/* ─────────── LISTS / COLUMNS ─────────── */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:24px;border-top:1px solid var(--ink)}
+.col{padding:20px 24px 22px 0}
+.col+.col{padding-left:28px;border-left:1px solid var(--rule)}
+.col-head{display:flex;align-items:baseline;gap:9px;margin-bottom:14px}
+.col-head .eyebrow{font-size:9.5px}
+.tag-no,.tag-yes{
+  font-size:8.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  padding:2px 7px;border-radius:2px;
+}
+.tag-no{background:var(--ink);color:var(--paper)}
+.tag-yes{background:var(--accent);color:#fff}
+
+ul.clean{list-style:none}
+ul.clean li{
+  font-size:13px;line-height:1.5;color:var(--ink-2);font-weight:400;
+  padding:7px 0 7px 18px;position:relative;border-bottom:1px solid #DFDDD9;
+}
+ul.clean li:last-child{border-bottom:none}
+ul.clean li::before{
+  content:'';position:absolute;left:0;top:14px;
+  width:7px;height:1px;background:var(--accent);
+}
+ul.clean li.strike::before{background:var(--ink)}
+ul.clean ul{list-style:none;margin-top:6px}
+ul.clean ul li{font-size:12px;padding:3px 0 3px 16px;border-bottom:none;color:var(--muted)}
+ul.clean ul li::before{width:4px;top:11px;background:var(--hair)}
+
+.note{
+  background:var(--tint-2);border-left:2px solid var(--accent);
+  padding:13px 16px;margin-top:20px;
+  font-size:12.5px;line-height:1.6;color:var(--ink-2);font-weight:400;
+}
+.note b{font-weight:600;color:var(--ink)}
+
+/* ─────────── ITEM CARDS ─────────── */
+.items{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);margin-top:24px;border:1px solid var(--rule)}
+.item{background:var(--paper);padding:16px 18px 17px;display:flex;flex-direction:column}
+.item-name{font-family:var(--serif);font-size:17px;font-weight:400;line-height:1.2;letter-spacing:-.01em}
+.item-name span{font-family:var(--sans);font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.06em;display:block;margin-top:4px}
+.item-desc{font-size:12px;line-height:1.6;color:var(--ink-2);font-weight:300;margin-top:8px;flex:1}
+.item-dose{
+  display:inline-flex;align-items:baseline;gap:6px;margin-top:12px;
+  padding-top:10px;border-top:1px solid #DFDDD9;
+}
+.dose-n{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1}
+.dose-u{font-size:9.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.item-mand{
+  font-size:8.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:#fff;background:var(--accent);padding:2px 7px;border-radius:2px;
+  align-self:flex-start;margin-bottom:9px;
+}
+
+.blank{background:var(--paper)}
+/* three-across compact grid */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);margin-top:24px;border:1px solid var(--rule)}
+.g3{background:var(--paper);padding:14px 16px 15px}
+.g3-name{font-family:var(--serif);font-size:15px;font-weight:400;line-height:1.25;letter-spacing:-.01em}
+.g3-desc{font-size:11.5px;line-height:1.55;color:var(--ink-2);font-weight:300;margin-top:6px}
+.g3-desc ul{list-style:none;margin-top:5px}
+.g3-desc li{padding-left:11px;position:relative;line-height:1.5}
+.g3-desc li::before{content:'';position:absolute;left:0;top:9px;width:5px;height:1px;background:var(--accent)}
+
+/* vitamins panel */
+.vit{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);margin-top:24px;border:1px solid var(--rule)}
+.v{background:var(--paper);padding:13px 14px;font-size:12.5px;color:var(--ink);font-weight:400;line-height:1.4}
+.v small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:4px;line-height:1.5}
+.v.wide{grid-column:span 2}
+
+/* closing checklist */
+.final{list-style:none;margin-top:24px;border-top:1px solid var(--ink)}
+.final li{
+  display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;
+  padding:15px 0;border-bottom:1px solid var(--rule);
+  font-size:13.5px;line-height:1.6;color:var(--ink-2);font-weight:300;
+}
+.final li b{font-weight:500;color:var(--ink)}
+.final-n{
+  font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--accent);
+  font-variant-numeric:tabular-nums;padding-top:3px;
+}
+
+/* footer */
+.foot{
+  border-top:1px solid var(--ink);
+  padding:26px var(--pad) 34px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+}
+.foot-mark{font-size:9.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--ink)}
+.foot-note{font-size:10.5px;line-height:1.6;color:var(--muted);font-weight:300;max-width:56ch}
+
+/* ─────────── REVEAL ─────────── */
+.js .rv{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.js .rv.in{opacity:1;transform:none}
+
+/* ─────────── RESPONSIVE ─────────── */
+@media(max-width:860px){
+  :root{--pad:44px;--rail:118px}
+  h1{font-size:42px}
+  h2{font-size:29px}
+  .cover-mark{width:118px;height:118px}
+}
+@media(max-width:680px){
+  :root{--pad:22px}
+  body{padding:0;background:var(--paper)}
+  .nav{padding:0 12px}
+  .nav-brand{font-size:8.5px;padding-right:12px;line-height:40px}
+  .nav a{line-height:40px;font-size:9px;padding:0 9px}
+  section{grid-template-columns:1fr;padding:34px var(--pad) 38px}
+  .rail{padding-left:0;flex-direction:row;align-items:center;gap:12px;margin-bottom:14px}
+  .rail::after{display:none}
+  .rail-glyph{width:28px;height:28px;padding:0}
+  .rail-glyph svg{width:26px;height:26px}
+  .cover-inner{padding:40px var(--pad) 36px}
+  .cover-top{flex-direction:column-reverse;align-items:flex-start;gap:18px}
+  .cover-mark{width:76px;height:76px}
+  h1{font-size:33px;margin-top:20px;max-width:none}
+  h2{font-size:26px}
+  .cover-body,.lede{font-size:14px}
+  .meta-strip{grid-template-columns:1fr;margin-top:28px}
+  .meta{border-right:none;border-bottom:1px solid var(--rule);padding:14px 0 15px}
+  .meta:last-child{border-bottom:none}
+  .meta-v{font-size:20px}
+  .two{grid-template-columns:1fr;margin-top:18px}
+  .col{padding:16px 0 18px}
+  .col+.col{padding-left:0;border-left:none;border-top:1px solid var(--rule)}
+  .items{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr}
+  .items .blank,.grid3 .blank{display:none}
+  .vit{grid-template-columns:1fr 1fr}
+  .v.wide{grid-column:span 2}
+  .scroll-hint{display:block}
+  .tl-key{gap:12px 18px}
+  .foot{padding:22px var(--pad) 30px}
+  .final li{grid-template-columns:26px 1fr;gap:10px;font-size:13px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rv{opacity:1!important;transform:none!important;transition:none!important}
+  *{animation:none!important}
+}
+
+@media print{
+  body{background:#fff;padding:0}
+  .nav,.scroll-hint{display:none}
+  .doc{max-width:none}
+  section{page-break-inside:avoid;border-top:1px solid #ccc}
+  .js .rv{opacity:1!important;transform:none!important}
+}
+
+/* ─────────── PEPTIDE SPEC ROW ─────────── */
+.spec{display:flex;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid #DFDDD9}
+.spec>div{padding-right:18px;margin-right:18px;border-right:1px solid var(--rule)}
+.spec>div:last-child{border-right:none;margin-right:0;padding-right:0}
+.spec-v{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--accent);display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.spec-k{font-size:8.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:block;margin-top:5px}
+/* ─────────── FORMULARY ─────────── */
+.formulary{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);margin-top:24px;border:1px solid var(--rule)}
+.f{background:var(--paper);padding:13px 14px;font-size:12.5px;color:var(--ink);font-weight:400;line-height:1.4}
+.f small{display:block;font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5}
+.f.blank{background:var(--paper)}
+/* ─────────── GATE ─────────── */
+.gate{border:1px solid var(--accent);margin-top:24px;background:var(--tint-2)}
+.gate-head{background:var(--accent);color:#fff;padding:10px 20px;font-size:9.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.gate-head em{font-style:normal;opacity:.72;font-weight:500}
+.gate-body{padding:18px 22px 20px}
+.labs{display:grid;grid-template-columns:repeat(3,1fr);gap:0 24px}
+.lab{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #00000012;font-size:12.5px;color:var(--ink);font-weight:400}
+.lab i{width:11px;height:11px;border:1px solid var(--accent);flex-shrink:0;display:block}
+.lab em{font-style:normal;color:var(--muted);font-size:11px}
+/* ─────────── RHYTHM ─────────── */
+.rhythm-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:22px}
+.rhythm-wrap svg{display:block;min-width:620px;width:100%;height:auto}
+.two-col-list{column-count:2;column-gap:44px}
+.two-col-list li{break-inside:avoid}
+@media(max-width:860px){.formulary{grid-template-columns:repeat(3,1fr)}.labs{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){
+  .formulary{grid-template-columns:1fr 1fr}.labs{grid-template-columns:1fr}
+  .gate-body{padding:16px 16px 18px}.two-col-list{column-count:1}
+  .spec>div{padding-right:14px;margin-right:14px}
+}
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">The Intend</span>
+  <a href="#top">Overview</a><a href="#timeline">Timeline</a><a href="#peptides">Peptides</a><a href="#gut">Gut</a>
+  <a href="#liver">Liver &amp; Detox</a><a href="#skin">Skin</a><a href="#hormonal">Hormonal</a>
+  <a href="#anti">Anti-Inflammatory</a><a href="#nutrition">Nutrition</a><a href="#lifestyle">Lifestyle</a><a href="#iv">IV Therapy</a>
+</nav>
+
+<div class="doc">
+
+<header class="cover" id="top">
+  <div class="cover-inner">
+    <div class="cover-top">
+      <div>
+        <p class="eyebrow eyebrow-accent">Program Nine</p>
+        <h1>Acne &amp; <em>Skin<br>Restoration</em><br>Protocol</h1>
+        <p class="cover-sub">Comprehensive Gut&ndash;Skin&ndash;Hormonal Support Program</p>
+      </div>
+      <div class="cover-mark" aria-hidden="true">
+        <svg viewBox="0 0 140 140" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round">
+          <circle cx="70" cy="70" r="54" opacity=".18"/>
+          <circle cx="70" cy="70" r="42" opacity=".28"/>
+          <path d="M26 48 C44 42 58 52 74 46 C90 40 106 50 114 47"/>
+          <path d="M26 60 C44 55 58 64 74 58 C90 52 106 62 114 59" opacity=".45"/>
+          <path d="M28 96 C46 92 60 100 76 95 C92 90 104 98 112 95" opacity=".3"/>
+          <path d="M58 51 C55 66 58 80 63 88"/>
+          <path d="M70 48 C67 64 70 78 75 86"/>
+          <path d="M63 88 C63 94 75 94 75 86"/>
+          <circle cx="69" cy="90" r="2.6" fill="currentColor" stroke="none" opacity=".45"/>
+          <g opacity=".45">
+            <path d="M34 74 C40 70 44 78 50 74"/><path d="M84 72 C90 68 94 76 100 72"/>
+            <path d="M36 86 C42 82 46 90 52 86"/><path d="M82 84 C88 80 92 88 98 84"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <p class="cover-body"><b style="font-weight:500;color:var(--ink)">Goal.</b> Support the gut&ndash;skin axis, reduce inflammation, improve skin healing, collagen synthesis, microbiome balance, liver detoxification and hormonal balance.</p>
+
+    <div class="meta-strip">
+      <div class="meta"><span class="meta-k">Minimum duration</span><span class="meta-v">8 weeks<small>Full peptide course</small></span></div>
+      <div class="meta"><span class="meta-k">Optimal duration</span><span class="meta-v">12&#8211;16 weeks<small>With reassessment</small></span></div>
+      <div class="meta"><span class="meta-k">Daily rhythm</span><span class="meta-v">16:8, two meals<small>No sugar &middot; no gluten &middot; no cow dairy</small></span></div>
+    </div>
+  </div>
+</header>
+
+<section id="timeline">
+  <div class="rail"><span class="rail-num">01</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+  <line x1="3" y1="9" x2="29" y2="9"/><line x1="3" y1="16" x2="24" y2="16"/><line x1="3" y1="23" x2="20" y2="23"/>
+  <circle cx="29" cy="9" r="1.8" fill="currentColor" stroke="none"/><circle cx="24" cy="16" r="1.8" fill="currentColor" stroke="none"/>
+  <circle cx="20" cy="23" r="1.8" fill="currentColor" stroke="none"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">The Program at a Glance</p>
+    <h2>How the weeks are structured</h2>
+    <div class="rule"></div>
+    <p class="lede">Unlike the other protocols, the peptides here run to different lengths, from a ten-day Epitalon course to ten weeks of GHK-Cu. Everything else runs daily. Week 8 is the minimum; weeks 9&ndash;16 are the optimal extension, with reassessment.</p>
+    <div class="tl-wrap"><svg viewBox="0 0 1040 546" role="img" aria-label="Sixteen-week timeline showing each peptide course length and the daily support elements">
+        <defs><pattern id="courseFill" width="24" height="14" patternUnits="userSpaceOnUse">
+          <rect width="24" height="14" fill="#E7C3AD"/><line x1="0" y1="0" x2="0" y2="14" stroke="#9E4726" stroke-width="1" opacity=".45"/>
+        </pattern></defs>
+        <text x="240" y="26" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#9E4726">WEEKS 1&#8211;8 &middot; MINIMUM COURSE</text>
+        <text x="634" y="26" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#8B8D8E">9&#8211;16 &middot; OPTIMAL, WITH REASSESSMENT</text>
+        <line x1="240" y1="34" x2="624" y2="34" stroke="#9E4726" stroke-width="1.4"/>
+        <line x1="624" y1="34" x2="1008" y2="34" stroke="#8B8D8E" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="0" y="66" font-family="Inter,sans-serif" font-size="9.5" font-weight="600" letter-spacing="2" fill="#8B8D8E">WEEK</text>
+        <g font-family="Inter,sans-serif" font-size="9.5" text-anchor="middle"><text x="264" y="66" fill="#4E5254">1</text><text x="312" y="66" fill="#4E5254">2</text><text x="360" y="66" fill="#4E5254">3</text><text x="408" y="66" fill="#4E5254">4</text><text x="456" y="66" fill="#4E5254">5</text><text x="504" y="66" fill="#4E5254">6</text><text x="552" y="66" fill="#4E5254">7</text><text x="600" y="66" fill="#4E5254">8</text><text x="648" y="66" fill="#8B8D8E">9</text><text x="696" y="66" fill="#8B8D8E">10</text><text x="744" y="66" fill="#8B8D8E">11</text><text x="792" y="66" fill="#8B8D8E">12</text><text x="840" y="66" fill="#8B8D8E">13</text><text x="888" y="66" fill="#8B8D8E">14</text><text x="936" y="66" fill="#8B8D8E">15</text><text x="984" y="66" fill="#8B8D8E">16</text></g>
+        <line x1="240" y1="76" x2="1008" y2="76" stroke="#17191A" stroke-width="1"/>
+        <g stroke="#D6D4D0" stroke-width="1">
+          <line x1="288" y1="76" x2="288" y2="516"/>
+          <line x1="336" y1="76" x2="336" y2="516"/>
+          <line x1="384" y1="76" x2="384" y2="516"/>
+          <line x1="432" y1="76" x2="432" y2="516"/>
+          <line x1="480" y1="76" x2="480" y2="516"/>
+          <line x1="528" y1="76" x2="528" y2="516"/>
+          <line x1="576" y1="76" x2="576" y2="516"/>
+          <line x1="672" y1="76" x2="672" y2="516"/>
+          <line x1="720" y1="76" x2="720" y2="516"/>
+          <line x1="768" y1="76" x2="768" y2="516"/>
+          <line x1="816" y1="76" x2="816" y2="516"/>
+          <line x1="864" y1="76" x2="864" y2="516"/>
+          <line x1="912" y1="76" x2="912" y2="516"/>
+          <line x1="960" y1="76" x2="960" y2="516"/>
+        </g>
+        <line x1="624" y1="76" x2="624" y2="516" stroke="#9E4726" stroke-width="1.4"/>
+        <line x1="1008" y1="76" x2="1008" y2="516" stroke="#8B8D8E" stroke-width="1" stroke-dasharray="3 3"/>
+        <g font-family="Inter,sans-serif" font-size="11.5" fill="#17191A">
+          <text x="0" y="96" font-family="Inter,sans-serif" font-size="9" font-weight="600" letter-spacing="1.8" fill="#9E4726">PEPTIDE COURSES</text>
+          <text x="0" y="121">BPC-157</text>
+          <rect x="240" y="110" width="384" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="151">TB-500</text>
+          <rect x="240" y="140" width="384" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="181">GHK-Cu</text>
+          <rect x="240" y="170" width="384" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="170" width="96" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="0" y="211">LL-37</text>
+          <rect x="240" y="200" width="192" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="241">Epitalon</text>
+          <rect x="240" y="230" width="69" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="271">MOTS-c</text>
+          <rect x="240" y="260" width="288" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="301">SS-31</text>
+          <rect x="240" y="290" width="192" height="14" fill="url(#courseFill)" stroke="#9E4726" stroke-width="1"/>
+          <text x="0" y="330" font-family="Inter,sans-serif" font-size="9" font-weight="600" letter-spacing="1.8" fill="#9E4726">DAILY THROUGHOUT</text>
+          <text x="0" y="355">Support stacks (all five)</text>
+          <rect x="240" y="344" width="384" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="344" width="384" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="0" y="385">Nutrition protocol</text>
+          <rect x="240" y="374" width="384" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="374" width="384" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="0" y="415">16&#8209;hour daily fast</text>
+          <rect x="240" y="404" width="384" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="404" width="384" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="0" y="445">Strength training</text>
+          <rect x="243" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="254" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="265" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="276" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="291" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="302" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="313" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="324" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="339" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="350" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="361" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="372" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="387" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="398" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="409" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="420" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="435" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="446" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="457" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="468" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="483" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="494" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="505" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="516" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="531" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="542" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="553" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="564" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="579" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="590" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="601" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="612" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5"/>
+          <rect x="627" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="638" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="649" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="660" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="675" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="686" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="697" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="708" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="723" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="734" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="745" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="756" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="771" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="782" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="793" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="804" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="819" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="830" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="841" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="852" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="867" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="878" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="889" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="900" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="915" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="926" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="937" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="948" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <rect x="963" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="974" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="985" y="434" width="8" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1" opacity=".42"/>
+          <rect x="996" y="434" width="8" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="2 1.5" opacity=".42"/>
+          <text x="0" y="475">Daily walking</text>
+          <rect x="240" y="464" width="384" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="464" width="384" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="0" y="505">Sleep 7.5&#8211;9 hrs</text>
+          <rect x="240" y="494" width="384" height="14" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="624" y="494" width="384" height="14" fill="none" stroke="#9E4726" stroke-width="1" stroke-dasharray="4 3"/>
+        </g>
+        <line x1="240" y1="516" x2="1008" y2="516" stroke="#17191A" stroke-width="1"/>
+      </svg></div>
+    <p class="scroll-hint">Scroll the timeline sideways &rarr;</p>
+    <div class="tl-key">
+      <div><span class="sw sw-b"></span>Peptide course</div>
+      <div><span class="sw sw-a"></span>Daily, continuous</div>
+      <div><span class="sw sw-c"></span>Extension to week 16</div>
+    </div>
+  </div>
+</section>
+
+<section id="peptides">
+  <div class="rail"><span class="rail-num">02</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3 L20 3"/><path d="M13 3 L13 9 L11 13 L11 27 C11 28 12 29 13 29 L19 29 C20 29 21 28 21 27 L21 13 L19 9 L19 3"/>
+  <line x1="11" y1="18" x2="21" y2="18" opacity=".55"/><line x1="11" y1="22" x2="21" y2="22" opacity=".4"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Pillar One</p>
+    <h2>Peptide protocol</h2>
+    <div class="rule"></div>
+    <div class="items"><div class="item"><p class="item-name">BPC-157</p><div class="spec"><div><span class="spec-v">10 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">1 vial</span><span class="spec-k">Per week</span></div><div><span class="spec-v">8 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item"><p class="item-name">TB-500</p><div class="spec"><div><span class="spec-v">10 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">1 vial</span><span class="spec-k">Per week</span></div><div><span class="spec-v">8 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item"><p class="item-name">GHK-Cu</p><div class="spec"><div><span class="spec-v">2 &times; 50 mg</span><span class="spec-k">Vials</span></div><div><span class="spec-v">Clinic protocol</span><span class="spec-k">Frequency</span></div><div><span class="spec-v">8&#8211;10 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item"><p class="item-name">LL-37</p><div class="spec"><div><span class="spec-v">5 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">1 vial</span><span class="spec-k">Weekly</span></div><div><span class="spec-v">4 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item"><p class="item-name">Epitalon</p><div class="spec"><div><span class="spec-v">10 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">10 days</span><span class="spec-k">Course</span></div></div></div><div class="item"><p class="item-name">MOTS-c</p><div class="spec"><div><span class="spec-v">10 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">2&times;</span><span class="spec-k">Injections weekly</span></div><div><span class="spec-v">6 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item"><p class="item-name">SS-31</p><div class="spec"><div><span class="spec-v">10 mg</span><span class="spec-k">Strength</span></div><div><span class="spec-v">5 days</span><span class="spec-k">Per week</span></div><div><span class="spec-v">4 weeks</span><span class="spec-k">Duration</span></div></div></div><div class="item blank" aria-hidden="true"></div></div>
+  </div>
+</section>
+
+<section id="gut">
+  <div class="rail"><span class="rail-num">03</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M9 4 L21 4 A5 5 0 0 1 21 14 L11 14 A5 5 0 0 0 11 24 L24 24"/>
+  <circle cx="24" cy="24" r="1.7" fill="currentColor" stroke="none" opacity=".6"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Support Stack One</p>
+    <h2>Gut restoration</h2>
+    <div class="rule"></div>
+    <div class="formulary"><div class="f">L-Glutamine</div><div class="f">L-Lysine</div><div class="f">Metabiotics</div><div class="f">Probiotic<small>Bacillus subtilis</small></div><div class="f">Akkermansia</div><div class="f">Digestive Enzymes</div><div class="f">Oregano Oil</div><div class="f">Garlic Extract</div><div class="f">Mastic Gum</div><div class="f">Neem Extract</div><div class="f">Berberine</div><div class="f">Comfortable Tummy</div><div class="f">Icelandic Moss</div><div class="f">Cordyceps</div><div class="f">Reishi Mushroom</div><div class="f">Milk Thistle</div><div class="f">Turmeric</div><div class="f">Wormwood Extract</div><div class="f">Black Seed Oil</div><div class="f blank" aria-hidden="true"></div></div>
+  </div>
+</section>
+
+<section id="liver">
+  <div class="rail"><span class="rail-num">04</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M16 3 C16 3 26 14.5 26 20.5 C26 25.8 21.5 29 16 29 C10.5 29 6 25.8 6 20.5 C6 14.5 16 3 16 3Z"/>
+  <path d="M11 20.5 C11 24 13.2 26 16 26" opacity=".5"/>
+  <line x1="10" y1="16" x2="22" y2="16" opacity=".3"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Support Stack Two</p>
+    <h2>Liver &amp; detox support</h2>
+    <div class="rule"></div>
+    <div class="formulary"><div class="f">Milk Thistle</div><div class="f">Dandelion Root</div><div class="f">Chlorella</div><div class="f">Spirulina</div><div class="f">Zeolite<small>Before meals</small></div><div class="f">N-Acetyl Cysteine<small>NAC</small></div><div class="f">Alpha Lipoic Acid</div><div class="f">Glutathione</div><div class="f">Gotu Kola Extract</div><div class="f">Cholesterol Balance Complex</div><div class="f blank" aria-hidden="true"></div><div class="f blank" aria-hidden="true"></div></div>
+  </div>
+</section>
+
+<section id="skin">
+  <div class="rail"><span class="rail-num">05</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+  <path d="M3 9 C8 6 12 12 17 9 C22 6 26 11 29 9"/>
+  <path d="M3 17 C8 14 12 20 17 17 C22 14 26 19 29 17" opacity=".6"/>
+  <path d="M3 25 C8 22 12 28 17 25 C22 22 26 27 29 25" opacity=".35"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Support Stack Three</p>
+    <h2>Skin regeneration</h2>
+    <div class="rule"></div>
+    <div class="formulary"><div class="f">Marine Collagen</div><div class="f">Vitamin C</div><div class="f">Astaxanthin</div><div class="f">CoQ10</div><div class="f">PQQ</div><div class="f">NMN</div><div class="f">Silicon<small>BioSil</small></div><div class="f">Hyaluronic Acid</div><div class="f">Omega-3</div><div class="f">Zinc</div><div class="f">Vitamin A</div><div class="f">Vitamin D3 + K2</div><div class="f">Complete Vitamin B Complex<small>B1 &middot; B2 &middot; B3 &middot; B5 &middot; B6 &middot; B7 &middot; B9 &middot; B12</small></div><div class="f blank" aria-hidden="true"></div><div class="f blank" aria-hidden="true"></div><div class="f blank" aria-hidden="true"></div></div>
+  </div>
+</section>
+
+<section id="hormonal">
+  <div class="rail"><span class="rail-num">06</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M16 6 L16 27"/><line x1="10" y1="27" x2="22" y2="27"/><circle cx="16" cy="4.2" r="1.8"/>
+  <line x1="5" y1="10" x2="27" y2="10"/>
+  <path d="M5 10 L1.5 18 C1.5 20.5 3.5 22 5 22 C6.5 22 8.5 20.5 8.5 18Z"/>
+  <path d="M27 10 L23.5 18 C23.5 20.5 25.5 22 27 22 C28.5 22 30.5 20.5 30.5 18Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Support Stack Four</p>
+    <h2>Hormonal balance</h2>
+    <div class="rule"></div>
+    <div class="formulary"><div class="f">Maca</div><div class="f">Wild Yam</div><div class="f">Tribulus<small>Puncture Vine</small></div><div class="f">Indole-3-Carbinol<small>I3C</small></div><div class="f">White Cinquefoil Extract</div><div class="f">Sugar Harmony Complex<small>With Aspen Bark</small></div><div class="f">Chromium</div><div class="f">Magnesium Chelate</div></div>
+  </div>
+</section>
+
+<section id="anti">
+  <div class="rail"><span class="rail-num">07</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M16 29 L16 8"/><path d="M16 20 C11 20 8 17 8 12 C13 12 16 15 16 20Z"/>
+  <path d="M16 15 C21 15 24 12 24 7 C19 7 16 10 16 15Z"/><path d="M16 25 C12.5 25 10 23 10 19.5" opacity=".45"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Support Stack Five</p>
+    <h2>Anti-inflammatory support</h2>
+    <div class="rule"></div>
+    <div class="formulary"><div class="f">Curcumin</div><div class="f">Cordyceps</div><div class="f">Reishi</div><div class="f">Black Seed Oil</div><div class="f">Omega-3</div><div class="f">Vitamin D3</div><div class="f">Astaxanthin</div><div class="f blank" aria-hidden="true"></div></div>
+  </div>
+</section>
+
+<section id="nutrition">
+  <div class="rail"><span class="rail-num">08</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 15 C4 22 9 27 16 27 C23 27 28 22 28 15Z"/><path d="M16 15 C16 9 19 5 24 4 C24 10 21 14 16 15Z"/>
+  <path d="M16 15 C14 11 11 9 8 9"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Pillar Two</p>
+    <h2>Nutrition</h2>
+    <div class="rule"></div>
+    <div class="rhythm-wrap"><svg viewBox="0 0 1040 196" role="img" aria-label="Sixteen eight fasting schedule with two meals">
+          <text x="216" y="30" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#9E4726" text-anchor="middle">EATING WINDOW &middot; 2 MEALS</text>
+          <text x="684" y="30" font-family="Inter,sans-serif" font-size="10.5" font-weight="600" letter-spacing="2.2" fill="#8B8D8E" text-anchor="middle">FASTING &middot; 16 HOURS</text>
+          <line x1="60" y1="40" x2="372" y2="40" stroke="#9E4726" stroke-width="1.4"/>
+          <line x1="372" y1="40" x2="996" y2="40" stroke="#8B8D8E" stroke-width="1" stroke-dasharray="4 4"/>
+          <rect x="60" y="54" width="312" height="48" fill="#F5E4DA" stroke="#9E4726" stroke-width="1"/>
+          <rect x="372" y="54" width="624" height="48" fill="none" stroke="#8B8D8E" stroke-width="1" stroke-dasharray="4 4"/>
+          <circle cx="112" cy="78" r="7" fill="#F4F3F1" stroke="#9E4726" stroke-width="1.5"/>
+          <circle cx="330" cy="78" r="7" fill="#F4F3F1" stroke="#9E4726" stroke-width="1.5"/>
+          <g stroke="#C9C7C2" stroke-width="1">
+            <line x1="60" y1="102" x2="60" y2="111"/><line x1="138" y1="102" x2="138" y2="109"/><line x1="216" y1="102" x2="216" y2="109"/>
+            <line x1="294" y1="102" x2="294" y2="109"/><line x1="372" y1="102" x2="372" y2="111"/><line x1="450" y1="102" x2="450" y2="109"/>
+            <line x1="528" y1="102" x2="528" y2="109"/><line x1="606" y1="102" x2="606" y2="109"/><line x1="684" y1="102" x2="684" y2="109"/>
+            <line x1="762" y1="102" x2="762" y2="109"/><line x1="840" y1="102" x2="840" y2="109"/><line x1="918" y1="102" x2="918" y2="109"/>
+            <line x1="996" y1="102" x2="996" y2="111"/>
+          </g>
+          <g font-family="Inter,sans-serif" font-size="10.5" fill="#8B8D8E" text-anchor="middle">
+            <text x="60" y="128">0h</text><text x="216" y="128">4h</text><text x="372" y="128">8h</text>
+            <text x="528" y="128">12h</text><text x="684" y="128">16h</text><text x="840" y="128">20h</text><text x="996" y="128">24h</text>
+          </g>
+          <line x1="112" y1="138" x2="112" y2="154" stroke="#9E4726" stroke-width="1"/>
+          <line x1="330" y1="138" x2="330" y2="154" stroke="#9E4726" stroke-width="1"/>
+          <g font-family="Inter,sans-serif" font-size="11" fill="#17191A" text-anchor="middle">
+            <text x="112" y="172">First meal</text><text x="330" y="172">Second meal</text>
+          </g>
+          <text x="684" y="172" font-family="Inter,sans-serif" font-size="11" fill="#8B8D8E" text-anchor="middle">Water throughout the day</text>
+        </svg></div>
+    <p class="scroll-hint">Scroll sideways &rarr;</p>
+    <div class="two" style="margin-top:26px">
+      <div class="col">
+        <div class="col-head"><span class="tag-yes">Include</span></div>
+        <ul class="clean"><li>16:8 intermittent fasting</li><li>2 meals daily</li><li>High protein intake</li><li>Goat or sheep dairy only, occasionally</li><li>Drink plenty of water</li><li>Warm water with olive oil before breakfast, if tolerated</li><li>Increase green vegetables</li><li>Increase healthy fats</li></ul>
+      </div>
+      <div class="col">
+        <div class="col-head"><span class="tag-no">Avoid</span></div>
+        <ul class="clean"><li class="strike">Sugar</li><li class="strike">Gluten</li><li class="strike">Cow dairy</li><li class="strike">Fruit during active treatment</li><li class="strike">Sweetened beverages</li><li class="strike">Fruit juices</li><li class="strike">White flour</li><li class="strike">White bread</li><li class="strike">White rice</li><li class="strike">Processed foods</li><li class="strike">Seed oils</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="lifestyle">
+  <div class="rail"><span class="rail-num">09</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="19" cy="7" r="2.5"/><path d="M19 10.5 L15.5 17.5"/><path d="M15.5 17.5 L19.5 20.5 L21 27.5"/>
+  <path d="M15.5 17.5 L10 20 L8 26.5"/><path d="M18 13 L23.5 15.5"/><path d="M17.5 13 L12.5 12"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Pillar Three</p>
+    <h2>Lifestyle</h2>
+    <div class="rule"></div>
+    <ul class="clean two-col-list" style="margin-top:20px;border-top:1px solid var(--ink);padding-top:6px"><li>7.5&ndash;9 hours sleep</li><li>Daily walking</li><li>Strength training 3&ndash;4 times weekly</li><li>Sun exposure when appropriate</li><li>Stress management</li><li>Avoid smoking</li><li>Limit alcohol</li></ul>
+  </div>
+</section>
+
+<section id="iv">
+  <div class="rail"><span class="rail-num">10</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="10" y="2.5" width="12" height="14" rx="2"/><line x1="12.5" y1="8" x2="19.5" y2="8" opacity=".45"/>
+  <line x1="16" y1="16.5" x2="16" y2="21"/>
+  <path d="M16 21.5 C16 21.5 20 26 20 27.8 C20 29.6 18.2 30.8 16 30.8 C13.8 30.8 12 29.6 12 27.8 C12 26 16 21.5 16 21.5Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">Optional</p>
+    <h2>IV therapy</h2>
+    <div class="rule"></div>
+    <div class="gate">
+      <div class="gate-head"><span>Optional IV therapy</span><em>Clinic administered</em></div>
+      <div class="gate-body"><div class="labs"><div class="lab"><i></i><span>Vitamin C IV</span></div><div class="lab"><i></i><span>Glutathione IV</span></div><div class="lab"><i></i><span>Alpha Lipoic Acid IV</span></div><div class="lab"><i></i><span>Phosphatidylcholine IV</span></div><div class="lab"><i></i><span>Ozone Therapy</span></div><div class="lab"><i></i><span>NAD+ IV <em>if indicated</em></span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="foot">
+  <span class="foot-mark">The Intend</span>
+  <p class="foot-note">This program is intended for general wellness support and is not a substitute for individual medical advice. Acne that is cystic, painful, or leaving marks should be assessed by a dermatologist, because scarring is permanent once it forms but largely preventable with timely treatment, and a supplement protocol is not a substitute for that. LL-37 is a cathelicidin, and elevated cathelicidin activity is implicated in rosacea, so anyone with rosacea or rosacea-like flushing should raise it with their clinician before use. All IV therapies listed, including ozone, must be administered by qualified medical staff. If pregnant, breastfeeding, or taking hormonal contraception, review the hormonal balance stack with a doctor first.</p>
+</div>
+
+</div>
+
+<script>
+(function(){
+  var els=document.querySelectorAll('.rv');
+  function showAll(){for(var i=0;i<els.length;i++)els[i].classList.add('in');}
+  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){showAll();return;}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.04});
+  for(var i=0;i<els.length;i++)io.observe(els[i]);
+  setTimeout(showAll,2600);
+  window.addEventListener('load',function(){setTimeout(showAll,1200);});
+})();
+</script>
+</body>
+</html>

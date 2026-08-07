@@ -12,6 +12,7 @@ import { FramedImage } from '@/components/FramedImage';
 import { useSessions } from '@/lib/sessions';
 import { useServices } from '@/lib/services';
 import { COLORS, FONT_ITALIC, FONT_SANS, FONT_SERIF } from '@/constants/brand';
+import { HEALTH_PROGRAMS, HEALTH_PROGRAM_EXPERT_ID, HEALTH_PROGRAM_PRICE_USD } from '@/constants/healthPrograms';
 
 export default function ExpertProfile() {
   const router = useRouter();
@@ -177,6 +178,34 @@ export default function ExpertProfile() {
           </>
         ) : null}
 
+        {expert.id === HEALTH_PROGRAM_EXPERT_ID ? (
+          <Pressable style={styles.hpStrip} onPress={() => router.push('/health-programs')}>
+            <LinearGradient
+              colors={['#2E2721', '#3A322A', '#241F1B']}
+              locations={[0, 0.6, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={['rgba(241,228,190,0.16)', 'rgba(241,228,190,0)']}
+              style={styles.hpStripHalo}
+              pointerEvents="none"
+            />
+            <Text style={styles.hpStripLabel}>PROGRAMS BY {expert.name.replace('Dr. ', '').split(' ')[0].toUpperCase()}</Text>
+            {HEALTH_PROGRAMS.slice(0, 3).map((hp) => (
+              <View key={hp.id} style={styles.hpStripRow}>
+                <View style={styles.hpStripDot} />
+                <Text style={styles.hpStripName} numberOfLines={1}>{hp.title}</Text>
+              </View>
+            ))}
+            <View style={styles.hpStripFoot}>
+              <Text style={styles.hpStripMore}>
+                and {HEALTH_PROGRAMS.length - 3} more, from ${HEALTH_PROGRAM_PRICE_USD}
+              </Text>
+              <Ionicons name="arrow-forward" size={14} color={COLORS.pastel} />
+            </View>
+          </Pressable>
+        ) : null}
+
         <Text style={styles.sectionTitle}>
           Client <Text style={styles.sectionTitleItalic}>Questions</Text>
         </Text>
@@ -332,6 +361,14 @@ const styles = StyleSheet.create({
   name: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink, textAlign: 'center' },
   title: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, textAlign: 'center', marginTop: 8 },
   sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 28, marginBottom: 12 },
+  hpStrip: { borderRadius: 20, overflow: 'hidden', padding: 20, marginTop: 28 },
+  hpStripHalo: { position: 'absolute', top: 0, left: 0, right: 0, height: 80 },
+  hpStripLabel: { fontSize: 9.5, letterSpacing: 2.4, color: 'rgba(255,255,255,0.55)', marginBottom: 14 },
+  hpStripRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
+  hpStripDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: COLORS.pastel, opacity: 0.7 },
+  hpStripName: { flex: 1, fontFamily: FONT_SERIF, fontSize: 15, color: '#FFFFFF' },
+  hpStripFoot: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.14)' },
+  hpStripMore: { flex: 1, fontSize: 12, color: COLORS.pastel, opacity: 0.9 },
   sectionTitleItalic: { fontFamily: FONT_ITALIC, fontSize: 22 },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },
