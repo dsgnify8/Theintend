@@ -11,7 +11,6 @@ import { usePendingSubmissions } from '@/lib/submissions';
 import { useUnpaidCount } from '@/lib/payouts';
 import { useExperts } from '@/lib/experts';
 import { SLOT_HOME_ARTICLES, useFeaturedList } from '@/lib/featured';
-import { useUnreadFeedbackCount } from '@/lib/feedback';
 
 // Behind the top of the page, matching the library and My Companion.
 const ADMIN_WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
@@ -23,7 +22,6 @@ export default function Admin() {
   const router = useRouter();
   const { role } = useAuth();
   const pending = usePendingSubmissions();
-  const feedbackUnread = useUnreadFeedbackCount();
   const unpaid = useUnpaidCount();
   const expertList = useExperts();
   const pinnedArticles = useFeaturedList(SLOT_HOME_ARTICLES);
@@ -113,14 +111,6 @@ export default function Admin() {
           title="Bookings"
           meta="Everything booked, and the only place to cancel one"
           onPress={() => router.push('/admin-bookings')}
-        />
-
-        <Row
-          icon="chatbubble-ellipses-outline"
-          title="Inbox"
-          meta="What people are telling us about the companion"
-          count={feedbackUnread ? String(feedbackUnread) : null}
-          onPress={() => router.push('/admin-inbox')}
         />
 
         <GroupLabel>Content</GroupLabel>

@@ -12,9 +12,6 @@ import { aed, useExpertEarnings } from '@/lib/earnings';
 import { sendPushToEmail } from '@/lib/notifications';
 import { splitFor, exceptionsFor } from '@/constants/splits';
 import { minorToAed, providerLabel, useOrderStats } from '@/lib/orderStats';
-import {
-  byProgram, isReady, money, programTitle, recordProgramPayout, useAllProgramSales, useProgramSales,
-} from '@/lib/programEarnings';
 
 export default function AdminPayouts() {
   const router = useRouter();
@@ -22,7 +19,6 @@ export default function AdminPayouts() {
   const { experts, loading } = useExperts();
   const { rows, loading: rowsLoading } = useAllPayoutDetails();
   const orders = useOrderStats();
-  const programs = useAllProgramSales();
 
   if (role !== 'admin') {
     return <Screen router={router}><View style={styles.center}><Text style={styles.muted}>Admins only.</Text></View></Screen>;
@@ -50,24 +46,6 @@ export default function AdminPayouts() {
                 {orders.failed > 0 ? ` ${orders.failed} did not complete.` : ''}
               </Text>
             ) : null}
-          </View>
-        ) : null}
-
-        {programs.sales.length > 0 ? (
-          <View style={styles.checkoutCard}>
-            <Text style={styles.checkoutHead}>PROGRAMS SOLD</Text>
-            {byProgram(programs.sales).map((row) => (
-              <View key={row.programId} style={styles.checkoutRow}>
-                <Text style={styles.checkoutName} numberOfLines={1}>{programTitle(row.programId)}</Text>
-                <Text style={styles.checkoutCount}>{row.sold}</Text>
-                <Text style={styles.checkoutValue}>{money(row.gross)}</Text>
-              </View>
-            ))}
-            <Text style={styles.checkoutNote}>
-              {programs.totals.sold} sold for {money(programs.totals.gross)}. Apple takes {money(programs.totals.apple)},
-              experts {money(programs.totals.expertPaid + programs.totals.expertReady + programs.totals.expertHeld)},
-              and {money(programs.totals.platform)} stays here.
-            </Text>
           </View>
         ) : null}
 
@@ -112,7 +90,6 @@ export default function AdminPayouts() {
                 )}
 
                 <ExpertPayoutBlock expert={e} />
-                <ExpertProgramBlock expert={e} />
               </View>
             );
           })
@@ -234,94 +211,6 @@ function ExpertPayoutBlock({ expert }: { expert: any }) {
   );
 }
 
-// What programs owe one expert, and the way to send it.
-//
-// Ready and held are shown apart. A sale inside its first fortnight is not
-// payable, and calling it owed would be wrong.
-function ExpertProgramBlock({ expert }: { expert: any }) {
-  const { sales, totals, reload } = useProgramSales(expert?.id);
-  const [reference, setReference] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  if (!sales.length) return null;
-
-  const ready = sales.filter((s: any) => isReady(s));
-
-  const send = async () => {
-    setSaving(true);
-    const { error } = await recordProgramPayout({
-      expertId: expert.id,
-      sales: ready,
-      reference: reference.trim() || null,
-    });
-    setSaving(false);
-    if (error) {
-      Alert.alert('That did not save', error.message ?? 'Nothing was recorded. Try again.');
-      return;
-    }
-    setReference('');
-    reload();
-    if (expert?.accountEmail) {
-      sendPushToEmail(
-        expert.accountEmail,
-        'Your program payout is on its way',
-        `${money(totals.expertReady)} has been sent for ${ready.length} program${ready.length === 1 ? '' : 's'}.`,
-        { kind: 'payout_sent', route: '/expert-payouts' },
-      );
-    }
-  };
-
-  const confirm = () => {
-    const body = `${money(totals.expertReady)} across ${ready.length} program sale${ready.length === 1 ? '' : 's'}.`;
-    Alert.alert('Record this program payout', body, [
-      { text: 'Not yet', style: 'cancel' },
-      { text: 'Record it', onPress: send },
-    ]);
-  };
-
-  return (
-    <>
-      <Text style={styles.bankHead}>PROGRAMS</Text>
-      <View style={styles.progGrid}>
-        <ProgCell label="Ready" value={money(totals.expertReady)} />
-        <ProgCell label="Held" value={money(totals.expertHeld)} />
-        <ProgCell label="Sent" value={money(totals.expertPaid)} />
-      </View>
-      {totals.expertHeld > 0 ? (
-        <Text style={styles.bankMuted}>
-          Held is waiting out the fourteen days. It becomes payable at the month end after that.
-        </Text>
-      ) : null}
-
-      {ready.length > 0 ? (
-        <>
-          <TextInput
-            value={reference}
-            onChangeText={setReference}
-            placeholder="Bank reference from the transfer"
-            placeholderTextColor={COLORS.muted}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            style={styles.refInput}
-          />
-          <Pressable style={[styles.sendBtn, saving && { opacity: 0.6 }]} disabled={saving} onPress={confirm}>
-            {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.sendText}>Mark programs as paid</Text>}
-          </Pressable>
-        </>
-      ) : null}
-    </>
-  );
-}
-
-function ProgCell({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.progCell}>
-      <Text style={styles.progCellLabel}>{label}</Text>
-      <Text style={styles.progCellValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, gap: 2 },
@@ -348,10 +237,6 @@ const styles = StyleSheet.create({
   bankHead: { fontSize: 11, letterSpacing: 1, color: COLORS.muted, marginTop: 16, marginBottom: 6 },
   bankBox: { gap: 2 },
   owedValue: { fontFamily: FONT_SERIF, fontSize: 24, color: COLORS.ink, marginTop: 2 },
-  progGrid: { flexDirection: 'row', gap: 8, marginTop: 2 },
-  progCell: { flex: 1, backgroundColor: COLORS.accentSoft, borderRadius: 12, paddingVertical: 11, alignItems: 'center' },
-  progCellLabel: { fontSize: 10, letterSpacing: 1.4, color: COLORS.muted },
-  progCellValue: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink, marginTop: 3 },
   refInput: { backgroundColor: COLORS.bg, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 11, paddingHorizontal: 13, fontSize: 14, color: COLORS.ink, marginTop: 12 },
   sendBtn: { marginTop: 10, paddingVertical: 13, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
   sendText: { color: COLORS.bg, fontSize: 14, letterSpacing: 0.4 },

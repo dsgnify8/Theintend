@@ -4,7 +4,6 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { supabase } from './supabase';
 import { useAuth } from './auth';
-import { goesInApp, goesToPush, NOTIF_CHANNEL, type NotifKind } from '@/constants/notifications';
 
 // How notifications show while the app is open.
 Notifications.setNotificationHandler({
@@ -70,63 +69,15 @@ export async function cancelLocalReminder(id: string) {
   try { await Notifications.cancelScheduledNotificationAsync(id); } catch {}
 }
 
-// Writes the record. Kept here rather than in lib/notify so the two send
-// functions below can use it without the two files importing each other.
-//
-// The kind comes from the data argument both functions already take. Anything
-// sent without one is stored as general rather than dropped, so a call site
-// that has not been updated still leaves something in the bell.
-async function storeNotification(opts: {
-  userId?: string | null;
-  email?: string | null;
-  title: string;
-  body: string;
-  data?: Record<string, any>;
-}) {
-  try {
-    const kind = (opts.data?.kind as NotifKind) ?? ('general' as NotifKind);
-    // A kind we know about decides for itself. An unknown one is kept.
-    if (kind in NOTIF_CHANNEL && !goesInApp(kind)) return;
-
-    let uid = opts.userId ?? null;
-    if (!uid && opts.email) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', opts.email.trim().toLowerCase())
-        .maybeSingle();
-      uid = (data as any)?.id ?? null;
-    }
-    if (!uid) return;
-
-    await supabase.from('notifications').insert({
-      user_id: uid,
-      kind,
-      title: opts.title,
-      body: opts.body,
-      route: opts.data?.route ?? null,
-      data: opts.data ?? {},
-    });
-  } catch {
-    /* the push still went. A missing record must not break the thing that sent it. */
-  }
-}
-
-// Sends a push to another user via our server function, and keeps a copy.
+// Sends a push to another user via our server function.
 export async function sendPushToEmail(email: string, title: string, body: string, data?: Record<string, any>) {
-  await storeNotification({ email, title, body, data });
   try {
-    const kind = (data?.kind as NotifKind) ?? null;
-    if (kind && kind in NOTIF_CHANNEL && !goesToPush(kind)) return;
     await supabase.functions.invoke('send-push', { body: { email, title, body, data: data ?? {} } });
   } catch {}
 }
 
 export async function sendPushTo(userId: string, title: string, body: string, data?: Record<string, any>) {
-  await storeNotification({ userId, title, body, data });
   try {
-    const kind = (data?.kind as NotifKind) ?? null;
-    if (kind && kind in NOTIF_CHANNEL && !goesToPush(kind)) return;
     await supabase.functions.invoke('send-push', { body: { userId, title, body, data: data ?? {} } });
   } catch {}
 }

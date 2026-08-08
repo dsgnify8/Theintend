@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator, Alert, Animated, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 // Required rather than imported, inside a try. A native module that is not in
@@ -25,7 +27,6 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { DURATION, EASE, reduceMotion } from '@/constants/motion';
 import { useAuth } from '@/lib/auth';
 import { type AiMessage, type Conversation, conversationTitle, getConversations, sendMessage, setSession, setSessionMessages, startNewConversation, useCompanionSession, deleteConversation } from '@/lib/yourAi';
-import { sendFeedback } from '@/lib/feedback';
 
 export default function YourAi() {
   const router = useRouter();
@@ -110,25 +111,6 @@ export default function YourAi() {
   const [thinkLabel, setThinkLabel] = useState('Thinking');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [histOpen, setHistOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [feedbackBusy, setFeedbackBusy] = useState(false);
-  const [feedbackDone, setFeedbackDone] = useState(false);
-
-  const sendTheFeedback = async () => {
-    if (!feedbackText.trim() || feedbackBusy) return;
-    setFeedbackBusy(true);
-    const { error } = await sendFeedback(feedbackText);
-    setFeedbackBusy(false);
-    if (error) {
-      Alert.alert('That did not send', error.message ?? 'Try again in a moment.');
-      return;
-    }
-    setFeedbackText('');
-    setFeedbackDone(true);
-    // Long enough to read, short enough not to be in the way.
-    setTimeout(() => { setFeedbackOpen(false); setFeedbackDone(false); }, 1600);
-  };
   // Only one row sits open at a time.
   const [openRow, setOpenRow] = useState<string | null>(null);
   const greeting = useRef(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]).current;
@@ -225,14 +207,9 @@ export default function YourAi() {
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
         </Pressable>
         <Text style={styles.headerTitle}>MY COMPANION</Text>
-        <View style={styles.headerRight}>
-          <Pressable onPress={() => setFeedbackOpen(true)} hitSlop={10} style={styles.headerBtn}>
-            <Ionicons name="information-circle-outline" size={21} color={COLORS.ink} />
-          </Pressable>
-          <Pressable onPress={() => setHistOpen(true)} hitSlop={10} style={styles.headerBtn}>
-            <Ionicons name="time-outline" size={21} color={COLORS.ink} />
-          </Pressable>
-        </View>
+        <Pressable onPress={() => setHistOpen(true)} hitSlop={12} style={styles.headerBtn}>
+          <Ionicons name="time-outline" size={21} color={COLORS.ink} />
+        </Pressable>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
@@ -353,52 +330,6 @@ export default function YourAi() {
               </ScrollView>
             )}
           </View>
-        </View>
-      </Modal>
-
-      <Modal
-        visible={feedbackOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setFeedbackOpen(false)}
-      >
-        <View style={styles.modalRoot}>
-          <Pressable style={styles.backdrop} onPress={() => setFeedbackOpen(false)} />
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={styles.sheet}>
-              <View style={styles.sheetHandle} />
-              <Text style={styles.sheetTitle}>Leave feedback</Text>
-
-              {feedbackDone ? (
-                <Text style={styles.fbThanks}>Sent. Thank you, we read all of it.</Text>
-              ) : (
-                <>
-                  <Text style={styles.fbNote}>
-                    What is working, what is not, anything that felt off. It goes straight to us.
-                  </Text>
-                  <TextInput
-                    value={feedbackText}
-                    onChangeText={setFeedbackText}
-                    placeholder="Write as much as you like"
-                    placeholderTextColor={COLORS.muted}
-                    multiline
-                    textAlignVertical="top"
-                    style={styles.fbInput}
-                    autoFocus
-                  />
-                  <Pressable
-                    style={[styles.fbSend, (!feedbackText.trim() || feedbackBusy) && { opacity: 0.45 }]}
-                    disabled={!feedbackText.trim() || feedbackBusy}
-                    onPress={sendTheFeedback}
-                  >
-                    {feedbackBusy
-                      ? <ActivityIndicator color={COLORS.bg} />
-                      : <Text style={styles.fbSendText}>Send</Text>}
-                  </Pressable>
-                </>
-              )}
-            </View>
-          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -587,12 +518,6 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: COLORS.bg, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 32 },
   sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: COLORS.line, marginBottom: 16 },
   sheetTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 12 },
-  headerRight: { flexDirection: 'row', alignItems: 'center' },
-  fbNote: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginBottom: 14 },
-  fbInput: { minHeight: 120, maxHeight: 220, backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, paddingHorizontal: 15, paddingVertical: 13, fontSize: 15, lineHeight: 22, color: COLORS.ink },
-  fbSend: { marginTop: 14, paddingVertical: 15, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
-  fbSendText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.4 },
-  fbThanks: { fontSize: 15, lineHeight: 23, color: COLORS.ink, paddingVertical: 18, paddingBottom: 26 },
   sheetEmpty: { fontSize: 14, lineHeight: 21, color: COLORS.muted, paddingVertical: 10, paddingBottom: 22 },
   histRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.line },
   histTitle: { fontSize: 15, lineHeight: 21, color: COLORS.ink },

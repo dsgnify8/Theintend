@@ -9,8 +9,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { bookingStartMs, useMyBookings } from './bookings';
 import { useMyPackages } from './packages';
 import { useAuth } from './auth';
-import { fetchStoredNotifs, markStoredSeen, type StoredNotif } from './notify';
-import { NOTIF_ICON } from '@/constants/notifications';
 
 export const NOTIFS_SEEN_KEY = 'intend.notifs.seen.v1';
 const SEEN_CAP = 200;
@@ -35,13 +33,6 @@ export function useNotificationFeed() {
   const { items: bookings, reload: reloadBookings } = useMyBookings();
   const { items: packages, reload: reloadPackages } = useMyPackages();
   const [seen, setSeen] = useState<string[] | null>(null);
-  const [stored, setStored] = useState<StoredNotif[]>([]);
-
-  const loadStored = useCallback(async () => {
-    setStored(await fetchStoredNotifs());
-  }, []);
-
-  useEffect(() => { loadStored(); }, [loadStored]);
 
   useEffect(() => {
     let alive = true;
@@ -59,19 +50,6 @@ export function useNotificationFeed() {
   const items = useMemo<FeedItem[]>(() => {
     const out: FeedItem[] = [];
     const now = Date.now();
-
-    // What was actually sent, newest first. These carry their own id from the
-    // table, so marking one seen is a real write rather than a device note.
-    for (const n of stored) {
-      out.push({
-        id: `stored:${n.id}`,
-        icon: NOTIF_ICON[n.kind] ?? 'notifications-outline',
-        title: n.title,
-        body: n.body,
-        route: n.route ?? '/',
-        at: new Date(n.created_at).getTime(),
-      });
-    }
 
     if (role === 'expert' || role === 'admin') {
       const expert = role === 'expert';
@@ -122,38 +100,27 @@ export function useNotificationFeed() {
     }
 
     return out;
-  }, [bookings, packages, role, stored]);
+  }, [bookings, packages, role]);
 
   const unread = useMemo(() => {
     if (seen === null) return 0;
     const s = new Set(seen);
-    // A stored one is unread until the table says otherwise, so it reads the
-    // same on every device. A derived one only exists on this device, so the
-    // device decides.
-    const storedUnread = stored.filter((n) => !n.read_at).length;
-    const derivedUnread = items.filter((i) => !i.id.startsWith('stored:') && !s.has(i.id)).length;
-    return storedUnread + derivedUnread;
-  }, [items, seen, stored]);
+    return items.filter((i) => !s.has(i.id)).length;
+  }, [items, seen]);
 
   const markAllSeen = useCallback(() => {
-    // Stored ones are marked in the table so it holds across devices.
-    const storedIds = stored.filter((n) => !n.read_at).map((n) => n.id);
-    if (storedIds.length) {
-      markStoredSeen(storedIds).then(loadStored).catch(() => {});
-    }
     const ids = items.map((i) => i.id);
     setSeen((prev) => {
       const merged = Array.from(new Set([...(prev ?? []), ...ids])).slice(-SEEN_CAP);
       AsyncStorage.setItem(NOTIFS_SEEN_KEY, JSON.stringify(merged)).catch(() => {});
       return merged;
     });
-  }, [items, stored, loadStored]);
+  }, [items]);
 
   const reload = useCallback(() => {
     reloadBookings();
     reloadPackages();
-    loadStored();
-  }, [reloadBookings, reloadPackages, loadStored]);
+  }, [reloadBookings, reloadPackages]);
 
   return { items, unread, ready: seen !== null, markAllSeen, reload };
 }

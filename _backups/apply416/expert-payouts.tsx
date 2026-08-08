@@ -12,7 +12,6 @@ import { splitFor } from '@/constants/splits';
 import { aed, useExpertEarnings } from '@/lib/earnings';
 import type { Expert } from '@/constants/experts';
 import { money, monthLabel, payoutMonthFor, programTitle, useProgramSales } from '@/lib/programEarnings';
-import { usePayoutLines } from '@/lib/payouts';
 
 const MON3P = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function sentOn(iso: string): string {
@@ -207,8 +206,18 @@ export default function ExpertPayouts() {
               {payouts.items.length === 0 ? (
                 <Text style={styles.payEmpty}>Nothing has been sent yet.</Text>
               ) : (
-                payouts.items.map((po: any) => (
-                  <PayoutRow key={po.id} payout={po} />
+                payouts.items.map((po) => (
+                  <View key={po.id} style={styles.sentRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sentAmount}>{aed(fromMinor(po.amount_minor))}</Text>
+                      <Text style={styles.payMeta}>
+                        {sentOn(po.paid_at)}
+                        {po.session_count ? ` \u00B7 ${po.session_count} session${po.session_count === 1 ? '' : 's'}` : ''}
+                      </Text>
+                      {po.reference ? <Text style={styles.payMeta}>Reference {po.reference}</Text> : null}
+                    </View>
+                    <Ionicons name="checkmark-circle" size={20} color={COLORS.taupeBlue} />
+                  </View>
                 ))
               )}
             </>
@@ -289,63 +298,6 @@ function ProgTotal({ label, value }: { label: string; value: string }) {
   );
 }
 
-// One payment, and what it was for.
-//
-// Collapsed by default. The amount and date answer most questions, and the
-// lines answer the one they ask when they do not.
-function PayoutRow({ payout }: { payout: any }) {
-  const [open, setOpen] = useState(false);
-  const lines = usePayoutLines(open ? payout.id : null);
-  const isUsd = (payout.currency ?? 'AED') === 'USD';
-  const amount = isUsd ? money(payout.amount_minor) : aed(fromMinor(payout.amount_minor));
-
-  const count = lines.bookings.length + lines.programs.length;
-
-  return (
-    <View style={styles.poRow}>
-      <Pressable style={styles.poHead} onPress={() => setOpen((v) => !v)}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.poAmount}>{amount}</Text>
-          <Text style={styles.poWhen}>
-            {new Date(payout.paid_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
-            {payout.reference ? `  ${payout.reference}` : ''}
-          </Text>
-        </View>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.muted} />
-      </Pressable>
-
-      {open ? (
-        lines.loading ? (
-          <ActivityIndicator color={COLORS.accent} style={{ marginVertical: 10 }} />
-        ) : count === 0 ? (
-          <Text style={styles.poEmpty}>No lines recorded against this one.</Text>
-        ) : (
-          <View style={styles.poLines}>
-            {lines.bookings.map((b: any) => (
-              <Text key={b.id} style={styles.poLine}>
-                {b.title}
-                {b.starts_at
-                  ? ` on ${new Date(b.starts_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}`
-                  : b.when_text ? ` on ${b.when_text}` : ''}
-              </Text>
-            ))}
-            {lines.programs.length > 0 ? (
-              <Text style={styles.poLine}>
-                {lines.programs.length} program{lines.programs.length === 1 ? '' : 's'} bought
-              </Text>
-            ) : null}
-            {lines.programs.map((pr: any) => (
-              <Text key={pr.id} style={styles.poSubLine}>
-                {programTitle(pr.program_id)}, {money(pr.expert_share_minor, pr.currency)}
-              </Text>
-            ))}
-          </View>
-        )
-      ) : null}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
@@ -384,14 +336,6 @@ const styles = StyleSheet.create({
   payAmount: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   totalCard: { backgroundColor: COLORS.accentSoft, borderRadius: 16, padding: 18, marginBottom: 12 },
   subHead: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 26, marginBottom: 12 },
-  poRow: { backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  poHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  poAmount: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
-  poWhen: { fontSize: 12, color: COLORS.muted, marginTop: 3 },
-  poLines: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.line, gap: 5 },
-  poLine: { fontSize: 13, lineHeight: 19, color: COLORS.ink },
-  poSubLine: { fontSize: 12, lineHeight: 18, color: COLORS.muted, paddingLeft: 10 },
-  poEmpty: { fontSize: 12, color: COLORS.muted, marginTop: 8, fontStyle: 'italic' },
   progNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginBottom: 10 },
   progRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: COLORS.card, borderRadius: 14, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 8 },
   progTitle: { fontFamily: FONT_SERIF, fontSize: 15, lineHeight: 20, color: COLORS.ink },

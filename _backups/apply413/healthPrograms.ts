@@ -16,7 +16,7 @@ export type HealthProgram = {
 
 // In dollars, because it is sold through Apple. Roughly the price of a
 // paperback, not the 899 dirhams this first said.
-export const HEALTH_PROGRAM_PRICE_USD = 189;
+export const HEALTH_PROGRAM_PRICE_USD = 210;
 export const HEALTH_PROGRAM_AUTHOR = 'Dr. Joanna Gudkina';
 // Whose profile carries them. Named here rather than worked out from who has
 // programs, so putting them on a second profile stays a decision.

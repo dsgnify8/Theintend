@@ -172,42 +172,6 @@ export async function payoutBookings(payoutId: string): Promise<any[]> {
   } catch { return []; }
 }
 
-// The programs a given payment covered.
-export async function payoutPrograms(payoutId: string): Promise<any[]> {
-  try {
-    const { data } = await supabase
-      .from('program_purchases')
-      .select('id,program_id,currency,amount_minor,expert_share_minor,purchased_at')
-      .eq('payout_id', payoutId)
-      .order('purchased_at', { ascending: true });
-    return (data as any[]) ?? [];
-  } catch { return []; }
-}
-
-export type PayoutLines = {
-  bookings: any[];
-  programs: any[];
-  loading: boolean;
-};
-
-// What one payment was for. Loaded when it is opened rather than for every
-// payout on the screen, since most are never opened.
-export function usePayoutLines(payoutId: string | null) {
-  const [lines, setLines] = useState<PayoutLines>({ bookings: [], programs: [], loading: false });
-
-  useEffect(() => {
-    if (!payoutId) { setLines({ bookings: [], programs: [], loading: false }); return; }
-    let alive = true;
-    setLines({ bookings: [], programs: [], loading: true });
-    Promise.all([payoutBookings(payoutId), payoutPrograms(payoutId)]).then(([b, pr]) => {
-      if (alive) setLines({ bookings: b, programs: pr, loading: false });
-    });
-    return () => { alive = false; };
-  }, [payoutId]);
-
-  return lines;
-}
-
 // Records a payment and marks what it covered.
 export async function recordPayout(opts: {
   expertId: string;
