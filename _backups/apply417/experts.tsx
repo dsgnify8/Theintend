@@ -9,20 +9,14 @@ import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
 import { FramedImage } from '@/components/FramedImage';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
-import { Ionicons } from '@expo/vector-icons';
 
 const ALL = 'All';
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 // Half the screen, bounded, so the first card always shows a sliver.
-const HERO_H = Math.max(260, Math.min(380, Math.round(SCREEN_H * 0.42)));
+const HERO_H = Math.max(300, Math.min(440, Math.round(SCREEN_H * 0.5)));
 const CARD_W = SCREEN_W - 40;
 const CARD_H = Math.round(CARD_W * 1.12);
-
-// Two across, with a gap between and the same margins as everything else.
-const GRID_GAP = 12;
-const GRID_W = Math.floor((SCREEN_W - 40 - GRID_GAP) / 2);
-const GRID_H = Math.round(GRID_W * 1.34);
 
 // Stepped opacities standing in for a gradient over the foot of each portrait.
 const SCRIM = [0, 0.04, 0.1, 0.18, 0.28, 0.4, 0.52, 0.64];
@@ -33,7 +27,6 @@ function initials(name: string) {
 
 export default function ExpertsScreen() {
   const [active, setActive] = useState<string>(ALL);
-  const [grid, setGrid] = useState(false);
   const { experts, loading } = useExperts();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -81,11 +74,11 @@ export default function ExpertsScreen() {
           </Text>
           <View style={styles.cue}>
             <View style={styles.cueLine} />
+            <Text style={styles.cueText}>SCROLL</Text>
           </View>
         </Animated.View>
 
-        <View style={styles.controls}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
           {categories.map((c) => {
             const on = c === active;
             return (
@@ -95,28 +88,17 @@ export default function ExpertsScreen() {
               </Pressable>
             );
           })}
-          </ScrollView>
-
-          <Pressable onPress={() => setGrid((v) => !v)} hitSlop={10} style={styles.viewBtn}>
-            <Ionicons
-              name={grid ? 'reorder-two-outline' : 'grid-outline'}
-              size={19}
-              color={COLORS.muted}
-            />
-          </Pressable>
-        </View>
+        </ScrollView>
 
         {loading ? (
           <View style={styles.loader}><ActivityIndicator color={COLORS.accent} /></View>
         ) : visible.length === 0 ? (
           <Text style={styles.empty}>No one in this category yet.</Text>
         ) : (
-          <View style={grid ? styles.grid : styles.list}>
-            {visible.map((e, i) =>
-              grid
-                ? <GridCard key={e.id} expert={e} />
-                : <ExpertCard key={e.id} expert={e} index={i} />
-            )}
+          <View style={styles.list}>
+            {visible.map((e, i) => (
+              <ExpertCard key={e.id} expert={e} index={i} />
+            ))}
           </View>
         )}
       </Animated.ScrollView>
@@ -170,34 +152,6 @@ function ExpertCard({ expert, index }: { expert: Expert; index: number }) {
   );
 }
 
-// The same card at half the width, without the numeral, blurb and link, which
-// crowd it at this size. The whole card opens the profile anyway.
-function GridCard({ expert }: { expert: Expert }) {
-  const router = useRouter();
-  return (
-    <Pressable style={styles.gridCard} onPress={() => router.push(`/expert/${expert.id}`)}>
-      <View style={styles.photo}>
-        {expert.photo ? (
-          <FramedImage uri={expert.photo} scale={expert.photoScale ?? 1} x={expert.photoX ?? 0} y={expert.photoY ?? 0} radius={0} />
-        ) : (
-          <View style={styles.fallback}><Text style={styles.gridFallbackText}>{initials(expert.name)}</Text></View>
-        )}
-      </View>
-
-      <View style={styles.scrim} pointerEvents="none">
-        {SCRIM.map((o, i) => (
-          <View key={i} style={[styles.scrimBand, { opacity: o }]} />
-        ))}
-      </View>
-
-      <View style={styles.gridOverlay}>
-        <Text style={styles.gridName} numberOfLines={2}>{expert.name}</Text>
-        <Text style={styles.gridRole} numberOfLines={2}>{expert.title.toUpperCase()}</Text>
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingTop: 0, paddingBottom: 64 },
@@ -208,8 +162,9 @@ const styles = StyleSheet.create({
   heroRule: { width: 36, height: 1, backgroundColor: COLORS.accent, opacity: 0.5, marginTop: 18, marginBottom: 18 },
   sub: { fontFamily: FONT_ITALIC, fontSize: 19, color: COLORS.accent, textAlign: 'center' },
   heroNote: { fontSize: 14, lineHeight: 22, color: COLORS.muted, textAlign: 'center', marginTop: 14, paddingHorizontal: 24 },
-  cue: { alignItems: 'center', marginTop: 18 },
-  cueLine: { width: 1, height: 26, backgroundColor: COLORS.line },
+  cue: { alignItems: 'center', marginTop: 30 },
+  cueLine: { width: 1, height: 34, backgroundColor: COLORS.line },
+  cueText: { fontSize: 9, letterSpacing: 3, color: COLORS.muted, marginTop: 8 },
 
   filters: { gap: 22, paddingTop: 6, paddingBottom: 10, paddingRight: 8 },
   filter: { alignItems: 'center' },
@@ -222,18 +177,6 @@ const styles = StyleSheet.create({
   empty: { fontSize: 14, color: COLORS.muted, paddingVertical: 40, textAlign: 'center' },
 
   list: { marginTop: 18 },
-  grid: { marginTop: 18, flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
-  gridCard: {
-    width: GRID_W, height: GRID_H, borderRadius: 18, overflow: 'hidden',
-    backgroundColor: COLORS.accentSoft,
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 4,
-  },
-  gridFallbackText: { fontFamily: FONT_SERIF, fontSize: 38, color: COLORS.accent },
-  gridOverlay: { position: 'absolute', left: 13, right: 13, bottom: 13 },
-  gridName: { fontFamily: FONT_SERIF, fontSize: 17, lineHeight: 21, color: COLORS.bg },
-  gridRole: { fontSize: 8.5, letterSpacing: 1.2, color: COLORS.bg, opacity: 0.82, marginTop: 5, lineHeight: 12 },
-  controls: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  viewBtn: { paddingTop: 4, paddingLeft: 2 },
   slot: { marginBottom: 44 },
   card: {
     width: CARD_W, height: CARD_H, borderRadius: 26, overflow: 'hidden',

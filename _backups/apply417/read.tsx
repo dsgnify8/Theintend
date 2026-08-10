@@ -99,6 +99,7 @@ export default function LibraryScreen() {
 
         <TintBand>
           <Text style={styles.sectionLabel}>PRACTICES</Text>
+          {isAdmin ? <Text style={styles.adminHint}>Hold a tile to change its image</Text> : null}
           <View style={styles.grid}>
             {PRACTICES.map((p) => (
               <PracticeTile key={p.key} practice={p} uri={images[p.key]} isAdmin={isAdmin} />

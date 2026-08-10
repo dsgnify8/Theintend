@@ -15,7 +15,7 @@ const ALL = 'All';
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 // Half the screen, bounded, so the first card always shows a sliver.
-const HERO_H = Math.max(260, Math.min(380, Math.round(SCREEN_H * 0.42)));
+const HERO_H = Math.max(300, Math.min(440, Math.round(SCREEN_H * 0.5)));
 const CARD_W = SCREEN_W - 40;
 const CARD_H = Math.round(CARD_W * 1.12);
 
@@ -81,6 +81,7 @@ export default function ExpertsScreen() {
           </Text>
           <View style={styles.cue}>
             <View style={styles.cueLine} />
+            <Text style={styles.cueText}>SCROLL</Text>
           </View>
         </Animated.View>
 
@@ -208,8 +209,9 @@ const styles = StyleSheet.create({
   heroRule: { width: 36, height: 1, backgroundColor: COLORS.accent, opacity: 0.5, marginTop: 18, marginBottom: 18 },
   sub: { fontFamily: FONT_ITALIC, fontSize: 19, color: COLORS.accent, textAlign: 'center' },
   heroNote: { fontSize: 14, lineHeight: 22, color: COLORS.muted, textAlign: 'center', marginTop: 14, paddingHorizontal: 24 },
-  cue: { alignItems: 'center', marginTop: 18 },
-  cueLine: { width: 1, height: 26, backgroundColor: COLORS.line },
+  cue: { alignItems: 'center', marginTop: 30 },
+  cueLine: { width: 1, height: 34, backgroundColor: COLORS.line },
+  cueText: { fontSize: 9, letterSpacing: 3, color: COLORS.muted, marginTop: 8 },
 
   filters: { gap: 22, paddingTop: 6, paddingBottom: 10, paddingRight: 8 },
   filter: { alignItems: 'center' },
