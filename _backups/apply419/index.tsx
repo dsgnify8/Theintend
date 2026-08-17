@@ -22,7 +22,6 @@ import { snippetOfDay } from '@/constants/ebookSnippets';
 import { LIBRARY } from '@/constants/library';
 import { quoteOfDay } from '@/lib/quoteOfDay';
 import { HEALTH_PROGRAMS, HEALTH_PROGRAM_PRICE_USD } from '@/constants/healthPrograms';
-import { useHomeEbooks } from '@/lib/ebooks';
 
 // Hours 0 to 4 are late night rather than early morning, so they read as
 // evening. Morning starts at 5.
@@ -45,7 +44,7 @@ const BOOKS = [
     id: 'quiet-engine',
     tag: 'GUT HEALTH',
     time: '25 min read',
-    title: 'The World of Gut Health',
+    title: 'The Quiet Engine',
     blurb: 'What gut health actually means, and how far it reaches into mood, skin and hormones.',
     cover: require('@/assets/ebooks/covers/cover-quiet-engine.jpg'),
   },
@@ -53,7 +52,7 @@ const BOOKS = [
     id: 'longevity',
     tag: 'LONGEVITY',
     time: '20 min read',
-    title: 'Living Better and Longer',
+    title: 'The Long Way Home to Your Own Body',
     blurb: 'How the body ages, what genuinely slows it, and the daily choices that carry the most weight.',
     cover: require('@/assets/ebooks/covers/cover-longevity.jpg'),
   },
@@ -61,7 +60,7 @@ const BOOKS = [
     id: 'hormones',
     tag: 'HORMONES',
     time: '25 min read',
-    title: 'A Guide to Hormonal Health',
+    title: 'The Wisdom of Her Body',
     blurb: 'How the hormonal system works, what shifts it, and how to read your own cycle.',
     cover: require('@/assets/ebooks/covers/cover-hormones.jpg'),
   },
@@ -217,18 +216,10 @@ export default function HomeScreen() {
   // The e-book rail moves on by itself, and a swipe takes over from there.
   const bookRef = useRef<ScrollView>(null);
   const [bookIdx, setBookIdx] = useState(0);
-
-  // The bundled three first, then anything chosen from admin, so adding a
-  // book does not reshuffle the homepage.
-  const uploadedHomeBooks = useHomeEbooks();
-  const books = useMemo(
-    () => [...BOOKS, ...uploadedHomeBooks],
-    [uploadedHomeBooks.length],
-  );
   useEffect(() => {
     const t = setInterval(() => {
       setBookIdx((i) => {
-        const next = (i + 1) % books.length;
+        const next = (i + 1) % BOOKS.length;
         bookRef.current?.scrollTo({ x: next * CARD_W, animated: true });
         return next;
       });
@@ -402,11 +393,11 @@ export default function HomeScreen() {
           onMomentumScrollEnd={(e) => setBookIdx(Math.round(e.nativeEvent.contentOffset.x / CARD_W))}
           style={styles.bookRail}
         >
-          {books.map((b) => (
+          {BOOKS.map((b) => (
             <Pressable key={b.id} style={styles.bookCard} onPress={() => router.push(`/ebook/${b.id}`)}>
-              <Image source={(b as any).coverUrl ? { uri: (b as any).coverUrl } : b.cover} style={styles.bookImage} resizeMode="cover" />
+              <Image source={b.cover} style={styles.bookImage} resizeMode="cover" />
               <View style={styles.trackRow}>
-                {books.map((_, i) => (
+                {BOOKS.map((_, i) => (
                   <View key={i} style={[styles.trackSeg, i === bookIdx && styles.trackSegOn]} />
                 ))}
               </View>
@@ -609,11 +600,11 @@ const styles = StyleSheet.create({
   snippetCta: { fontSize: 14, color: COLORS.accent },
   snippetBook: { fontSize: 11, letterSpacing: 0.6, color: COLORS.muted, marginTop: 10 },
 
-  quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 26, paddingHorizontal: 22, marginTop: 18 },
+  quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 26, paddingHorizontal: 22, marginTop: 18, alignItems: 'center' },
   quoteKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, textAlign: 'center', alignSelf: 'stretch' },
-  quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.gold, opacity: 0.18, marginTop: 4 , alignSelf: 'center'},
-  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.gold, textAlign: 'center', marginTop: 2, alignSelf: 'stretch' , width: '100%'},
-  quoteRule: { width: 34, height: 1, backgroundColor: COLORS.line, marginTop: 20 , alignSelf: 'center'},
+  quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.gold, opacity: 0.18, marginTop: 4 },
+  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.gold, textAlign: 'center', marginTop: 2, alignSelf: 'stretch' },
+  quoteRule: { width: 34, height: 1, backgroundColor: COLORS.line, marginTop: 20 },
   quoteCta: { fontSize: 13, color: COLORS.accent, marginTop: 16, textAlign: 'center', alignSelf: 'stretch' },
 });
 

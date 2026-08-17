@@ -29,7 +29,6 @@ function fromRow(r: any): Expert {
     photoX: r.photo_x ?? 0,
     photoY: r.photo_y ?? 0,
     availability: r.availability ?? null,
-    keywords: Array.isArray(r.keywords) ? r.keywords : [],
   };
 }
 
@@ -105,59 +104,6 @@ export async function createExpert(row: any) {
   return { error };
 }
 
-// Makes one from nothing, and refuses if the id is taken.
-//
-// createExpert upserts, which is right for saving an edit and wrong for making
-// something new: a collision would quietly overwrite whoever was already there.
-export async function newExpert(row: {
-  id: string; name: string; title: string; category: string;
-  blurb?: string; bio?: string; faqs?: string[]; keywords?: string[];
-  profile_url?: string; photo?: string | null; account_email?: string | null;
-}): Promise<{ error: any }> {
-  const id = row.id.trim();
-  if (!id) return { error: { message: 'It needs an id.' } };
-
-  try {
-    const { data: taken } = await supabase.from('experts').select('id').eq('id', id).maybeSingle();
-    if (taken) return { error: { message: `There is already an expert called ${id}. Choose another id.` } };
-
-    // After everyone else, so a new one does not land in the middle of the
-    // list. The order can be changed afterwards.
-    const { data: last } = await supabase
-      .from('experts').select('sort').order('sort', { ascending: false }).limit(1).maybeSingle();
-    const sort = ((last as any)?.sort ?? 0) + 1;
-
-    const { error } = await supabase.from('experts').insert({
-      id,
-      name: row.name.trim(),
-      title: row.title.trim(),
-      category: row.category.trim(),
-      blurb: row.blurb ?? '',
-      bio: row.bio ?? '',
-      faqs: row.faqs ?? [],
-      keywords: row.keywords ?? [],
-      profile_url: row.profile_url ?? 'https://www.theintend.com/experts',
-      photo: row.photo ?? null,
-      account_email: row.account_email?.trim().toLowerCase() || null,
-      sort,
-    });
-    if (!error) await reloadExperts();
-    return { error };
-  } catch (e: any) {
-    return { error: e };
-  }
-}
-
-// An id that can live in a route and a storage path.
-export function expertSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/^dr\.?\s+/, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
-}
-
 export async function deleteExpert(id: string) {
   const { error } = await supabase.from('experts').delete().eq('id', id);
   if (!error) await reloadExperts();
@@ -186,12 +132,7 @@ export async function ensureSeeded() {
 
 export async function updateExpert(
   id: string,
-  patch: Partial<{
-    name: string; title: string; category: string; blurb: string; bio: string;
-    faqs: string[]; keywords: string[]; profile_url: string;
-    photo: string; photo_scale: number; photo_x: number; photo_y: number;
-    account_email: string; availability: any; sort: number;
-  }>
+  patch: Partial<{ bio: string; photo: string; title: string; blurb: string; name: string; account_email: string; photo_scale: number; photo_x: number; photo_y: number; availability: any }>
 ) {
   const { error } = await supabase.from('experts').update(patch).eq('id', id);
   if (!error) await reloadExperts();

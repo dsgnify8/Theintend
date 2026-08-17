@@ -39,11 +39,6 @@ export default function AdminExperts() {
         <Text style={styles.h1}>Edit experts</Text>
         <Text style={styles.sub}>Tap an expert to update their photo and bio. Changes go live everywhere.</Text>
 
-        <Pressable style={styles.newBtn} onPress={() => router.push('/admin-expert-new')}>
-          <Ionicons name="add" size={18} color={COLORS.bg} />
-          <Text style={styles.newText}>Add an expert</Text>
-        </Pressable>
-
         {loading || seeding ? (
           <ActivityIndicator color={COLORS.accent} style={{ marginTop: 24 }} />
         ) : (
@@ -88,8 +83,6 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 48 },
   h1: { fontFamily: FONT_SERIF, fontSize: 32, color: COLORS.ink, marginBottom: 8 },
   sub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginBottom: 16 },
-  newBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: COLORS.ink, borderRadius: 999, paddingVertical: 14, marginBottom: 18 },
-  newText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.3 },
   locked: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingBottom: 60 },
   lockedText: { fontSize: 15, color: COLORS.muted },
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 14, marginBottom: 10 },

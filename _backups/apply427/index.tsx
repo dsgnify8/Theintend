@@ -22,7 +22,6 @@ import { snippetOfDay } from '@/constants/ebookSnippets';
 import { LIBRARY } from '@/constants/library';
 import { quoteOfDay } from '@/lib/quoteOfDay';
 import { HEALTH_PROGRAMS, HEALTH_PROGRAM_PRICE_USD } from '@/constants/healthPrograms';
-import { useHomeEbooks } from '@/lib/ebooks';
 
 // Hours 0 to 4 are late night rather than early morning, so they read as
 // evening. Morning starts at 5.
@@ -217,18 +216,10 @@ export default function HomeScreen() {
   // The e-book rail moves on by itself, and a swipe takes over from there.
   const bookRef = useRef<ScrollView>(null);
   const [bookIdx, setBookIdx] = useState(0);
-
-  // The bundled three first, then anything chosen from admin, so adding a
-  // book does not reshuffle the homepage.
-  const uploadedHomeBooks = useHomeEbooks();
-  const books = useMemo(
-    () => [...BOOKS, ...uploadedHomeBooks],
-    [uploadedHomeBooks.length],
-  );
   useEffect(() => {
     const t = setInterval(() => {
       setBookIdx((i) => {
-        const next = (i + 1) % books.length;
+        const next = (i + 1) % BOOKS.length;
         bookRef.current?.scrollTo({ x: next * CARD_W, animated: true });
         return next;
       });
@@ -402,11 +393,11 @@ export default function HomeScreen() {
           onMomentumScrollEnd={(e) => setBookIdx(Math.round(e.nativeEvent.contentOffset.x / CARD_W))}
           style={styles.bookRail}
         >
-          {books.map((b) => (
+          {BOOKS.map((b) => (
             <Pressable key={b.id} style={styles.bookCard} onPress={() => router.push(`/ebook/${b.id}`)}>
-              <Image source={(b as any).coverUrl ? { uri: (b as any).coverUrl } : b.cover} style={styles.bookImage} resizeMode="cover" />
+              <Image source={b.cover} style={styles.bookImage} resizeMode="cover" />
               <View style={styles.trackRow}>
-                {books.map((_, i) => (
+                {BOOKS.map((_, i) => (
                   <View key={i} style={[styles.trackSeg, i === bookIdx && styles.trackSegOn]} />
                 ))}
               </View>

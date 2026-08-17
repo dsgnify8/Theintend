@@ -8,20 +8,14 @@ import { Asset } from 'expo-asset';
 import { LIBRARY } from '@/constants/library';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { recordBookOpen, saveBookScroll, saveBookPct, getBookScroll } from '@/lib/store';
-import { findEbook } from '@/lib/ebooks';
 
 type Heading = { title: string; top: number };
 
 export default function EbookReader() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [item, setItem] = useState<any>(LIBRARY.find((i) => i.id === id) ?? null);
+  const item = LIBRARY.find((i) => i.id === id);
   const mod = (item as any)?.pdf ?? (item as any)?.html;
-
-  useEffect(() => {
-    if (item || !id) return;
-    findEbook(String(id)).then((found) => { if (found) setItem(found); });
-  }, [id, item]);
   const [uri, setUri] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const startY = useRef(0);
@@ -39,19 +33,8 @@ export default function EbookReader() {
     let active = true;
     (async () => {
       try {
+        if (!mod) { setErr('This book is not available yet.'); return; }
         startY.current = getBookScroll(id);
-
-        const remote = (item as any)?.url;
-        if (remote) {
-          if (active) setUri(String(remote));
-          return;
-        }
-
-        if (!mod) {
-          // Still being looked up, or genuinely not there.
-          if (item) setErr('This book is not available yet.');
-          return;
-        }
         const asset = Asset.fromModule(mod);
         await asset.downloadAsync();
         if (active) setUri(asset.localUri ?? asset.uri);
@@ -60,7 +43,7 @@ export default function EbookReader() {
       }
     })();
     return () => { active = false; };
-  }, [mod, item]);
+  }, [mod]);
 
   useEffect(() => {
     if (uri && startY.current > 40) {
@@ -166,7 +149,7 @@ export default function EbookReader() {
           allowFileAccess
           allowFileAccessFromFileURLs
           allowUniversalAccessFromFileURLs
-          {...(uri.startsWith('file') ? { allowingReadAccessToURL: uri } : null)}
+          allowingReadAccessToURL={uri}
           injectedJavaScript={injected}
           onMessage={onMessage}
           startInLoadingState

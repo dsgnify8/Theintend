@@ -120,10 +120,6 @@ export default function AdminExpertEdit() {
             <Ionicons name="pricetags-outline" size={16} color={COLORS.ink} />
             <Text style={styles.frameBtnText}>Sessions and prices</Text>
           </Pressable>
-          <Pressable style={styles.frameBtn} onPress={() => router.push(`/admin-expert-events/${expert.id}`)}>
-            <Ionicons name="calendar-outline" size={16} color={COLORS.ink} />
-            <Text style={styles.frameBtnText}>Classes and programs</Text>
-          </Pressable>
 
           <Field label="Name" value={name} onChangeText={setName} />
           <Field label="Title" value={title} onChangeText={setTitle} />
