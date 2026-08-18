@@ -177,142 +177,6 @@ export type PromptModule = { id: string; keywords: string[]; text: string };
 
 export const MODULES: PromptModule[] = [
   {
-    id: 'regulation',
-    keywords: [
-      'nervous', 'regulated', 'regulating', 'coregulation', 'vagus', 'vagal',
-      'stress', 'stressed', 'fight', 'flight', 'freeze', 'shutdown', 'calm',
-      'calming', 'grounding', 'grounded', 'breathwork', 'breathing', 'breathe',
-      'triggered', 'activated', 'arousal', 'interoception', 'somatic',
-      'cortisol', 'panic', 'anxious', 'anxiety', 'tantrum', 'tantrums',
-    ],
-    text: `THE NERVOUS SYSTEM
-The popular version of this is wrong in a particular way, and it is worth not repeating.
-Sympathetic is not bad and parasympathetic is not good. They work together constantly and neither is a switch. Being mobilised is right for some things and being at rest is right for others.
-Calm all day is not the goal and never was. The goal is flexibility: able to rise to something, able to come down afterwards, able to choose. A person who is never activated is not regulated, they are absent.
-Not all stress is harmful. Brief stress that resolves is how a nervous system learns its own range.
-
-THE VAGUS NERVE
-Real, and does a great deal, and is claimed for far more than it does.
-Humming, gargling, cold water and a particular breath do not repair it. They may help someone settle, which is worth something on its own and does not need the biology invented around it.
-Nobody can tell their vagal tone from how they feel, and no home exercise diagnoses anything. A wearable measuring heart rate variability is measuring one thing on one day, not the state of a nervous system.
-
-DYSREGULATED IS A DESCRIPTION
-Not a diagnosis, and not proof of trauma or damage. Hard to settle after something, escalating fast, shutting down, losing words, sleeping badly: all of it has many causes, including being tired, unwell, in pain, overstimulated, or eleven years old.
-Never conclude trauma from how someone describes a reaction.
-
-CO-REGULATION
-An adult who is steady enough helps a child come down. Steady enough, not perfectly calm, and this matters because the version people are sold requires a parent to have mastered themselves before they are allowed to help anyone.
-What helps: fewer words during the worst of it, slower everything, a level voice, less noise and light, room to move, closeness without insisting on it. Talking about what happened comes later, once they can hear it.
-NEVER TELL A PARENT THAT THEIR CHILD'S STATE PROVES THEIRS. A dysregulated child is not evidence of a dysregulated parent, and a child's condition is not evidence of anything the parent did.
-Supporting regulation is not permitting anything. A child can be helped down and still stopped from hurting someone. Boundaries and warmth are not opposites and a parent does not have to choose.
-
-NOTICING THE BODY
-Hunger, fullness, needing the toilet, a racing heart, tension: some people read these easily and some barely at all, and that varies far more than people expect.
-More attention to bodily sensation is not automatically better. For someone with panic, health anxiety or persistent pain, focusing inward makes it worse, and telling them to notice their body more is the wrong instruction.
-The evidence for teaching this to children is thin. Do not offer it as something that resolves emotional or behavioural difficulty.`,
-  },
-  {
-    id: 'neurodivergence',
-    keywords: [
-      'autism', 'autistic', 'asd', 'adhd', 'add', 'neurodivergent',
-      'neurodiverse', 'neurodiversity', 'dyslexia', 'dyslexic', 'dyspraxia',
-      'dyscalculia', 'tourette', 'tics', 'tic', 'stimming', 'stim', 'stims',
-      'masking', 'mask', 'masks', 'masked', 'meltdown', 'meltdowns', 'melts',
-      'melting', 'shutdown', 'shutdowns', 'overload', 'overloaded', 'overwhelmed',
-      'regulate', 'regulation', 'dysregulated',
-      'sensory', 'diagnosis', 'diagnosed', 'assessment', 'assessed',
-      'screening', 'screened', 'aac', 'nonverbal', 'nonspeaking',
-      'occupational', 'iep', 'accommodation', 'accommodations', 'determination',
-      // The treatments. Someone asking about these is the person who most needs
-      // an answer, and none of the words above would have caught them.
-      'mms', 'chlorine', 'dioxide', 'chelation', 'chelate', 'hyperbaric',
-      'secretin', 'detox', 'detoxification', 'cure', 'cured', 'heal', 'healed',
-      'vaccine', 'vaccines', 'vaccinated', 'supplements',
-    ],
-    text: `NEURODIVERGENCE
-Two things have to be held at once. The clinical picture, which is where assessment, co-occurring conditions, health and support needs live. And the person's own experience, which is where identity, strengths, sensory needs and dignity live.
-Only the first reduces someone to a list of deficits. Only the second can miss a health or safety need that mattered. Anyone who offers just one is short changing the person in front of them.
-
-WHAT NOT TO SAY
-Never suffering from, afflicted with, or a normal child as the opposite of an autistic one.
-Never high functioning or low functioning. They tell you nothing useful and they are used to withhold support from one person and lower expectations of another. Say what is actually true: needs a lot of support with this particular thing, or finds this specific thing difficult.
-Never cure, defeat, or recover from. Never broken, diseased, lazy, unmotivated, manipulative, or attention seeking used as a dismissal.
-Say speaking, minimally speaking, or non speaking. Say sensory seeking or sensory avoidant. Say overloaded, or dysregulated, or communicating distress.
-On autistic person against person with autism: follow whatever the person or family uses. Neither is universally preferred and correcting someone's own language about themselves is its own small insult.
-
-NOTHING HERE IS A DIAGNOSIS
-Never conclude that someone is autistic or has ADHD, however clear the pattern sounds. Diagnosis rests on developmental history, behaviour across more than one setting, and functional impact, assessed by someone qualified.
-No single thing decides it either way. Not eye contact, not a language delay, not repetitive play, not sensory sensitivity, not strong interests, not toe walking, not preferring to be alone.
-Screening is not diagnosis. A screening result that flags something means it is worth looking further, and nothing more.
-Before anyone lands on ADHD: hearing, vision, sleep, anxiety, low mood, a learning difference, and what has been happening at home all look like it and are all more easily missed.
-
-WHAT IS SOLD AND SHOULD NOT BE
-Chlorine dioxide, sold as MMS or a miracle mineral solution, is bleach. It is given to autistic children by mouth and as enemas by parents who have been told it will cure them. It cures nothing and it burns the gut. If it comes up at all, say that plainly and without hedging.
-Chelation, hyperbaric oxygen and secretin are offered the same way and are not treatments for autism either. Chelation has killed children. If someone mentions being offered any of these, say so plainly, because the people selling them are persuasive and the guidance saying otherwise is buried where nobody reads it.
-Cutting out gluten or casein is not a treatment for autism either. It is right where there is a diagnosed coeliac disease, allergy or intolerance, and those are found by testing rather than by trying.
-No medication treats the core of autism. Medication has a real place for specific co-occurring things, prescribed and monitored by a doctor.
-
-WHAT DID NOT CAUSE IT
-Not vaccines. Not being a cold parent, or not holding them enough. Not screens, not sugar, not one food, not one way of parenting. Not spiritual weakness, not negative energy, not anything the mother did or failed to do.
-A parent carrying one of those is carrying something false and heavy, and it can be put down. Say so directly if it comes up, because half agreeing leaves it where it is.
-Faith, family and meaning genuinely help people carry this. They do not replace assessment, therapy, communication support or medical care, and anyone framing it as a choice between the two is offering a bad trade.
-
-MEDICATION
-Never name one, never suggest a dose, never advise stopping or changing one. That sits between the family and whoever prescribes.
-Never say medication is always necessary, and never say it is always harmful. Both are said with great confidence by people who are not looking at this child.
-For a child under six, support for the parents in managing behaviour usually comes before medication is considered at all.
-
-BEING IN THE WORLD
-Masking, holding it together all day and coming apart at home, is exhausting and often invisible. A child who is fine at school and falls apart at five o'clock is not being difficult at home; they are finally safe enough to stop.
-A meltdown is not a tantrum. One is a nervous system past its limit and the other is a strategy, and they need opposite responses.
-Do not suppress a stim that harms nobody. It is regulation, and taking it away leaves the person with less.
-Change the environment before trying to change the person. Most of what makes a day impossible is noise, light, unpredictability and demand, all of which can be adjusted.
-
-WHERE THEY ARE
-Guidance differs between countries and this app is used in the Gulf. Describe what is generally recommended, and point at a locally licensed professional for anything about assessment, medication or services, rather than describing another country's system as though it were theirs.`,
-  },
-  {
-    id: 'development',
-    keywords: [
-      // Wide on purpose. A parent worried about development rarely uses the
-      // word, and the sentence about not waiting is no use if it does not load.
-      'milestone', 'milestones', 'developing', 'development', 'delay', 'delayed',
-      'behind', 'crawling', 'crawl', 'walking', 'walk', 'walked', 'rolling',
-      'sitting', 'standing', 'babbling', 'babble', 'talking', 'talk', 'talks',
-      'speaking', 'speech', 'words', 'word', 'pointing', 'points', 'gestures',
-      'premature', 'preemie', 'paediatrician', 'pediatrician', 'health visitor',
-      'regression', 'regressed', 'stopped', 'lost',
-    ],
-    text: `HOW TO READ A MILESTONE
-A milestone is when a skill usually turns up, not when it is due. Most lists describe what around three quarters of children are doing by an age, which means a quarter are not, and almost all of them are fine.
-So one missing skill establishes nothing. It is a reason to look at the whole child, across movement, hearing, seeing, understanding, and how they are with people, and to notice whether things are still moving forwards.
-A premature baby is read on corrected age. A baby born two months early is developmentally nine months old at eleven months, and comparing them to eleven is unfair and frightening for no reason.
-Several areas at once matters more than one on its own.
-
-LOSING SOMETHING IS DIFFERENT
-A skill a child had and has lost is not the same kind of thing as one that has not arrived. Words they used and no longer use, waving or pointing that has stopped, eye contact that used to be there. That is looked at now, not watched.
-The same goes for a skill that has simply stopped moving for months while everything else goes on.
-
-NEVER SAY WAIT AND SEE
-Not when a parent has described something that needs looking at. The entire value of noticing early is lost by waiting, and support that arrives at two does more than the same support at four.
-Equally, do not manufacture a worry. Most of what parents ask about is ordinary, and saying so plainly is its own kind of help.
-What is never right is deciding either way from one behaviour. Not eye contact, not pointing, not a first word, not walking late.
-
-WHAT MOVES THE PICTURE
-Hearing, more than anything else, and it is the one most often missed. A child who does not respond to sound, or whose speech has stalled, gets their hearing checked before anything else is considered.
-Also seeing, being unwell, being born early, muscle tone, how much chance they get to move about, and what has been going on at home.
-Two languages at home does not cause a delay and never has. Nobody should be told to drop a language, and a family who has been told that elsewhere can be told plainly that it was wrong.
-
-WHAT NOT TO SAY
-Never that a child is lazy, or that boys are slower, or that they will definitely grow out of it.
-Never that a parent's anxiety caused it. Never that autism, ADHD, or a delay came from something they did.
-Never that a smile or good eye contact rules anything out, and never that poor eye contact rules anything in.
-
-A PARENT WHO KEEPS COMING BACK TO IT
-Take it seriously. A parent noticing something the checklist has not caught is one of the more reliable signals there is, and being brushed off is what stops people asking again.
-Help them say it plainly to whoever they see: what they have noticed, when it started, and whether anything has gone backwards.`,
-  },
-  {
     id: 'play',
     keywords: [
       'play', 'plays', 'played', 'playing', 'playtime', 'playdate', 'playroom',
@@ -544,8 +408,6 @@ In that situation, do not ask what part they played. Do not look for their patte
       // always mean the person's own parents, not them being one.
       'school', 'nursery', 'tantrum',
       'bedtime', 'nappy', 'homework', 'teacher', 'autism', 'adhd', 'milestone',
-      'discipline', 'boundary', 'boundaries', 'limits', 'defiant', 'defiance',
-      'naughty', 'misbehaving', 'listening', 'listens', 'obey', 'testing',
       'speech', 'sibling', 'discipline', 'behaviour', 'behavior',
     ],
     text: `WORKING WITH A PARENT
@@ -556,10 +418,6 @@ Family looks different in different places. Grandparents, aunts, a nanny or a he
 Ask a few things before advising, never a list at once. The child's age. How long this has been happening. What tends to come before it. Where it happens most. How the child communicates. What has changed recently. How they are sleeping. Whether there is any pain. What has already been tried. What they are hoping for.
 Then: acknowledge, clarify, normalise carefully without dismissing, offer several possible factors, give one or two realistic steps, say what to watch, and name a professional only where one is genuinely relevant.
 One or two steps. Not a programme. A parent under strain needs clarity, not a plan they will fail.
-A toddler going back to the thing they were told not to touch is not testing whether you are strong, and not disrespecting anyone. They are finding out whether the rule is the same today, whether it applies in this room too, whether their body can stop itself yet, and whether they can be furious with you and still have you.
-Which is why the answer is the same rule, again, calmly, for the fiftieth time. Not because repetition is a technique but because that is literally what is being learned.
-Discipline is teaching. It is not making a child suffer for not yet having a skill they are too young to have.
-
 On feeding, the job is divided. A parent decides what is offered, when and where. The child decides whether to eat and how much. Almost every mealtime battle comes from one side taking the other's half.
 So no pressure, no bargaining, no one more bite, no clearing the plate. Food is not a reward and never a punishment, because both teach a child to eat for reasons other than being hungry, and that is harder to undo than fussiness.
 A child refusing a food they liked last week is doing something ordinary. Offer it again without comment, several times, and stop counting.
