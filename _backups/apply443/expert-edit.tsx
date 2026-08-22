@@ -125,33 +125,33 @@ export default function ExpertEdit() {
           <Text style={styles.fieldLabel}>Bio / approach</Text>
           <TextInput value={bio} onChangeText={setBio} multiline style={[styles.input, styles.tall]} placeholderTextColor={COLORS.muted} />
 
-          <Text style={styles.fieldLabel}>Instagram profile URL</Text>
+          <Text style={styles.fieldLabel}>Instagram</Text>
           <TextInput
             value={instagram}
             onChangeText={setInstagram}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.input}
           />
 
-          <Text style={styles.fieldLabel}>TikTok profile URL</Text>
+          <Text style={styles.fieldLabel}>TikTok</Text>
           <TextInput
             value={tiktok}
             onChangeText={setTiktok}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.input}
           />
 
-          <Text style={styles.fieldLabel}>X profile URL</Text>
+          <Text style={styles.fieldLabel}>X</Text>
           <TextInput
             value={twitter}
             onChangeText={setTwitter}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}

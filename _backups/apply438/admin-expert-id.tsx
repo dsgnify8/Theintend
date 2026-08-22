@@ -35,9 +35,9 @@ export default function AdminExpertEdit() {
       setTitle(expert.title);
       setBlurb(expert.blurb);
       setBio(expert.bio);
-      setInstagram(expert.instagram ?? '');
-      setTiktok(expert.tiktok ?? '');
-      setTwitter(expert.twitter ?? '');
+      setInstagram(e.instagram ?? '');
+      setTiktok(e.tiktok ?? '');
+      setTwitter(e.twitter ?? '');
       setAccountEmail(expert.accountEmail ?? '');
       setPhoto(expert.photo);
       setFilled(true);
@@ -137,14 +137,6 @@ export default function AdminExpertEdit() {
           <Field label="Title" value={title} onChangeText={setTitle} />
           <Field label="Short blurb" value={blurb} onChangeText={setBlurb} multiline />
           <Field label="Bio / approach" value={bio} onChangeText={setBio} multiline tall />
-
-          <Text style={styles.groupLabel}>WHERE TO FIND THEM</Text>
-          <Text style={styles.groupNote}>
-            Paste the whole profile address. Only the ones filled in show on their profile.
-          </Text>
-          <Field label="Instagram profile URL" value={instagram} onChangeText={setInstagram} />
-          <Field label="TikTok profile URL" value={tiktok} onChangeText={setTiktok} />
-          <Field label="X profile URL" value={twitter} onChangeText={setTwitter} />
           <Field label="Linked account email (gives this person their expert panel)" value={accountEmail} onChangeText={setAccountEmail} autoCapitalize="none" keyboardType="email-address" />
           {user?.email && expert ? (
             <Pressable
@@ -198,8 +190,6 @@ function BackBar({ onPress }: { onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  groupLabel: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginTop: 22, marginBottom: 8 },
-  groupNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginBottom: 12 },
   safe: { flex: 1, backgroundColor: COLORS.bg },
   backBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 },
   backText: { fontSize: 16, color: COLORS.ink, marginLeft: 2 },

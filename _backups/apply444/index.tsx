@@ -217,15 +217,6 @@ export default function HomeScreen() {
   const snippetBook = LIBRARY.find((l) => l.id === snippet.bookId);
   const quote = quoteOfDay();
 
-  // The serif is loaded at start up, and a Text measured before it arrives
-  // keeps the width it worked out with the system font. This remounts it once,
-  // so it is measured with the real one.
-  const [quoteSettled, setQuoteSettled] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setQuoteSettled(true), 400);
-    return () => clearTimeout(t);
-  }, []);
-
   // The e-book rail moves on by itself, and a swipe takes over from there.
   const bookRef = useRef<ScrollView>(null);
   const [bookIdx, setBookIdx] = useState(0);
@@ -524,7 +515,7 @@ export default function HomeScreen() {
           <View style={styles.quoteInner}>
   <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
             <Text style={styles.quoteMark}>{'\u201C'}</Text>
-            <Text key={quoteSettled ? 'settled' : 'first'} style={styles.quoteText}>{quote}</Text>
+            <Text style={styles.quoteText}>{quote}</Text>
             <View style={styles.quoteRule} />
             <Text style={styles.quoteCta}>Start your affirmations</Text>
           </View>

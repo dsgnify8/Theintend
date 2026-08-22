@@ -75,13 +75,11 @@ export async function buyProgram(programId: string): Promise<BuyResult> {
   return res.ok ? { ok: true } : { ok: false, reason: res.reason };
 }
 
-// Everything this Apple ID owns. Apple requires this for anything non
-// consumable, and it is also how someone gets their programs on a new phone.
-export async function restorePrograms(): Promise<{ ok: boolean; found: number; reason?: string }> {
+// Everything this Apple ID has bought. Used by Restore purchases, which Apple
+// requires for anything non consumable.
+export async function restorePrograms(): Promise<BuyResult> {
   const res = await restore();
-  return res.ok
-    ? { ok: true, found: res.found }
-    : { ok: false, found: 0, reason: res.reason };
+  return res.ok ? { ok: true } : { ok: false, reason: res.reason };
 }
 
 // Wired once at app start so a purchase that arrives late, or on another

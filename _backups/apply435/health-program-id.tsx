@@ -93,20 +93,13 @@ export default function HealthProgramReader() {
 
   const buy = async () => {
     if (!id) return;
-    // stayBusy: the button holds until Apple has actually answered, rather
-    // than until the sheet was asked for. That gap is what made a failed
-    // purchase look like nothing happening at all.
-    const stayBusy = true;
-    setBusy(stayBusy);
+    setBusy(true);
     setNote(null);
-
     const res = await buyProgram(String(id));
-    await owned.reload();
     setBusy(false);
-
-    if (res.ok) return;
-    // An empty reason means they chose not to, which needs no comment.
-    if (res.reason) setNote(res.reason);
+    // Nothing is recorded here. Apple confirms through the listener, and the
+    // gate closes on its own when it does.
+    if (!res.ok && res.reason) setNote(res.reason);
   };
 
   const onRestore = async () => {
@@ -115,15 +108,8 @@ export default function HealthProgramReader() {
     const res = await restorePrograms();
     await owned.reload();
     setBusy(false);
-
-    if (!res.ok) { setNote(res.reason ?? 'Could not restore.'); return; }
-    // What came back, rather than what we happen to hold locally. Something
-    // may have been restored for another program even if not for this one.
-    if (res.found === 0) {
-      setNote('Nothing to restore on this Apple ID. If you bought this on another account, sign in with that one.');
-    } else if (!owned.ids.includes(String(id))) {
-      setNote(`Restored ${res.found} program${res.found === 1 ? '' : 's'}, though not this one.`);
-    }
+    if (!res.ok) setNote(res.reason ?? 'Could not restore.');
+    else if (!owned.ids.includes(String(id))) setNote('Nothing to restore for this program.');
   };
 
   if (!program) {

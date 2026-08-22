@@ -37,9 +37,6 @@ const SKY = require('@/assets/images/home-sky.jpg');
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = SCREEN_W - 40;
-// The quote sits inside the card's own padding. A number rather than a
-// percentage, so nothing has to resolve it against anything.
-const QUOTE_W = CARD_W - 44;
 
 // Every e-book, newest first. Read times are scaled the same way across all
 // three, so they are honest about relative length.
@@ -216,15 +213,6 @@ export default function HomeScreen() {
   const snippet = snippetOfDay();
   const snippetBook = LIBRARY.find((l) => l.id === snippet.bookId);
   const quote = quoteOfDay();
-
-  // The serif is loaded at start up, and a Text measured before it arrives
-  // keeps the width it worked out with the system font. This remounts it once,
-  // so it is measured with the real one.
-  const [quoteSettled, setQuoteSettled] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setQuoteSettled(true), 400);
-    return () => clearTimeout(t);
-  }, []);
 
   // The e-book rail moves on by itself, and a swipe takes over from there.
   const bookRef = useRef<ScrollView>(null);
@@ -521,13 +509,11 @@ export default function HomeScreen() {
         </ScrollView>
 
         <Pressable style={styles.quoteCard} onPress={() => router.push('/affirmations')}>
-          <View style={styles.quoteInner}>
-  <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
-            <Text style={styles.quoteMark}>{'\u201C'}</Text>
-            <Text key={quoteSettled ? 'settled' : 'first'} style={styles.quoteText}>{quote}</Text>
-            <View style={styles.quoteRule} />
-            <Text style={styles.quoteCta}>Start your affirmations</Text>
-          </View>
+          <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
+          <Text style={styles.quoteMark}>{'\u201C'}</Text>
+          <Text style={styles.quoteText}>{quote}</Text>
+          <View style={styles.quoteRule} />
+          <Text style={styles.quoteCta}>Start your affirmations</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -623,11 +609,10 @@ const styles = StyleSheet.create({
   snippetCta: { fontSize: 14, color: COLORS.accent },
   snippetBook: { fontSize: 11, letterSpacing: 0.6, color: COLORS.muted, marginTop: 10 },
 
-  quoteInner: { paddingVertical: 26, paddingHorizontal: 22 },
-  quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, marginTop: 18 },
+  quoteCard: { backgroundColor: COLORS.card, borderRadius: 22, borderWidth: 1, borderColor: COLORS.line, paddingVertical: 26, paddingHorizontal: 22, marginTop: 18 },
   quoteKicker: { fontSize: 10, letterSpacing: 2, color: COLORS.muted, textAlign: 'center', alignSelf: 'stretch' },
   quoteMark: { fontFamily: FONT_SERIF, fontSize: 52, lineHeight: 52, color: COLORS.gold, opacity: 0.18, marginTop: 4 , alignSelf: 'center'},
-  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.gold, textAlign: 'center', marginTop: 2 , width: QUOTE_W, alignSelf: 'center'},
+  quoteText: { fontFamily: FONT_SERIF, fontSize: 23, lineHeight: 33, color: COLORS.gold, textAlign: 'center', marginTop: 2, alignSelf: 'stretch' , width: '100%'},
   quoteRule: { width: 34, height: 1, backgroundColor: COLORS.line, marginTop: 20 , alignSelf: 'center'},
   quoteCta: { fontSize: 13, color: COLORS.accent, marginTop: 16, textAlign: 'center', alignSelf: 'stretch' },
 });

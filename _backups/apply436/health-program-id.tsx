@@ -115,15 +115,8 @@ export default function HealthProgramReader() {
     const res = await restorePrograms();
     await owned.reload();
     setBusy(false);
-
-    if (!res.ok) { setNote(res.reason ?? 'Could not restore.'); return; }
-    // What came back, rather than what we happen to hold locally. Something
-    // may have been restored for another program even if not for this one.
-    if (res.found === 0) {
-      setNote('Nothing to restore on this Apple ID. If you bought this on another account, sign in with that one.');
-    } else if (!owned.ids.includes(String(id))) {
-      setNote(`Restored ${res.found} program${res.found === 1 ? '' : 's'}, though not this one.`);
-    }
+    if (!res.ok) setNote(res.reason ?? 'Could not restore.');
+    else if (!owned.ids.includes(String(id))) setNote('Nothing to restore for this program.');
   };
 
   if (!program) {

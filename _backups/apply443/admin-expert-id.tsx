@@ -140,11 +140,11 @@ export default function AdminExpertEdit() {
 
           <Text style={styles.groupLabel}>WHERE TO FIND THEM</Text>
           <Text style={styles.groupNote}>
-            Paste the whole profile address. Only the ones filled in show on their profile.
+            A handle or a whole link, either works. Only the ones filled in show on their profile.
           </Text>
-          <Field label="Instagram profile URL" value={instagram} onChangeText={setInstagram} />
-          <Field label="TikTok profile URL" value={tiktok} onChangeText={setTiktok} />
-          <Field label="X profile URL" value={twitter} onChangeText={setTwitter} />
+          <Field label="Instagram" value={instagram} onChangeText={setInstagram} />
+          <Field label="TikTok" value={tiktok} onChangeText={setTiktok} />
+          <Field label="X" value={twitter} onChangeText={setTwitter} />
           <Field label="Linked account email (gives this person their expert panel)" value={accountEmail} onChangeText={setAccountEmail} autoCapitalize="none" keyboardType="email-address" />
           {user?.email && expert ? (
             <Pressable

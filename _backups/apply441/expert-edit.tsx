@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
-import { getExpertForEmail, updateExpert } from '@/lib/experts';
+import { getExpertForEmail } from '@/lib/experts';
 import { submitProfileChange, uploadSubmissionImage } from '@/lib/submissions';
 import type { Expert } from '@/constants/experts';
 
@@ -18,9 +18,6 @@ export default function ExpertEdit() {
   const [filled, setFilled] = useState(false);
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
-  const [instagram, setInstagram] = useState('');
-  const [tiktok, setTiktok] = useState('');
-  const [twitter, setTwitter] = useState('');
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -34,9 +31,6 @@ export default function ExpertEdit() {
     if (expert && !filled) {
       setBio(expert.bio);
       setPhoto(expert.photo);
-      setInstagram(expert.instagram ?? '');
-      setTiktok(expert.tiktok ?? '');
-      setTwitter(expert.twitter ?? '');
       setFilled(true);
     }
   }, [expert, filled]);
@@ -68,32 +62,11 @@ export default function ExpertEdit() {
   const submit = async () => {
     setBusy(true);
     setStatus(null);
-    const payload: {
-      bio?: string; photo?: string;
-      instagram?: string; tiktok?: string; twitter?: string;
-    } = {};
+    const payload: { bio?: string; photo?: string } = {};
     if (bio !== expert.bio) payload.bio = bio;
     if (photo !== expert.photo && photo) payload.photo = photo;
-    // Handles save straight away rather than waiting on approval. Compared
-    // against what is there now, so clearing one counts as a change.
-    const socials: any = {};
-    if (instagram.trim() !== (expert.instagram ?? '')) socials.instagram = instagram.trim();
-    if (tiktok.trim() !== (expert.tiktok ?? '')) socials.tiktok = tiktok.trim();
-    if (twitter.trim() !== (expert.twitter ?? '')) socials.twitter = twitter.trim();
-
-    if (Object.keys(socials).length) {
-      const { error: socialError } = await updateExpert(expert.id, socials);
-      if (socialError) {
-        setStatus(`Could not save your links: ${socialError.message}`);
-        setBusy(false);
-        return;
-      }
-    }
-
-    if (!Object.keys(payload).length) {
-      setStatus(Object.keys(socials).length
-        ? 'Your links are live.'
-        : 'Nothing changed yet.');
+    if (!payload.bio && !payload.photo) {
+      setStatus('Nothing changed yet.');
       setBusy(false);
       return;
     }
@@ -109,7 +82,7 @@ export default function ExpertEdit() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.h1}>Edit my profile</Text>
-          <Text style={styles.sub}>Your bio and photo are reviewed before they go live. Your links go up straight away.</Text>
+          <Text style={styles.sub}>Changes are reviewed by the team before they go live.</Text>
 
           <View style={styles.head}>
             <View style={styles.avatar}>
@@ -124,42 +97,6 @@ export default function ExpertEdit() {
 
           <Text style={styles.fieldLabel}>Bio / approach</Text>
           <TextInput value={bio} onChangeText={setBio} multiline style={[styles.input, styles.tall]} placeholderTextColor={COLORS.muted} />
-
-          <Text style={styles.fieldLabel}>Instagram profile URL</Text>
-          <TextInput
-            value={instagram}
-            onChangeText={setInstagram}
-            placeholder="https://instagram.com/yourname"
-            placeholderTextColor={COLORS.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-          />
-
-          <Text style={styles.fieldLabel}>TikTok profile URL</Text>
-          <TextInput
-            value={tiktok}
-            onChangeText={setTiktok}
-            placeholder="https://instagram.com/yourname"
-            placeholderTextColor={COLORS.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-          />
-
-          <Text style={styles.fieldLabel}>X profile URL</Text>
-          <TextInput
-            value={twitter}
-            onChangeText={setTwitter}
-            placeholder="https://instagram.com/yourname"
-            placeholderTextColor={COLORS.muted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={styles.input}
-          />
-          <Text style={styles.socialNote}>
-            Only the ones you fill in appear on your profile.
-          </Text>
 
           <Pressable style={styles.saveBtn} onPress={submit} disabled={busy}>
             {busy ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>Submit for approval</Text>}
@@ -206,5 +143,4 @@ const styles = StyleSheet.create({
   saveBtn: { marginTop: 18, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.taupeBlue, alignItems: 'center' },
   saveText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   status: { fontSize: 14, lineHeight: 20, color: COLORS.ink, marginTop: 14, textAlign: 'center' },
-  socialNote: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 8 },
 });

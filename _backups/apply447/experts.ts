@@ -173,9 +173,7 @@ export function socialHandle(input) {
 }
 
 export function socialUrl(kind, input) {
-  // Cleaned of every kind of whitespace, not just spaces at the ends. A value
-  // with a newline in it looks identical to a clean one and fails every time.
-  const raw = String(input == null ? '' : input).replace(/\s+/g, '').trim();
+  const raw = String(input == null ? '' : input).trim();
   if (!raw) return null;
 
   // Already a whole address, so use it rather than taking it apart and

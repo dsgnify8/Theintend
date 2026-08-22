@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Image } from '@/components/Img';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { socialUrl, useExpert } from '@/lib/experts';
+import { useExpert } from '@/lib/experts';
 import { EXPERTS } from '@/constants/experts';
 import { useLiked, toggleLiked } from '@/lib/store';
 import { FramedImage } from '@/components/FramedImage';
@@ -216,8 +216,6 @@ export default function ExpertProfile() {
           </View>
         ))}
 
-        <SocialRow expert={expert} />
-
         <Pressable
           style={styles.bookBtn}
           onPress={() => {
@@ -329,50 +327,6 @@ function BackBar({ onPress }: { onPress: () => void }) {
   );
 }
 
-// The ones filled in, and nothing at all when none have been.
-// A link that will not open now says which one, rather than failing into an
-// empty catch and letting something else report it.
-async function openSocial(url: string | null) {
-  if (!url) return;
-  try {
-    const ok = await Linking.canOpenURL(url);
-    if (!ok) {
-      Alert.alert('That link will not open', url);
-      return;
-    }
-    await Linking.openURL(url);
-  } catch (e: any) {
-    Alert.alert('That link will not open', `${url}\n\n${e?.message ?? ''}`);
-  }
-}
-
-function SocialRow({ expert }: { expert: any }) {
-  const links = ([
-    ['instagram', 'logo-instagram', expert.instagram],
-    ['tiktok', 'logo-tiktok', expert.tiktok],
-    ['twitter', 'logo-twitter', expert.twitter],
-  ] as const)
-    .map(([kind, icon, value]) => ({ icon, url: socialUrl(kind, value) }))
-    .filter((x) => !!x.url);
-
-  if (!links.length) return null;
-
-  return (
-    <View style={styles.socialRow}>
-      {links.map((l) => (
-        <Pressable
-          key={l.icon}
-          style={styles.socialBtn}
-          hitSlop={8}
-          onPress={() => openSocial(l.url)}
-        >
-          <Ionicons name={l.icon as any} size={17} color={COLORS.accent} />
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 14 },
@@ -427,8 +381,6 @@ const styles = StyleSheet.create({
   cqCard: { borderTopWidth: 1, borderTopColor: COLORS.line, paddingTop: 2, paddingBottom: 18 },
   cqMark: { fontFamily: FONT_SERIF, fontSize: 68, lineHeight: 62, color: COLORS.accent, opacity: 0.10 },
   cqText: { fontFamily: FONT_SANS, fontSize: 14, lineHeight: 22, color: COLORS.taupe, marginTop: -20 },
-  socialRow: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  socialBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: COLORS.line, alignItems: 'center', justifyContent: 'center' },
   bookBtn: { marginTop: 28, paddingVertical: 16, borderRadius: 999, backgroundColor: COLORS.ink, alignItems: 'center' },
   bookText: { color: COLORS.bg, fontSize: 15, letterSpacing: 0.5 },
   missing: { padding: 24, fontSize: 15, color: COLORS.muted },

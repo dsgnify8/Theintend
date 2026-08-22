@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Image } from '@/components/Img';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -330,22 +330,6 @@ function BackBar({ onPress }: { onPress: () => void }) {
 }
 
 // The ones filled in, and nothing at all when none have been.
-// A link that will not open now says which one, rather than failing into an
-// empty catch and letting something else report it.
-async function openSocial(url: string | null) {
-  if (!url) return;
-  try {
-    const ok = await Linking.canOpenURL(url);
-    if (!ok) {
-      Alert.alert('That link will not open', url);
-      return;
-    }
-    await Linking.openURL(url);
-  } catch (e: any) {
-    Alert.alert('That link will not open', `${url}\n\n${e?.message ?? ''}`);
-  }
-}
-
 function SocialRow({ expert }: { expert: any }) {
   const links = ([
     ['instagram', 'logo-instagram', expert.instagram],
@@ -364,7 +348,7 @@ function SocialRow({ expert }: { expert: any }) {
           key={l.icon}
           style={styles.socialBtn}
           hitSlop={8}
-          onPress={() => openSocial(l.url)}
+          onPress={() => { if (l.url) Linking.openURL(l.url).catch(() => {}); }}
         >
           <Ionicons name={l.icon as any} size={17} color={COLORS.accent} />
         </Pressable>

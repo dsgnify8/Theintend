@@ -173,17 +173,7 @@ export function socialHandle(input) {
 }
 
 export function socialUrl(kind, input) {
-  // Cleaned of every kind of whitespace, not just spaces at the ends. A value
-  // with a newline in it looks identical to a clean one and fails every time.
-  const raw = String(input == null ? '' : input).replace(/\s+/g, '').trim();
-  if (!raw) return null;
-
-  // Already a whole address, so use it rather than taking it apart and
-  // guessing how to put it back together.
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (/^(www\.)?(instagram|tiktok|twitter|x)\.com\//i.test(raw)) return 'https://' + raw.replace(/^www\./i, '');
-
-  const h = socialHandle(raw);
+  const h = socialHandle(input);
   if (!h) return null;
   if (kind === 'instagram') return `https://instagram.com/${h}`;
   if (kind === 'tiktok') return `https://tiktok.com/@${h}`;
@@ -226,27 +216,9 @@ export async function updateExpert(
     account_email: string; availability: any; sort: number;
   }>
 ) {
-  // Asks for the row back, because an update that matches nothing returns no
-  // error at all. Without this a blocked write and a successful one look the
-  // same, and the screen says Saved either way.
-  const { data, error } = await supabase
-    .from('experts')
-    .update(patch)
-    .eq('id', id)
-    .select('id');
-
-  if (error) return { error };
-
-  if (!data || data.length === 0) {
-    return {
-      error: {
-        message: `Wrote nothing for ${id}. Either that id is not in the table, or the update was refused.`,
-      },
-    };
-  }
-
-  await reloadExperts();
-  return { error: null };
+  const { error } = await supabase.from('experts').update(patch).eq('id', id);
+  if (!error) await reloadExperts();
+  return { error };
 }
 
 export async function uploadExpertImage(expertId: string, base64: string): Promise<string> {

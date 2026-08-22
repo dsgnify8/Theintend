@@ -15,7 +15,6 @@ import {
   purchaseUpdatedListener,
   requestPurchase,
   restorePurchases,
-  getAvailablePurchases,
 } from 'expo-iap';
 import { ALL_PRODUCT_IDS, programIdForProduct } from '@/constants/healthPrograms';
 
@@ -170,41 +169,14 @@ export async function buy(productId: string): Promise<BuyOutcome> {
   });
 }
 
-// Everything this Apple ID owns.
-//
-// Restoring does not replay purchases to the listener. The library is explicit
-// about it: restorePurchases triggers a refresh and returns nothing, and the
-// caller asks getAvailablePurchases what is owned. A transaction we have
-// already finished is never sent as an update again, and ours are finished the
-// moment they are recorded, which is why waiting on the listener found nothing.
-export async function restore(): Promise<{ ok: boolean; found: number; reason?: string }> {
+// Everything this Apple ID has bought, replayed through the same listener.
+export async function restore(): Promise<{ ok: boolean; reason?: string }> {
   const ready = await startIap();
-  if (!ready) return { ok: false, found: 0, reason: 'Could not reach the App Store. Try again in a moment.' };
-
+  if (!ready) return { ok: false, reason: 'Could not reach the App Store. Try again in a moment.' };
   try {
-    // Asks Apple to sync. Nothing comes back from this.
-    try { await restorePurchases(); } catch {}
-
-    const owned: any = await getAvailablePurchases();
-    const list = Array.isArray(owned) ? owned : (owned?.purchases ?? []);
-
-    let found = 0;
-    for (const purchase of list as any[]) {
-      const productId = purchase?.productId ?? purchase?.id;
-      const programId = productId ? programIdForProduct(String(productId)) : null;
-      if (!programId) continue;
-      try {
-        await onOwned?.(programId);
-        found += 1;
-        // Anything still unfinished is closed off, so it stops being redelivered.
-        try { await finishTransaction({ purchase, isConsumable: false }); } catch {}
-      } catch {
-        // Recording failed. Leave it unfinished so Apple offers it again.
-      }
-    }
-
-    return { ok: true, found };
+    await restorePurchases();
+    return { ok: true };
   } catch (e: any) {
-    return { ok: false, found: 0, reason: String(e?.message ?? 'Could not restore.') };
+    return { ok: false, reason: String(e?.message ?? 'Could not restore.') };
   }
 }

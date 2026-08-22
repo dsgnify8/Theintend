@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
-import { getExpertForEmail, updateExpert } from '@/lib/experts';
+import { getExpertForEmail } from '@/lib/experts';
 import { submitProfileChange, uploadSubmissionImage } from '@/lib/submissions';
 import type { Expert } from '@/constants/experts';
 
@@ -74,26 +74,14 @@ export default function ExpertEdit() {
     } = {};
     if (bio !== expert.bio) payload.bio = bio;
     if (photo !== expert.photo && photo) payload.photo = photo;
-    // Handles save straight away rather than waiting on approval. Compared
-    // against what is there now, so clearing one counts as a change.
-    const socials: any = {};
-    if (instagram.trim() !== (expert.instagram ?? '')) socials.instagram = instagram.trim();
-    if (tiktok.trim() !== (expert.tiktok ?? '')) socials.tiktok = tiktok.trim();
-    if (twitter.trim() !== (expert.twitter ?? '')) socials.twitter = twitter.trim();
-
-    if (Object.keys(socials).length) {
-      const { error: socialError } = await updateExpert(expert.id, socials);
-      if (socialError) {
-        setStatus(`Could not save your links: ${socialError.message}`);
-        setBusy(false);
-        return;
-      }
-    }
+    // Compared against what is there now, so clearing one counts as a change
+    // and leaving one alone does not.
+    if (instagram.trim() !== (expert.instagram ?? '')) payload.instagram = instagram.trim();
+    if (tiktok.trim() !== (expert.tiktok ?? '')) payload.tiktok = tiktok.trim();
+    if (twitter.trim() !== (expert.twitter ?? '')) payload.twitter = twitter.trim();
 
     if (!Object.keys(payload).length) {
-      setStatus(Object.keys(socials).length
-        ? 'Your links are live.'
-        : 'Nothing changed yet.');
+      setStatus('Nothing changed yet.');
       setBusy(false);
       return;
     }
@@ -109,7 +97,7 @@ export default function ExpertEdit() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Text style={styles.h1}>Edit my profile</Text>
-          <Text style={styles.sub}>Your bio and photo are reviewed before they go live. Your links go up straight away.</Text>
+          <Text style={styles.sub}>Changes are reviewed by the team before they go live.</Text>
 
           <View style={styles.head}>
             <View style={styles.avatar}>
@@ -125,33 +113,33 @@ export default function ExpertEdit() {
           <Text style={styles.fieldLabel}>Bio / approach</Text>
           <TextInput value={bio} onChangeText={setBio} multiline style={[styles.input, styles.tall]} placeholderTextColor={COLORS.muted} />
 
-          <Text style={styles.fieldLabel}>Instagram profile URL</Text>
+          <Text style={styles.fieldLabel}>Instagram</Text>
           <TextInput
             value={instagram}
             onChangeText={setInstagram}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.input}
           />
 
-          <Text style={styles.fieldLabel}>TikTok profile URL</Text>
+          <Text style={styles.fieldLabel}>TikTok</Text>
           <TextInput
             value={tiktok}
             onChangeText={setTiktok}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}
             style={styles.input}
           />
 
-          <Text style={styles.fieldLabel}>X profile URL</Text>
+          <Text style={styles.fieldLabel}>X</Text>
           <TextInput
             value={twitter}
             onChangeText={setTwitter}
-            placeholder="https://instagram.com/yourname"
+            placeholder="your handle, or paste the link"
             placeholderTextColor={COLORS.muted}
             autoCapitalize="none"
             autoCorrect={false}

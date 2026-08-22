@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Change Your Life From the Inside Out — 21 Days of Transformation | The Intend</title>
+<meta name="description" content="A 21-day guided journey with the teachings of Carl Jung. From The Intend.">
+<script>document.documentElement.className+=' js';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F7F4EE; --paper-2:#F1EDE4; --card:#FCFAF6;
+  --ink:#22201D; --ink-2:#514C45; --muted:#8C857A;
+  --rule:#DED8CB; --hair:#E7E2D7;
+  --accent:#4A5C6A; --accent-2:#6E8494; --tint:#E4E9ED; --tint-2:#EEF1F4;
+  --warm:#B08D57; --warm-tint:#F2E9DA;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --rail:196px; --pad:82px; --maxw:1020px;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:#EAE5DA;font-family:var(--sans);color:var(--ink);font-size:16px;line-height:1.65;
+  padding:24px 14px 56px;-webkit-font-smoothing:antialiased;font-weight:300}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:400;max-width:var(--maxw);margin:0 auto;background:var(--ink);
+  display:flex;align-items:center;gap:2px;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-brand{font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--paper);padding-right:16px;margin-right:8px;white-space:nowrap;border-right:1px solid #ffffff20;line-height:46px}
+.nav a{font-size:9.5px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#B9B3A7;
+  text-decoration:none;white-space:nowrap;padding:0 10px;line-height:46px;border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s}
+.nav a:hover,.nav a:focus-visible{color:var(--paper);border-bottom-color:var(--accent-2)}
+
+.doc{max-width:var(--maxw);margin:0 auto;background:var(--paper);overflow:hidden}
+
+/* ── SHELL ── */
+section{display:grid;grid-template-columns:var(--rail) 1fr;border-top:1px solid var(--rule);
+  padding:64px var(--pad) 68px 0}
+.rail{padding-left:var(--pad);display:flex;flex-direction:column;gap:14px;position:relative}
+.rail::after{content:'';position:absolute;left:var(--pad);top:70px;bottom:-68px;width:1px;background:var(--hair)}
+section:last-of-type .rail::after{display:none}
+.rail-num{font-size:9.5px;font-weight:400;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;
+  max-width:calc(var(--rail) - var(--pad) - 14px);line-height:1.6}
+.rail-glyph{width:30px;height:30px;color:var(--accent);position:relative;z-index:2;background:var(--paper)}
+.rail-glyph svg{display:block;width:28px;height:28px}
+.body-col{min-width:0}
+
+/* ── TYPE ── */
+.eyebrow{font-size:9.5px;font-weight:400;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.eyebrow-accent{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--serif);font-weight:300;letter-spacing:0;line-height:1.14}
+h2{font-size:40px;margin:10px 0 0;max-width:22ch}
+h3{font-size:26px;font-weight:400;margin:0}
+h4{font-size:20px;font-weight:500;margin:0}
+p.txt{font-size:15.5px;line-height:1.85;color:var(--ink-2);margin-bottom:17px;font-weight:300}
+p.txt:last-child{margin-bottom:0}
+p.txt b{font-weight:500;color:var(--ink)}
+.lede{font-family:var(--serif);font-size:21px;line-height:1.55;color:var(--ink);font-weight:300;max-width:46ch;font-style:italic}
+.rule{height:1px;background:var(--rule);margin:24px 0}
+.rule-short{height:1px;width:56px;background:var(--accent);margin:20px 0;opacity:.5}
+em{font-style:italic}
+
+/* drop cap on first paragraph of a chapter */
+.dropcap::first-letter{font-family:var(--serif);font-size:62px;line-height:.82;float:left;
+  padding:6px 12px 0 0;color:var(--accent);font-weight:300}
+
+/* ── COVER ── */
+.cover{display:block;border-top:none;padding:0;background:linear-gradient(180deg,#F9F6F0 0%,var(--paper) 100%)}
+.cover-inner{padding:80px var(--pad) 64px;position:relative}
+.cover-mark{width:200px;height:200px;color:var(--accent);margin:0 auto 34px}
+.cover-mark svg{width:100%;height:100%;display:block}
+.cover-kicker{text-align:center;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted);margin-bottom:26px}
+h1{font-size:60px;font-weight:300;line-height:1.1;text-align:center;max-width:17ch;margin:0 auto}
+h1 em{font-style:italic;color:var(--accent)}
+.cover-sub{text-align:center;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:26px;line-height:1.9}
+.cover-social{max-width:52ch;margin:36px auto 0;text-align:center;font-family:var(--serif);font-size:19px;
+  font-style:italic;line-height:1.6;color:var(--ink-2)}
+.cover-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--rule);margin-top:48px}
+.cm{padding:20px 22px 22px;border-right:1px solid var(--rule);text-align:center}
+.cm:last-child{border-right:none}
+.cm-k{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px}
+.cm-v{font-family:var(--serif);font-size:26px;font-weight:400;display:block;line-height:1.1}
+.cm-v small{font-family:var(--sans);font-size:11px;color:var(--ink-2);display:block;margin-top:6px;letter-spacing:.02em}
+
+/* ── OPENING / NOTICE ── */
+.opening{background:var(--paper-2)}
+.notice-card{background:var(--card);border:1px solid var(--rule);padding:30px 34px 32px;margin-top:24px}
+.pull{font-family:var(--serif);font-size:27px;font-style:italic;line-height:1.42;color:var(--accent);
+  border-left:2px solid var(--accent);padding:4px 0 4px 24px;margin:30px 0}
+
+/* ── CONTENTS ── */
+.toc{list-style:none;margin-top:24px;border-top:1px solid var(--ink)}
+.toc li{border-bottom:1px solid var(--rule)}
+.toc a{display:grid;grid-template-columns:78px 1fr auto;gap:18px;align-items:baseline;
+  padding:15px 2px;text-decoration:none;color:var(--ink);transition:background .18s,padding .18s}
+.toc a:hover{background:var(--tint-2);padding-left:10px}
+.toc-n{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+.toc-t{font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.3}
+.toc-m{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+/* ── CHAPTER OPENER ── */
+.ch-open{display:flex;align-items:flex-start;gap:26px;margin-bottom:6px}
+.ch-mark{width:64px;height:64px;color:var(--accent);flex-shrink:0;opacity:.9}
+.ch-mark svg{width:100%;height:100%;display:block}
+.sub{margin-top:44px}
+.sub-head{display:flex;align-items:baseline;gap:14px;margin-bottom:16px}
+.sub-num{font-size:10px;letter-spacing:.2em;color:var(--accent);flex-shrink:0}
+
+/* ── PHASE DIVIDER ── */
+.phase{border-top:1px solid var(--ink);background:var(--accent);color:#fff;
+  display:grid;grid-template-columns:var(--rail) 1fr;padding:58px var(--pad) 60px 0}
+.phase .rail{padding-left:var(--pad)}
+.phase .rail::after{display:none}
+.phase .rail-num,.phase .rail-glyph{color:#fff}
+.phase .rail-glyph{background:transparent}
+.phase-eyebrow{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#ffffffa8}
+.phase h2{color:#fff;font-size:46px;margin-top:12px}
+.phase-range{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#ffffffbb;margin-top:16px}
+.phase-intro{font-family:var(--serif);font-size:20px;font-style:italic;color:#ffffffdd;margin-top:20px;max-width:40ch;line-height:1.55}
+.phase-bar{display:flex;gap:4px;margin-top:28px;max-width:400px}
+.pb{height:3px;flex:1;background:#ffffff33}
+.pb.on{background:#fff}
+
+/* ── DAY ── */
+.day-head{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;
+  border-bottom:1px solid var(--ink);padding-bottom:16px;flex-wrap:wrap}
+.day-n{display:flex;align-items:baseline;gap:12px}
+.day-n .big{font-family:var(--serif);font-size:58px;font-weight:300;line-height:.86;color:var(--accent)}
+.day-n .lab{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.day-title{font-family:var(--serif);font-size:29px;font-weight:400;line-height:1.24;max-width:24ch;flex:1;min-width:240px}
+.day-kicker{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--warm);margin-bottom:8px}
+
+.block{margin-top:30px}
+.block-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.block-h span{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent)}
+.block-h i{flex:1;height:1px;background:var(--hair);display:block}
+
+.why{background:var(--tint-2);border-left:2px solid var(--accent-2);padding:22px 26px 24px;margin-top:28px}
+.why .block-h{margin-bottom:12px}
+.why p.txt{font-size:15px;margin-bottom:13px}
+
+.action{border:1px solid var(--rule);background:var(--card);margin-top:30px}
+.action-head{background:var(--accent);color:#fff;padding:14px 26px;display:flex;justify-content:space-between;
+  gap:16px;align-items:baseline;flex-wrap:wrap}
+.action-name{font-family:var(--serif);font-size:21px;font-weight:400}
+.action-meta{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#ffffffb5}
+.action-body{padding:24px 28px 28px}
+.objective{font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--hair);padding-bottom:16px;margin-bottom:20px}
+.objective b{font-weight:500;color:var(--ink);letter-spacing:.02em}
+.steps{list-style:none;counter-reset:s}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:16px;padding-bottom:22px}
+.steps>li:last-child{padding-bottom:0}
+.steps>li::before{content:counter(s,decimal-leading-zero);font-size:10px;letter-spacing:.12em;color:var(--accent);
+  padding-top:5px;font-variant-numeric:tabular-nums}
+.step-t{font-family:var(--serif);font-size:19px;font-weight:500;line-height:1.3;margin-bottom:8px}
+.step-l{list-style:none}
+.step-l li{font-size:14.5px;line-height:1.72;color:var(--ink-2);padding:3px 0 3px 16px;position:relative}
+.step-l li::before{content:'';position:absolute;left:0;top:14px;width:7px;height:1px;background:var(--accent);opacity:.55}
+
+.note-card{background:var(--warm-tint);padding:18px 22px;margin-top:24px;font-size:14px;line-height:1.72;color:var(--ink-2)}
+.note-card b{font-weight:500;color:var(--ink)}
+.day-close{font-family:var(--serif);font-size:20px;font-style:italic;line-height:1.55;color:var(--accent);
+  margin-top:28px;padding-top:22px;border-top:1px solid var(--rule);max-width:52ch}
+
+.simple-list{list-style:none;margin-top:6px}
+.simple-list li{font-size:15px;line-height:1.7;color:var(--ink-2);padding:7px 0 7px 20px;position:relative;
+  border-bottom:1px solid var(--hair)}
+.simple-list li:last-child{border-bottom:none}
+.simple-list li::before{content:'';position:absolute;left:0;top:17px;width:8px;height:1px;background:var(--accent);opacity:.6}
+
+/* ── NUMBERED PRACTICE CARDS ── */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:26px}
+.cd{background:var(--card);padding:22px 24px 24px}
+.cd-t{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.25;margin-bottom:9px}
+.cd-p{font-size:14px;line-height:1.72;color:var(--ink-2)}
+.cd.blank{background:var(--card)}
+
+/* ── RESOURCES ── */
+.res{list-style:none;margin-top:24px;border-top:1px solid var(--ink)}
+.res li{display:grid;grid-template-columns:52px 1fr;gap:20px;padding:22px 0;border-bottom:1px solid var(--rule)}
+.res-n{font-size:10px;letter-spacing:.14em;color:var(--accent);padding-top:6px}
+.res-t{font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.25}
+.res-p{font-size:14px;line-height:1.72;color:var(--ink-2);margin-top:8px}
+.res-q{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--accent);margin-top:9px}
+
+/* ── FINAL ── */
+.final-sec{background:var(--accent);color:#fff;border-top:none}
+.final-sec .rail-num,.final-sec .rail-glyph{color:#fff}
+.final-sec .rail-glyph{background:transparent}
+.final-sec .rail::after{background:#ffffff2e}
+.final-sec h2{color:#fff}
+.final-sec .eyebrow{color:#ffffffa0}
+.final-sec p.txt{color:#ffffffdb}
+.final-sec .rule{background:#ffffff30}
+.letter{font-family:var(--serif);font-size:19px;line-height:1.75;color:#ffffffe8;font-style:italic;max-width:54ch}
+.letter p{margin-bottom:18px}
+.sign{margin-top:26px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#ffffffb0}
+.sign b{display:block;font-family:var(--serif);font-size:22px;font-style:normal;letter-spacing:.14em;
+  color:#fff;margin-top:12px;font-weight:400;text-transform:none}
+
+.foot{border-top:1px solid var(--ink);padding:30px var(--pad) 38px;display:flex;justify-content:space-between;
+  align-items:flex-end;gap:22px;flex-wrap:wrap;background:var(--paper)}
+.foot-mark{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink)}
+.foot-note{font-size:11px;line-height:1.7;color:var(--muted);max-width:58ch}
+
+/* ── REVEAL ── */
+.js .rv{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+.js .rv.in{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:880px){
+  :root{--pad:48px;--rail:160px}
+  h1{font-size:46px}h2{font-size:33px}.phase h2{font-size:37px}
+  .cover-mark{width:158px;height:158px}
+  .cards{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+  :root{--pad:22px}
+  body{padding:0;background:var(--paper)}
+  .nav{padding:0 12px}.nav-brand{font-size:9px;line-height:42px;padding-right:12px}
+  .nav a{line-height:42px;font-size:9px;padding:0 8px}
+  section,.phase{grid-template-columns:1fr;padding:38px var(--pad) 42px}
+  .rail{padding-left:0;flex-direction:row;align-items:center;gap:12px;margin-bottom:16px}
+  .rail::after{display:none}
+  .rail-glyph{width:26px;height:26px}.rail-glyph svg{width:24px;height:24px}
+  .cover-inner{padding:44px var(--pad) 40px}
+  .cover-mark{width:124px;height:124px;margin-bottom:26px}
+  h1{font-size:34px;max-width:none}
+  .cover-sub{font-size:11px;letter-spacing:.16em}
+  .cover-social{font-size:17px}
+  .cover-meta{grid-template-columns:1fr;margin-top:32px}
+  .cm{border-right:none;border-bottom:1px solid var(--rule);padding:16px 0 17px;text-align:left}
+  .cm:last-child{border-bottom:none}
+  h2{font-size:28px}.phase h2{font-size:31px}
+  .lede{font-size:18px}
+  p.txt{font-size:15px}
+  .dropcap::first-letter{font-size:50px;padding-right:9px}
+  .ch-open{gap:16px}.ch-mark{width:46px;height:46px}
+  .notice-card{padding:22px 20px 24px}
+  .pull{font-size:22px;padding-left:18px}
+  .toc a{grid-template-columns:1fr;gap:5px;padding:14px 2px}
+  .toc-m{white-space:normal}
+  .day-n .big{font-size:46px}
+  .day-title{font-size:24px;min-width:0}
+  .action-head{padding:13px 20px}.action-body{padding:20px 20px 24px}
+  .steps>li{grid-template-columns:26px 1fr;gap:12px}
+  .why{padding:18px 20px 20px}
+  .cd{padding:18px 20px 20px}
+  .res li{grid-template-columns:40px 1fr;gap:14px}
+  .letter{font-size:17px}
+  .foot{padding:24px var(--pad) 32px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .rv{opacity:1!important;transform:none!important;transition:none!important}
+}
+@media print{
+  body{background:#fff;padding:0}
+  .nav{display:none}.doc{max-width:none}
+  section,.phase{page-break-inside:avoid;border-top:1px solid #ccc}
+  .js .rv{opacity:1!important;transform:none!important}
+  .phase,.final-sec{background:#fff!important;color:#000!important}
+  .phase h2,.final-sec h2,.letter,.phase-intro{color:#000!important}
+  .action-head{background:#eee!important;color:#000!important}
+  .action-meta{color:#555!important}
+}
+</style>
+</head>
+<body>
+<nav class="nav"><span class="nav-brand">The Intend</span>
+<a href="#top">Cover</a><a href="#begin">Before You Begin</a><a href="#contents">Contents</a>
+<a href="#ch1">The Call</a>
+<a href="#ch2">Inner Hero</a>
+<a href="#ch3">Inner Ground</a>
+<a href="#ch4">How It Works</a>
+<a href="#descent">The Descent</a>
+<a href="#meeting">The Meeting</a>
+<a href="#ascent">The Ascent</a>
+<a href="#ch8">Next Steps</a><a href="#ch9">Going Deeper</a><a href="#ch10">Closing</a></nav><div class="doc">
+<header class="cover" id="top">
+  <div class="cover-inner">
+    <div class="cover-mark" aria-hidden="true"><svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <g opacity=".22">
+    <line x1="100" y1="10" x2="100" y2="24"/><line x1="100" y1="176" x2="100" y2="190"/>
+    <line x1="10" y1="100" x2="24" y2="100"/><line x1="176" y1="100" x2="190" y2="100"/>
+  </g>
+  <circle cx="100" cy="100" r="84" opacity=".16"/>
+  <!-- outer profile -->
+  <path d="M150 178 C150 150 152 138 146 124 C140 110 132 104 130 92 C127 74 116 60 100 60 C80 60 66 76 66 96 C66 106 60 110 55 118 C52 123 54 127 59 129 L66 131 C68 139 66 146 70 150 C74 154 82 153 86 152 L86 178"
+        opacity=".9"/>
+  <!-- second layer -->
+  <path d="M138 178 C138 152 140 140 135 128 C130 116 124 110 122 99 C119 84 111 73 99 73 C84 73 74 85 74 100 C74 108 70 112 66 118 C64 121 66 124 69 125 L74 127 C76 133 75 139 78 142 C81 145 87 144 90 143 L90 178"
+        opacity=".55"/>
+  <!-- third layer -->
+  <path d="M126 178 C126 154 128 143 124 133 C120 123 116 118 114 108 C112 96 106 87 97 87 C86 87 79 96 79 107 C79 113 76 116 73 121 C72 123 73 125 75 126 L79 127 C80 131 80 136 82 138 C84 140 88 139 91 139 L91 178"
+        opacity=".34"/>
+  <!-- inner core -->
+  <circle cx="99" cy="115" r="13" opacity=".75"/>
+  <circle cx="99" cy="115" r="5.5" opacity=".95"/>
+  <path d="M86 115 C86 108 92 102 99 102" opacity=".5"/>
+</svg></div>
+    <p class="cover-kicker">The Intend &middot; A 21-Day Guided Journey</p>
+    <h1>Change Your Life From the <em>Inside Out</em></h1>
+    <p class="cover-sub">21 Days of Transformation<br>With the Teachings of Carl Jung</p>
+    <p class="cover-social">A daily schedule that has changed the lives of thousands of The&nbsp;Intend readers.</p>
+    <div class="cover-meta">
+      <div class="cm"><span class="cm-k">The journey</span><span class="cm-v">21 days<small>Three phases &middot; one day at a time</small></span></div>
+      <div class="cm"><span class="cm-k">Each day holds</span><span class="cm-v">Phrase &middot; reflection &middot; action<small>A triad for insight and reorganization</small></span></div>
+      <div class="cm"><span class="cm-k">What you need</span><span class="cm-v">A notebook<small>And a quiet corner that is yours</small></span></div>
+    </div>
+  </div>
+</header>
+<section class="opening" id="begin">
+  <div class="rail"><span class="rail-num">Opening</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">An Invitation</p>
+    <h2>Before you begin</h2>
+    <div class="rule-short"></div>
+    <p class="txt dropcap">This book was written with the intention of uniting deep psychology and practical transformation. Inspired by the teachings of Carl Jung, it was structured as a 21-day schedule for those who want to change from the inside out, without ready-made formulas, but with depth, clarity and soul.</p>
+<p class="txt">The journey is symbolic, but the effects are real. Each day, you will be invited to reflect, act, and feel. This is not just a book: it is a mirror, a compass, and perhaps a transitional portal between who you were and who you are ready to be.</p>
+    <div class="notice-card">
+      <div class="block-h"><span>Important notice</span><i></i></div>
+      <p class="txt">Before proceeding with this book, it is essential that you understand something about the process you are about to begin.</p>
+<p class="txt">This is not a material for quick consumption. It was built strategically and intentionally, respecting how the human unconscious actually transforms. The brain needs constant exposure to new pathways to create stable circuits of real change.</p>
+<p class="txt">This is how we get out of automatic mode and start living more consciously.</p>
+<p class="txt">You will notice that, on Days 1 to 12, the themes revolve around internal listening, emotional unblocking, reconnecting with forgotten aspects of your psyche (such as your inner child, creativity, vulnerability, intuition).</p>
+<p class="txt">This part is softer, more symbolic, introspective — it sets the stage.</p>
+<p class="txt">From Day 12 onwards, something changes: the exercises become more active, more challenging, and require clear action.</p>
+<p class="txt">It is the moment when you begin to assert your inner strength, break old patterns and enter a new rhythm of presence.</p>
+<p class="txt">So don’t skip steps — even if you think you “get it.” Each repetition is a polishing. Each day is a layer. And sometimes, it's only the third or fourth time that a truth really descends from the mind to the body.</p>
+    </div>
+    <p class="pull">Transformation is not a leap — it is a daily construction.</p>
+  </div>
+</section>
+<section id="contents">
+  <div class="rail"><span class="rail-num">Contents</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">The Map</p>
+    <h2>Contents</h2>
+    <ul class="toc"><li><a href="#ch1"><span class="toc-n">Chapter One</span><span class="toc-t">The Call of the Soul: Why Jung Now?</span><span class="toc-m">Four sections</span></a></li><li><a href="#ch2"><span class="toc-n">Chapter Two</span><span class="toc-t">The Journey of the Inner Hero: Fundamentals of Jungian Psychology</span><span class="toc-m">Four sections</span></a></li><li><a href="#ch3"><span class="toc-n">Chapter Three</span><span class="toc-t">Preparing the Inner Ground: Before Starting the 21 Days</span><span class="toc-m">Four sections</span></a></li><li><a href="#ch4"><span class="toc-n">Chapter Four</span><span class="toc-t">The 21 Days of Transformation: How it Works</span><span class="toc-m">Four sections</span></a></li><li><a href="#descent"><span class="toc-n">Chapter Five</span><span class="toc-t">The Descent</span><span class="toc-m">Day 1 to Day 7</span></a></li><li><a href="#meeting"><span class="toc-n">Chapter Six</span><span class="toc-t">The Meeting</span><span class="toc-m">Day 8 to Day 14</span></a></li><li><a href="#ascent"><span class="toc-n">Chapter Seven</span><span class="toc-t">The Ascent</span><span class="toc-m">Day 15 to Day 21</span></a></li><li><a href="#ch8"><span class="toc-n">Chapter Eight</span><span class="toc-t">Next Steps</span><span class="toc-m">Keeping it alive</span></a></li><li><a href="#ch9"><span class="toc-n">Chapter Nine</span><span class="toc-t">The Path to Self-Knowledge Does Not End Here</span><span class="toc-m">Going deeper</span></a></li><li><a href="#ch10"><span class="toc-n">Chapter Ten</span><span class="toc-t">Support Resources + Conclusion</span><span class="toc-m">Closing</span></a></li></ul>
+  </div>
+</section>
+<section id="ch1">
+  <div class="rail"><span class="rail-num">Chapter One</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M32 6 C20 6 12 15 12 26 C12 33 15 36 15 42 L15 50 C15 54 18 57 22 57 L38 57"/>
+<path d="M32 6 C42 6 50 14 50 24 C50 32 45 36 42 40"/>
+<path d="M42 40 C40 44 40 50 42 54" opacity=".45"/>
+<circle cx="31" cy="28" r="8" opacity=".55"/><circle cx="31" cy="28" r="3.4" opacity=".8"/>
+<path d="M24 46 C27 44 33 44 36 46" opacity=".4"/></svg></div>
+      <div>
+        <p class="eyebrow">The Journey</p>
+        <h2>The Call of the Soul: Why Jung Now?</h2>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class=""><p class="txt dropcap">We live in an era marked by external excesses and internal emptiness. We are connected all the time, but we feel an almost existential loneliness. We have access to all the information in the world in seconds, but we still ask ourselves: “What is all this for?” Modernity has brought incredible advances, but it has also come at a silent emotional cost. It is as if we are surviving on autopilot, while the deepest meaning of life escapes through the cracks of routine.</p>
+<p class="txt">Loss of meaning does not happen suddenly. It settles in little by little, like a fog that covers the clarity of the soul. First, the signs come: discouragement, restlessness, constant tiredness, a desire to disappear or start all over again from scratch. Then, the feeling that everything is disconnected – from people, from goals, even from yourself. The soul, which previously whispered, begins to scream. And many of us don't know what to do with that scream.</p>
+<p class="txt">Carl Jung spoke of this loss of meaning as one of the greatest evils of the century. He perceived that behind many psychological symptoms there was a profound spiritual deficiency. Not necessarily linked to religion, but to a feeling of existential emptiness. When we do not have a “why,” any “how” becomes unbearable. And that is when many people become ill, emotionally, spiritually, silently.</p>
+<p class="txt">The curious thing is that, even surrounded by so many self-help tools, personal development and modern spirituality, we still feel that something essential is missing. Jung reminds us that the answer is not outside, but within.</p>
+<p class="txt">It's not about adding more, but about removing what disconnects us from who we really are. The collapse of meaning, then, can be seen not as a tragedy but as a turning point: the chance to begin again with more truth.</p>
+<p class="txt">Perhaps this is the true calling of the soul in our time. When everything outside seems meaningless, it is an invitation to look within. The emptiness we feel is not a sign of failure, but rather that the time has come to rebuild our inner world. And in this reconstruction, Jung’s teachings are like ancient maps – they do not tell us the exact path, but they show us the landscapes we need to cross in order to rediscover what we have lost: the connection with our own spirit.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">1.2</span><h3>Crisis as an Invitation to Inner Transformation</h3></div><p class="txt">Every crisis, no matter how painful, carries within it an opportunity in disguise. This idea may seem romantic or even irritating to those in the midst of chaos, but it is exactly what Jung tried to show us: moments of rupture, collapse and confusion are often the only ones capable of pushing us into ourselves. Without a crisis, we would continue to function on autopilot, following the scripts we have inherited and repeating patterns that no longer serve us.</p>
+<p class="txt">Jung believed that psychic suffering was a kind of messenger of the soul. When we ignore our deep needs, our unfulfilled desires, our poorly healed wounds, the soul begins to manifest itself through symptoms: anguish, insomnia, apathy, anxiety, compulsions. These symptoms, which we normally try to silence with distractions or medication, can be understood as signs that something inside us is asking for attention – and transformation.</p>
+<p class="txt">Instead of running away from the crisis, Jung invites us to listen to it. To dive into the discomfort with courage and curiosity. This does not mean glorifying pain, but recognizing its symbolic value. Crisis does indeed destabilize us – but it is precisely in this destructuring that space opens up for something new to emerge. Like a forest that needs to burn in order to be reborn, there are cycles of the soul that only flourish after devastation. In this sense, crisis is also a rebirth.</p>
+<p class="txt">Jung’s path runs deeply counter to the culture of quick fixes. He offers us no shortcuts or instant promises. Instead, he proposes a slow, symbolic, and transformative process of inner listening. When we choose to go through a crisis with awareness, it ceases to be just a trauma and becomes a rite of passage. Something dies, yes – but something is also born. And this birth is the beginning of individuation, the path to becoming who we really are.</p>
+<p class="txt">So instead of asking, “Why is this happening to me?” Jung invites us to ask, “What is this happening to me for?” This small shift in perspective transforms victims into seekers, and crises into portals. Within pain lies a seed of wisdom waiting to germinate. And perhaps the greatest gift we can give ourselves is this: to allow crisis to teach us, to break us with purpose, and to rebuild us with truth.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">1.3</span><h3>Why Jung's teachings are essential in the 21st century</h3></div><p class="txt">In a world where everything is measured, categorized, and explained by logic, Jung’s teachings offer a breath of fresh air: he invites us to embrace the mysterious, the invisible, and the symbolic as legitimate parts of the human experience. Instead of denying what we don’t understand, Jung teaches us to listen deeply to what the soul whispers in the form of dreams, symptoms, and repetitions. He didn’t just seek to heal the mind—he wanted to understand the soul. And that search is more necessary today than ever.</p>
+<p class="txt">The 21st century is marked by extremes: abundant technology but fragile connections; freedom of choice but paralyzing anxiety; hyperconnectivity but loneliness. In this context, Jungian concepts become invaluable tools. The idea of the collective unconscious, for example, shows us that our pains are not just personal – they also belong to the time in which we live. When we recognize this, we stop feeling abnormal or isolated and begin to understand that we are part of a larger movement of the human soul.</p>
+<p class="txt">Jung’s wisdom lies in the way he reclaims the importance of symbols, myths and archetypes. Instead of treating suffering as a mistake to be corrected, he sees it as a symbol to be interpreted. A dream is not just a jumble of confusing images – it is a language of the soul. An identity crisis is not just a mental breakdown – it is a call from the Self to return to our essence. This symbolic perspective is urgent in a society that has lost the ability to listen to the invisible.</p>
+<p class="txt">Furthermore, Jung offers us a real alternative to the culture of performance and productivity. He teaches us that true fulfillment comes not from external goals, but from an internal process of self-knowledge and integration. Being whole, for Jung, is more important than being successful. He reminds us that we are not here to be perfect, but to become whole—with light and shadow, reason and emotion, strength and fragility.</p>
+<p class="txt">For all these reasons, Jung’s teachings are not only relevant – they are essential. They restore depth to existence, humanity to suffering, and meaning to our existence. In times of quick answers and shallow solutions, Jung offers us a profound and transformative path. A path that requires courage, yes – but that, in the end, returns us to ourselves. And perhaps this is the greatest gift we can receive in these times: remembering who we truly are.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">1.4</span><h3>Jung as a guide on the journey to within</h3></div><p class="txt">Carl Gustav Jung was not just a theoretician or a doctor of the mind – he was a true explorer of the human soul. His life was marked by an intense inner journey, especially after his break with Freud, when he delved deeply into his own dreams, visions and symbols. It was this dive, which he called “confrontation with the unconscious”, that formed the basis of his work. In going through his dark night of the soul, Jung not only survived: he came back with maps to help others do the same.</p>
+<p class="txt">Jung's uniqueness as a guide is that he does not point out an external path, but encourages each person to find their own. He does not offer ready-made formulas or universal solutions. On the contrary, he challenges us to listen to the unconscious, observe our own symbols, understand our patterns and integrate everything we reject within ourselves. He knew that the true teacher is the one who teaches us to trust our own inner compass – no matter how confusing it may seem at first.</p>
+<p class="txt">When speaking of archetypes, shadow, persona and Self, Jung offers us symbolic keys to open internal doors that we often lock out of fear or ignorance. Each of his concepts is more than a theory – it is a mirror. When we read about the shadow, for example, we are not studying psychology: we are being invited to recognize our masks and integrate forgotten parts of who we are. With him, knowledge is not for accumulating, but for transforming.</p>
+<p class="txt">To see Jung as a guide is to recognize that the path to self-knowledge is neither linear nor comfortable—it is a journey. But it is also the only path that truly liberates. He does not promise a life without pain, but a life with meaning. And that changes everything. When we look within with courage, we begin to see ourselves with more compassion. We begin to understand that inner monsters also have stories, and that wounds carry seeds of wisdom.</p>
+<p class="txt">Therefore, over the next 21 days, the invitation is simple but profound: to walk alongside Jung. Use his phrases, ideas and reflections as a guiding thread to go beyond the surface. Not as someone who seeks ready-made answers, but as someone who is ready to listen to what the soul has to say. Jung is not a guru – he is a traveling companion. And this journey, if undertaken with presence and truth, can change everything from the inside out.</p></div>
+  </div>
+</section>
+<section id="ch2">
+  <div class="rail"><span class="rail-num">Chapter Two</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="32" cy="32" r="25" opacity=".28"/><circle cx="32" cy="32" r="17" opacity=".45"/>
+<path d="M32 7 L32 57" opacity=".2"/><path d="M7 32 L57 32" opacity=".2"/>
+<path d="M32 15 L38 28 L32 41 L26 28 Z"/><circle cx="32" cy="32" r="4"/>
+<path d="M14 44 C20 40 26 40 32 42 C38 44 44 44 50 40" opacity=".5"/></svg></div>
+      <div>
+        <p class="eyebrow">The Journey</p>
+        <h2>The Journey of the Inner Hero: Fundamentals of Jungian Psychology</h2>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="sub"><div class="sub-head"><span class="sub-num">2.1</span><h3>The personal and collective unconscious</h3></div><p class="txt">When we think of the “unconscious,” many people imagine it as just a place where we store forgotten memories or repressed traumas. For Jung, however, the unconscious goes far beyond that. It is a vast, living, pulsating universe that influences our decisions, behaviors, emotions, and even our dreams. It is as if there were a hidden forest inside each person, full of unexplored paths – and it is precisely in this forest that the deepest parts of our truth reside.</p>
+<p class="txt">Jung divided the unconscious into two layers: the personal unconscious and the collective unconscious. The first is made up of everything that has been repressed, forgotten or not experienced in our personal history. These are memories, traumas, desires and experiences that, for some reason, could not be integrated into our consciousness. Even when forgotten, these parts continue to act in subtle ways, influencing our feelings, choices and reactions.</p>
+<p class="txt">The collective unconscious is even more mysterious – it is like a psychic inheritance shared by all humanity. It contains archetypes, primordial images that inhabit us all, regardless of culture, time or place. This is why stories of heroes, shadows and divine mothers appear in myths and religions all over the world. These universal symbols do not come from outside: they emerge from within, from an ancestral memory that we carry without knowing it.</p>
+<p class="txt">Recognizing these two dimensions of the unconscious is the first step toward beginning the journey of individuation. It is necessary to look within not only as someone who observes personal traumas, but as someone who dives into a much deeper ocean, full of symbols that connect us with humanity as a whole. This awareness broadens our worldview and helps us understand that we are not alone in our pain and quests. There is something greater guiding us – something that speaks to us through images, dreams, repetitions and synchronicities.</p>
+<p class="txt">Therefore, by exploring the unconscious, we are beginning the journey of the inner hero: the path back to our truest essence. It is not about controlling the mind, but about dialoguing with it on deeper levels. Learning to listen to what the soul whispers when reason is silent. It is in this invisible territory that the transformative power of Jungian psychology resides – not as a distant theory, but as a real map for those who wish to rediscover their wholeness.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">2.2</span><h3>Archetypes and symbols – The language of the soul</h3></div><p class="txt">Imagine that the human soul communicates through a language of its own—a language that is not made up of words, but of images, metaphors, and symbols. For Jung, this was the true language of the unconscious. While the rational mind speaks with logic, the soul expresses itself through archetypes—universal structures of meaning—and symbols—living representations of inner forces. When we understand this language, we open a channel of communication with the deepest part of ourselves.</p>
+<p class="txt">Archetypes are primordial psychic patterns that exist in the collective unconscious. They are not ideas created by the mind, but living forms that manifest themselves in myths, dreams, art, religion and even in our behaviors. The mother archetype, for example, is not just the figure of the biological mother, but an energy that represents care, nourishment and protection. The hero archetype symbolizes the courage to face challenges and seek inner truth. They are everywhere – in the films we watch, in the stories that touch us, in the roles we play.</p>
+<p class="txt">Symbols, in turn, are the ways in which these archetypes come to life in the real world. A lion can symbolize strength and courage. A dark forest can represent diving into the unconscious. A mirror can indicate the need to look at oneself. For Jung, symbols should not be explained literally, but rather felt, intuited, and experienced. They carry multiple meanings and help us understand what words cannot express.</p>
+<p class="txt">When we start to look at our experiences in a symbolic way, everything takes on new meaning. A dream is no longer just a random sequence of images, but a letter from the soul with hidden messages. A conflict with someone can symbolize an internal struggle. An obstacle in life can represent an archetypal test that challenges us to grow. With this vision, we stop seeing life as a coincidence and start seeing it as a symbolic path, full of messages that guide us inwards.</p>
+<p class="txt">Delving deeper into archetypes and symbols is like learning a new language – the language of the soul. And as we listen to it, something within us awakens. We begin to live with greater presence, intuition and meaning. The world ceases to be just an external place and becomes a mirror of our psyche. This is how Jung invites us to live: not as spectators of life, but as active participants in a great archetypal narrative that unfolds both outside and inside us.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">2.3</span><h3>The process of individuation – becoming who you are</h3></div><p class="txt">For Jung, the deepest purpose in life is not to be perfect, successful, or accepted by others, but to become who you really are. This process, which he called individuation, is the path back to inner wholeness. It is not about achieving an “ideal self,” but about integrating all the parts that make us up—including those we prefer to hide or deny. It is a path of authenticity, truth, and reconnection with our own soul.</p>
+<p class="txt">Individuation is a journey that takes us from the ego – our social identity, shaped by conditioning – to the Self, the deepest and truest psychic center of our being. Throughout our lives, we identify with roles: the professional, the child, the friend, the responsible person, the caregiver. But often, by putting on these masks, we lose touch with our essence. Jung shows us that the path to healing is the return to this essence, through inner listening and the integration of opposites.</p>
+<p class="txt">This process is neither linear nor comfortable. It involves crises, deconstructions, losses and reunions. It mainly involves facing the shadow – all the parts of ourselves that we deny, such as anger, fear, fragility, envy, desire. Individuation invites us to embrace all of this with compassion, without judgment. Because only by integrating these parts can we become whole. Being whole, for Jung, is not about being “good”, but about being true.</p>
+<p class="txt">During individuation, we also rediscover aspects that were dormant: forgotten talents, ignored desires, old dreams. As we get to know ourselves more deeply, we begin to live with more freedom and presence. Choices are no longer guided by what is expected of us, and begin to reflect who we really are. And with that, a new peace begins to form – a peace that comes from inner congruence, from the alignment between feeling, thinking and acting.</p>
+<p class="txt">Individuation, therefore, is the path back to the center. It is not a fixed destination, but a continuous journey, made up of cycles, maturation and discoveries. Every experience, every challenge, every encounter, can help us become more aware of who we are. And, as Jung said, “what we do not face within ourselves, we will find as destiny.” Therefore, the call of individuation is also a call to courage – to look at yourself, listen to yourself, and ultimately become whole.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">2.4</span><h3>Light and shadow – integration as healing</h3></div><p class="txt">We all have an image that we show to the world – that part of us that fits in, that pleases, that meets expectations. This is our light, but it can also be our mask. Jung called this mask the persona, and explained that, although it is necessary for social life, it does not represent everything we are. Behind the persona lives the shadow: the hidden, rejected or undeveloped side of our psyche. And it is in this shadow that much of our power to heal and transform lies hidden.</p>
+<p class="txt">The shadow is not synonymous with “evil”, but with everything that was repressed because it did not fit into the patterns we learned. It could be the anger we were never allowed, the desire we were taught to fear, the vulnerability we learned to hide. It can also contain unlived talents, stifled gifts, joys that we put aside to fit into what was expected of us. Jung said that the more we ignore the shadow, the more it grows stronger and acts unconsciously – sabotaging our relationships, choices and emotional health.</p>
+<p class="txt">Integrating the shadow does not mean giving in to chaos, but rather bringing to light what is hidden, welcoming these parts with awareness and responsibility. It is a delicate process, which requires courage to look at yourself without masks, and compassion to not judge yourself for what you find. Jung stated that “no one becomes enlightened by imagining figures of light, but by making darkness conscious.” Healing, therefore, comes from the union of opposites: light and shadow, reason and emotion, strength and fragility.</p>
+<p class="txt">This integration movement does not happen in a single moment. It is a process that occurs gradually, in cycles. As we become more aware of our shadow, we become less impulsive, less judgmental of others, and more truthful. Our relationships become more authentic because we stop projecting onto others what we don’t want to see in ourselves. The shadow, when integrated, stops controlling us – and starts to strengthen us.</p>
+<p class="txt">True emotional maturity, for Jung, comes from the ability to recognize and integrate the totality of our being. This does not make us “perfect,” but more human, more whole, more truthful. And perhaps this is the greatest gift of Jungian psychology: the reminder that we do not need to choose between light or shadow. We can be both. And it is precisely in this encounter between light and dark that the living, pulsating soul of who we truly are resides.</p></div>
+  </div>
+</section>
+<section id="ch3">
+  <div class="rail"><span class="rail-num">Chapter Three</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M8 38 L56 38"/><path d="M32 38 L32 12"/>
+<path d="M32 26 C24 26 20 21 20 14 C28 14 32 19 32 26Z"/>
+<path d="M32 22 C40 22 44 17 44 10 C36 10 32 15 32 22Z" opacity=".7"/>
+<path d="M32 38 C28 44 24 46 20 52" opacity=".5"/><path d="M32 38 C36 44 40 46 44 52" opacity=".5"/>
+<path d="M32 38 L32 54" opacity=".5"/></svg></div>
+      <div>
+        <p class="eyebrow">The Journey</p>
+        <h2>Preparing the Inner Ground: Before Starting the 21 Days</h2>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="sub"><div class="sub-head"><span class="sub-num">3.1</span><h3>What to expect from the process</h3></div><p class="txt">Before embarking on any journey of inner transformation, it is important to know that this will not be a linear, predictable or controllable path. As you delve into Jung’s teachings and open yourself to a symbolic listening of the soul, you will probably feel a range of emotions – enthusiasm, resistance, enchantment and even discomfort. This is natural. You are about to access deeper layers of yourself, and this can bring both relief and estrangement.</p>
+<p class="txt">The 21-day process is not a ready-made recipe, nor a magic formula. It is a symbolic proposal for reconnecting with the Self – the truest center of your being. Some reflections will resonate immediately, others may seem distant at first, but will take effect over time. True transformation rarely happens in a straight line. It acts like nature: in spirals, in cycles, in subtle and sometimes invisible movements.</p>
+<p class="txt">It is important to remember that each person will have a unique experience. What touches one reader deeply may provoke resistance in another. This is because each person is at a specific point in their own journey. There is no right or wrong – there is only your own pace. Jung teaches us that respecting the soul’s timing is an essential part of the process. Therefore, if at any point you feel like slowing down or repeating a day, follow your intuition. This book is a guide, not a prison.</p>
+<p class="txt">During the 21 days, you will be invited to reflect, feel and act symbolically. The idea is to balance thought, emotion and action in small daily doses that work like seeds. Some germinate quickly. Others need silence, time and listening to flourish. Therefore, even after the 21 days, you may notice that something is still moving inside you. This is what we call soul work – quiet, deep and transformative.</p>
+<p class="txt">Finally, and most importantly: don’t expect perfection. Expect presence. Don’t expect to “fix” yourself. Expect to find yourself. The goal is not to become someone different, but to remember who you already are, in your most complete and profound essence. And this remembrance can come little by little, in phrases, in tears, in silent smiles. Trust the process. And, above all, trust yourself.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">3.2</span><h3>How to deal with internal resistances</h3></div><p class="txt">Every journey of self-discovery, no matter how beautiful and transformative, inevitably encounters barriers. These barriers are not outside of us—they are within us. Jung called these internal forces psychic resistances: parts of us that fear change, that cling to the familiar, even if it involves suffering. They emerge as doubt, procrastination, discouragement, or even a feeling of “this won’t work for me.” Knowing this in advance prepares us to welcome these resistances with more kindness, rather than with guilt.</p>
+<p class="txt">Resistance is a form of protection. Our psyche, by instinct, avoids touching old wounds or opening doors that have been locked by pain. So, when you start this 21-day process, it is natural for internal voices to arise telling you that you will not be able to do it, that it is a waste of time or that there are other priorities. These voices are not enemies – they are parts that need to be heard, understood and, little by little, transformed. The secret is not to overcome resistance, but to dialogue with it.</p>
+<p class="txt">Jung invites us to look at these resistances with curiosity, as if they were internal characters that hold stories. Ask yourself, “What is this part of me trying to protect?” or “What am I afraid of finding if I delve deeper?” Sometimes resistance hides old, unresolved pain. Other times, it protects an image of control or strength that we have constructed to survive. By bringing these parts into awareness, we begin the true process of integration.</p>
+<p class="txt">It's helpful to realize that resistance can also manifest as perfectionism. The desire to “do everything right” or to feel something profound with each reading can, paradoxically, be a way of avoiding the real dive. The symbolic path is more organic and unpredictable than the mind would like. So be kind to yourself. Not every day will bring great revelations, and that’s okay. The soul works in silence. Sometimes, just being present is an act of profound transformation.</p>
+<p class="txt">Finally, remember: resisting is not the same as failing. Resisting is part of the journey. When it comes, embrace it. Breathe. Write it down. Resume it when you feel it. The important thing is to continue with honesty and determination. Every time you decide to continue, even if slowly, you are strengthening the link with your truth. And this, more than any technique, is what really transforms.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">3.3</span><h3>Creating a safe space for transformation</h3></div><p class="txt">Before beginning any deep inner process, such as the one proposed in this book, it is essential to create a safe space—both externally and internally. The unconscious, like a sensitive child, opens up more easily when it feels welcomed and protected. This space does not have to be grand or sacred in the traditional sense, but it does have to be real. A corner of the house, a comfortable chair, a lit candle, a journal nearby—small details that tell your body and soul, “Here I am for me.”</p>
+<p class="txt">This space is not just physical. It is also emotional and symbolic. Creating a safe space means giving yourself permission to feel, to not know, to change your mind, to let things arise without the filter of judgment. Jung reminds us that the unconscious does not reveal itself under pressure. It expresses itself when there is silence, curiosity and surrender. Therefore, more than rigid discipline, this journey requires presence and intention.</p>
+<p class="txt">Ideally, you should establish a simple, repetitive ritual, something that signals to your inner world that you are entering a special moment. This could be starting the day with a deep breath, reading the phrase of the day carefully, writing down a word that came to mind after reflection, or even playing soft music in the background. The important thing is that this ritual is yours, personal, and intimate. This creates a symbolic field where transformation can happen more naturally.</p>
+<p class="txt">Another fundamental aspect of this safe space is self-compassion. The Jungian journey can awaken intense content: memories, emotions, internal images. It won't always be comfortable, but it can always be welcomed. Avoid beating yourself up for not being able to reflect deeply in a day, or for feeling emotionally distant. The process is not about performance – it’s about connection. And every act of kindness towards yourself strengthens the inner container so that the soul can speak.</p>
+<p class="txt">Remember: transforming yourself does not mean leaving your comfort zone violently, but rather with courage and care. When you create a safe space, you tell your psyche: “Come on, I’m here, I’ll support whatever comes your way.” And this simple willingness already begins the healing process. What you are about to experience is a symbolic journey. And every journey needs solid ground to stand on. Let this space – external and internal – be your ground.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">3.4</span><h3>Tools that can help – journaling, meditation, dreams</h3></div><p class="txt">During an inner journey like this, some symbolic and practical tools can work as true allies. They are not mandatory, but they have the power to deepen the experience, open channels of listening and record the subtle transformations that happen along the way. Among these tools, three stand out: diary, meditation and dream observation. Each of them touches the psyche in a specific way and accesses different dimensions of the soul.</p>
+<p class="txt">The diary is a silent mirror. He does not judge, does not interrupt, does not correct. By writing, we give shape to nebulous thoughts, name emotions we didn't know we were feeling, and discover patterns that previously went unnoticed. More than a record of events, the diary becomes a direct channel to the unconscious. You can write freely, jot down phrases that touch you, record images that come to you, or even write symbolic letters to parts of yourself that are emerging. The most important thing is that it is an intimate and free space.</p>
+<p class="txt">Meditation acts as a gateway to inner silence. It doesn’t have to be complex or spiritual. Just take a few minutes each day to sit, breathe, and observe what’s going on inside you with attention and curiosity. Meditation creates a field of presence—a space where inner messages can emerge without noise. Often, symbolic insights, forgotten memories, or suppressed emotions emerge in this moment of pause. Meditation is listening to what the soul is trying to say when the world goes silent.</p>
+<p class="txt">Dreams, in turn, are the direct language of the unconscious. Jung considered dreams to be precious symbolic messages, capable of revealing what is happening in the deep psyche. Over the course of these 21 days, it is very common for dreams to become more vivid or filled with symbols. Having a notebook by your bed to write them down as soon as you wake up is a valuable practice. It is not necessary to interpret them technically, but to welcome their images, feelings and messages with openness. Sometimes, just writing them down can start a process of integration.</p>
+<p class="txt">These three tools – writing, silence and dreaming – form a sacred triangle of support. They help sustain what emerges during the journey, transform symbolic content into lived experience, and maintain the link with the active Self. Choose the ones that resonate most with you, use them freely, and remember: the most important thing is not to do everything “right”, but to do it with presence and truth. The soul recognizes the gesture.</p></div>
+  </div>
+</section>
+<section id="ch4">
+  <div class="rail"><span class="rail-num">Chapter Four</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="32" cy="32" r="24" opacity=".3"/>
+<path d="M32 32 C32 20 40 12 52 12" opacity=".9"/>
+<path d="M32 32 C32 44 24 52 12 52" opacity=".55"/>
+<path d="M32 32 C44 32 52 40 52 52" opacity=".4"/>
+<circle cx="32" cy="32" r="2.6" fill="currentColor" stroke="none"/></svg></div>
+      <div>
+        <p class="eyebrow">The Journey</p>
+        <h2>The 21 Days of Transformation: How it Works</h2>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="sub"><div class="sub-head"><span class="sub-num">4.1</span><h3>Why 21 Days?</h3></div><p class="txt">The number 21 has been associated, throughout history, with cycles of change and internal consolidation. It represents a kind of bridge between the old and the new. It is common to find in spiritual, philosophical traditions and even in neuroscience studies the idea that it takes three weeks for a practice to begin to take root in the mind and body. Jung, who deeply understood the power of symbols, would certainly see 21 as a threshold number, capable of marking significant transitions in the psyche.</p>
+<p class="txt">From an archetypal point of view, the number 21 represents the meeting of three and seven: two numbers deeply connected to wholeness. Three speaks of movement, creation and expression; seven, of introspection, mystery and spirituality. When combined, they form a structure that favors both internal immersion and the reorganization of daily life. What is built in 21 days has the potential to stop being an abstract concept and become an integrated experience.</p>
+<p class="txt">Each of the 21 days proposed in this book is not just a linear sequence, but rather a stage with its own value, which symbolically connects with the others. It is not about “evolving” progressively as if climbing a ladder. What happens is more like a spiral: a movement that returns to similar points, but with a new awareness. It is this spiral that allows reflection to mature and transformation to occur without forcing.</p>
+<p class="txt">Choosing a 21-day structure is also an invitation to gentle discipline. Knowing that each day brings a phrase, a reflection and a symbolic action, the reader is called to daily presence, without excessive pressure. There is no need for excessive time or forced depth – all that is needed is a commitment to small daily encounters with oneself. This regularity activates something powerful: repetition with intention, which transforms simple gestures into lasting internal milestones.</p>
+<p class="txt">Finally, the number 21 invites you to find a balance between intensity and consistency. It is not about causing great inner revolutions in a few days, but about opening space for subtle movements that, together, generate a new way of perceiving life. The symbolic value of this cycle lies precisely in its firm simplicity: 21 seeds sown, one each day, with the potential to blossom at the right time.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">4.2</span><h3>How to use each day – phrase, reflection, action</h3></div><p class="txt">The structure proposed for each of the 21 days was carefully designed to offer an accessible yet profound experience. The idea is not to create long tasks or excessive emotional demands, but rather to open up a daily symbolic space that can be welcomed even in the midst of routine. To this end, each day will consist of three essential elements: a key phrase, a guiding reflection, and a symbolic action. Together, these parts function as a triad that favors the awakening of insights and internal reorganization.</p>
+<p class="txt">The purpose of a sentence is to awaken. It is not a literary embellishment, but a trigger for perception. Some are taken directly from Carl Jung's words; others are inspired by his vision and adapted to the contemporary context. The intention is for each sentence to act as a mirror, or as a small break in the automatic flow of thought. As you read it, allow yourself to feel it. Read it more than once if necessary. Let it provoke, disturb, inspire, or question you – that initial reaction is already part of the work.</p>
+<p class="txt">Next, the reflection proposes a more focused dive. It will explore the theme brought up by the sentence, providing examples, symbolic associations and subtle questions. This is not a text to be consumed in a hurry, but to be savored. You can read it in the morning and return to it at night, or revisit it throughout the day, allowing its layers to reveal themselves little by little. Reflection is an invitation to listen. It does not require immediate answers – just presence.</p>
+<p class="txt">The third part of each day is symbolic action. Contrary to what we are used to, here the action does not seek measurable results, but rather meaningful gestures. It could be writing an unsent letter, walking in silence, observing an object with new eyes, or lighting a candle with intention. The function of action is to anchor experience in the body, in matter, in concrete life. When the symbolic finds expression in reality, something is organized internally – even if in a subtle way.</p>
+<p class="txt">Using the three elements – phrase, reflection and action – is not a strict obligation, but a possibility. There are days when just the phrase will resonate deeply; others, when the action will be the turning point. Trust your sensitivity to guide the rhythm. This practice is not about achieving a goal, but about getting in touch with what lives silently within you. And when that happens, even a small gesture can open a crack through which light shines.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">4.3</span><h3>The importance of repetition and delivery</h3></div><p class="txt">We live in times where everything needs to be new, fast and intense. However, when it comes to inner transformation, what really creates change is not immediate impact, but meaningful repetition. Jung understood that the psyche is organized through symbols, images and recurring experiences. It's as if the soul needs rhythms, daily rituals, to feel safe enough to reveal itself. Repetition, in this context, is not boredom – it is fertile soil.</p>
+<p class="txt">By repeating a symbolic gesture for days in a row, we create an internal space of welcome. The phrases and reflections echo on different levels: sometimes in the mind, sometimes in the emotions, sometimes in the body. What seemed abstract on the first day may make sense on the tenth. Repetition allows for this subtle, almost invisible, but profoundly effective maturation. It takes us out of impulse and invites us to emotional consistency, something rare and precious.</p>
+<p class="txt">But for this repetition to bear fruit, it is also necessary to develop surrender. Surrendering does not mean giving up on taking action, but rather letting go of the need to control the results. Instead of trying to force a “great discovery” every day, we propose an attitude of listening and receptiveness. Surrendering allows the unconscious to act in its own time, without pressure. Like a buried seed that germinates without us having to dig to see if it has sprouted yet.</p>
+<p class="txt">Often, the most profound effects of this type of work appear later, when we least expect it. A different dream, a subtle shift in perception, a conversation that touches us differently, an emotion that finally finds a name. These small signs of transformation are not spectacular, but they are real. Surrender allows these movements to occur without us being overcome by the anxiety of “functioning.” The soul does not operate in performance logic – it moves with subtlety.</p>
+<p class="txt">Therefore, this 21-day cycle must be lived with ease, but also with commitment. Ease so as not to demand ready-made answers. Commitment so as not to give up in the face of silence. Daily repetition and sincere surrender create a fertile field where something essential can flourish – not by imposition, but because it was ready to emerge. And, often, all the soul needs is time, space and respect to show itself.</p></div><div class="sub"><div class="sub-head"><span class="sub-num">4.4</span><h3>Suggested practices during the 21 days</h3></div><p class="txt">Although the proposed cycle already has a clear format, some complementary practices can help deepen the experience and create a more stable emotional foundation throughout the days. These practices are not rules, but suggestions that encourage contact with internal aspects that are often forgotten. When incorporated with authenticity, they become bridges between the symbolic world and concrete reality.</p>
+<p class="txt">The first suggestion is to set aside a fixed time of day to dedicate to the process. It could be first thing in the morning, when you wake up, or at night, when silence sets in. Regularity helps the body and mind adjust to listening internally. Over time, this schedule becomes an emotional anchor point. Even if it’s just for fifteen minutes, this daily gesture of meeting with yourself can generate more presence than long periods of sporadic introspection.</p>
+<p class="txt">Another useful practice is to observe your body during the process. Jung considered the body to be an ally in communicating with the unconscious. Pay attention to how you breathe when reading the quote of the day, how your body reacts to certain reflections, what sensations arise when performing a symbolic action. Sometimes, what you feel in your stomach, on your skin or in your chest is as revealing as an intellectual analysis. Incorporating your body into the process is a way to make it more complete and rooted.</p>
+<p class="txt">It’s also important to keep a journal. In it, you can jot down thoughts that come to you, spontaneous insights, passages that touched you, dreams, or unexpected emotions. It’s not about writing correctly, beautifully, or logically—it’s about creating a thread of continuity between days. When you reread what you wrote, you may notice patterns and movements that weren’t evident at the time they happened. Writing serves as a living memory of the transformation that’s underway.</p>
+<p class="txt">Finally, a subtle but powerful practice: intentional silence. Choose at least one day — or part of a day — to silence external noises. This could mean turning off your cell phone for an hour, avoiding unnecessary conversations, walking in silence, or simply being with your own thoughts without seeking distraction. Silence creates a fertile field for the soul to express itself. And in these pauses, the answers you’ve been searching for often emerge with clarity.</p></div>
+  </div>
+</section>
+<section class="phase" id="descent">
+  <div class="rail"><span class="rail-num">Chapter Five</span>
+    <div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10 14 C20 20 44 20 54 14" opacity=".5"/>
+<path d="M12 24 C21 29 43 29 52 24" opacity=".4"/>
+<path d="M15 34 C22 38 42 38 49 34" opacity=".3"/>
+<path d="M32 10 L32 48"/><path d="M26 42 L32 49 L38 42"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="phase-eyebrow">Phase I of III</p>
+    <h2>The Descent</h2>
+    <p class="phase-range">Day 1 to Day 7</p>
+    <p class="phase-intro">Confrontation with the unconscious and the shadow.</p>
+    <div class="phase-bar"><span class="pb on"></span><span class="pb"></span><span class="pb"></span></div>
+  </div>
+</section>
+<section id="day1">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">01</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">First phase — Confrontation with the unconscious and the shadow</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You are about to come into contact with what Carl Jung called the personal unconscious — an internal territory where repressed memories, pains, desires and forces live. That's where the shadow lives: everything that was ignored, denied or rejected throughout life. And the first step to accessing it is not to think more — it is to silence the noise of the mind and listen to what arises in the silence.</p>
+<p class="txt">Silence is not the absence of sound. It is presence without distraction. It is in silence that the unconscious begins to move and reveal what was hidden. When you become silent with intention, forgotten memories, bodily tensions, and subtle sensations begin to emerge. It may feel uncomfortable—and that is precisely why it is powerful. The shadow begins to reveal itself when we stop running from it.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">If you don’t go into silence, you will continue to live on the surface. The shadow will continue to act behind your decisions, emotions, and reactions—without you even realizing it. Deep listening is what opens the door to what needs to be seen and healed. It’s not about “meditating,” it’s about facing what is alive within you but has been silenced for too long.</p>
+<p class="txt">This is the beginning of true transformation: seeing what was hidden, not to condemn, but to understand.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Listening to the Unconscious Ritual</span><span class="action-meta">10 minutes</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> Create internal space for repressed content to begin to emerge safely.</p><ol class="steps"><li><div><p class="step-t">Prepare the environment</p><ul class="step-l"><li>Sit in a place where you can be alone. Close the door, turn off the TV, silence your cell phone.</li><li>If you wish, light a candle or hold an object in front of you that represents “truth.”</li></ul></div></li><li><div><p class="step-t">Be silent and feel</p><ul class="step-l"><li>Close your eyes. Take three deep breaths. And for 10 minutes, remain in complete silence. Don't try to control your thoughts. Just observe what arises. Emotions, images, phrases, memories. Everything is welcome.</li></ul></div></li><li><div><p class="step-t">Intuitive registration</p><ul class="step-l"><li>Open your notebook and write: <em>“What came into being when the world fell silent?”</em></li><li>Write down a word, image or feeling. Even if it doesn't seem meaningful. This will be the first sign that the shadow has started to move.</li></ul></div></li></ol></div>
+    </div></div>
+</section>
+<section id="day2">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">02</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-kicker">Mask Exercise · Part one of three</p><p class="day-title">The mask that protects and imprisons me</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Today you will begin one of the most important exercises in the process: discovering who you show yourself to be — and what is hidden behind it. Carl Jung called this identity shaped to adapt to the world a “persona.” It is useful, yes. But when we identify too much with it, we end up suffocating essential parts of our being.</p>
+<p class="txt">The consequence? Emotional fatigue, lack of authenticity, silent internal crises. True healing begins when you stop playing a role and start being whole. This exercise, divided into three steps, will open this process in a simple but powerful way.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Creating the Mask</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Draw the mask</p><ul class="step-l"><li>Take a sheet of paper. Draw a large mask (really simple, just the shape).</li></ul></div></li><li><div><p class="step-t">On the front of the mask</p><ul class="step-l"><li>Write down 5 to 10 characteristics that you show to the world. Think about the image you maintain at work, on social media, with your family, and among friends.</li><li><em>Ex: responsible, controlled, helpful, good-humored, strong.</em></li></ul></div></li><li><div><p class="step-t">On the back of the mask</p><ul class="step-l"><li>Write down what you usually hide to maintain this image.</li><li><em>Ex: fear of failure, need to please, repressed anger, constant sadness.</em></li><li>Keep this sheet. You will come back to it tomorrow.</li></ul></div></li></ol></div>
+    </div></div>
+</section>
+<section id="day3">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">03</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-kicker">Mask Exercise · Part two of three</p><p class="day-title">Silent revisit</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Before you begin the Day 3 exercise, grab the mask you created yesterday. Read calmly. Observe your physical and emotional reaction. Breathe.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Silent Revisit</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Answer in your notebook</p><ul class="step-l"><li><em>What else does this mask protect me from?</em></li><li><em>What about this mask is suffocating me?</em></li><li>Write it down without filtering. You don’t need to understand everything right now — what matters is that you start to see what you’re hiding from yourself.</li></ul></div></li></ol></div>
+    </div></div>
+</section>
+<section id="day4">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">04</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-kicker">Mask Exercise · Part three of three</p><p class="day-title">End of the first phase</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">If you feel that the mask activity brought something important to light, make a symbolic closing gesture.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Symbolic closing gesture</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Choose your gesture</p><ul class="step-l"><li>You can keep this paper close to your heart as a reminder of your truth.</li><li>Or you can tear or burn it with intention — marking the end of a cycle of interpretation and the beginning of a more honest expression of who you are.</li></ul></div></li></ol></div>
+    </div></div>
+</section>
+<section id="day5">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">05</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">What I hide from myself</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Now that you've recognized part of your social mask, it's time to dig deeper. The time has come to see what you hide from yourself — your fears, desires, impulses and emotions that you chose to ignore in order to adapt.</p>
+<p class="txt">Carl Jung called this your personal shadow. It is not the evil in you—it is simply what has been rejected, repressed, forgotten. If these parts remain hidden, they dominate your actions and sabotage your path. If you acknowledge them, they become your strength.</p>
+<p class="txt">To deny the shadow is to be its prisoner. To recognize it is to begin to be free.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">As long as you avoid looking at your repressed emotions, your patterns keep repeating themselves. Unresolved anger, insecurities disguised as arrogance, fear disguised as indifference... Nothing goes away because you pretend you don't feel it.</p>
+<p class="txt">Today, you will look directly at these parts without fear—and in doing so, you will begin to recover your vital energy.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Shadow Mirror</span><span class="action-meta">15 minutes</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> Recognize emotional patterns that you deny or avoid admitting.</p><ol class="steps"><li><div><p class="step-t">Open the page</p><ul class="step-l"><li>Take your notebook and write at the top of the page: <em>“What do I avoid admitting about myself?”</em></li></ul></div></li><li><div><p class="step-t">Write freely, without censorship</p><ul class="step-l"><li><em>I'm afraid of failing.</em></li><li><em>I feel jealous.</em></li><li><em>I like to manipulate people sometimes.</em></li><li><em>I want to be taken care of, but I pretend to be independent.</em></li><li><em>I feel guilty and hide it with anger.</em></li></ul></div></li><li><div><p class="step-t">Then, reflect</p><ul class="step-l"><li>How do these hidden parts impact my relationships?</li><li>What repetitive patterns do these emotions create in my life?</li></ul></div></li><li><div><p class="step-t">End the practice</p><ul class="step-l"><li>Close with the following note: <em>“Seeing is not judging. Seeing is liberating.”</em></li></ul></div></li></ol></div>
+    </div><p class="day-close">This is one of the most important exercises in your transformation. What you recognize today will make room for profound changes in the next steps.</p></div>
+</section>
+<section id="day6">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">06</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The pain that was never named</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Much of the pain we carry doesn’t come from huge events. It comes from small wounds that were never acknowledged. Feelings that were ignored, emotional needs that were unmet, subtle rejections that built up.</p>
+<p class="txt">This pain does not go away because it is forgotten. It turns into inexplicable sadness, chronic anxiety, persistent dissatisfaction. Today, you are going to do something that very few people have the courage to do: name the pain that has never been acknowledged.</p>
+<p class="txt">This is an essential part of the transformation process. That which is named can be healed. That which remains hidden will continue to bleed in silence.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">If you don't acknowledge your wounds, they will continue to influence your emotions, your relationships, and your choices unconsciously. Naming pain is the beginning of the process of integration and liberation. You are not here to carry wounds forever. You are here to transform them into awareness and inner strength.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Letter to the pain</span><span class="action-meta">20 minutes</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> To acknowledge, without judgment, the pain that still lives within you.</p><ol class="steps"><li><div><p class="step-t">Grab your notebook</p><ul class="step-l"><li>Write the title: <em>“My nameless pain.”</em></li></ul></div></li><li><div><p class="step-t">Speak to this pain</p><ul class="step-l"><li>Now, write as if you were speaking to this pain. Don't think too much. Let it come.</li><li><em>“I feel your presence when I feel alone, even when surrounded by people.”</em></li><li><em>“You were born when I needed affection and I was charged for it.”</em></li><li><em>“You grew every time I hid my fear behind smiles.”</em></li></ul></div></li><li><div><p class="step-t">Write freely</p><ul class="step-l"><li>If you like, you can even talk to pain as if it were a child, a friend, a wounded animal — pain wants to be acknowledged, not judged.</li></ul></div></li><li><div><p class="step-t">Close with your voice</p><ul class="step-l"><li>At the end of writing, take a deep breath and say in a low voice: <em>“I see you. You are part of my story, but you do not define who I am.”</em></li></ul></div></li><li><div><p class="step-t">Keep this letter</p><ul class="step-l"><li>It is a testament to your emotional maturity.</li></ul></div></li></ol></div>
+    </div><p class="day-close">Today you took a step that most people avoid their entire lives: naming the pain is the beginning of true healing.</p></div>
+</section>
+<section id="day7">
+  <div class="rail"><span class="rail-num">The Descent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">07</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The cycle that repeats itself</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">How many times have you found yourself stuck in the same problems, even trying to change? Repetitive patterns — toxic relationships, self-sabotage, excessive self-criticism — are no coincidence. They are expressions of the shadow trying to get your attention.</p>
+<p class="txt">As long as these cycles remain unconscious, you will continue to attract the same situations and feel the same pain. Today, you will consciously identify one of the most repeated cycles in your life. Not to blame yourself, but to finally see where real change needs to happen.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Patterns are not broken by willpower. They are broken by full awareness. By bringing an unconscious cycle to light, you take away its power to control you.</p>
+<p class="txt">What is seen can be transformed. What is ignored becomes stronger.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Repetitive Cycle Map</span><span class="action-meta">20 minutes</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> Make visible a hidden pattern that limits your life.</p><ol class="steps"><li><div><p class="step-t">Draw the circle</p><ul class="step-l"><li>Take a blank sheet of paper and draw a large circle in the center of the page. In the middle, write: <em>“My repetitive cycle.”</em></li></ul></div></li><li><div><p class="step-t">Map the steps around it</p><ul class="step-l"><li>What situation always comes back?</li><li>What behavior do you repeat even though you know it is harmful to you?</li><li>What feeling comes up every time?</li><li><em>I start something new with excitement → I demand too much of myself → I get exhausted → I give up → I blame myself → I start the cycle again.</em></li><li><em>I enter relationships wanting to be accepted → I cancel myself out → I accumulate anger → I explode or distance myself → I feel lonely → I repeat.</em></li></ul></div></li><li><div><p class="step-t">Reflect</p><ul class="step-l"><li>After mapping your cycle: <em>What is the first thing I could change to break this pattern?</em></li></ul></div></li></ol></div>
+    </div><p class="day-close">Today you begin to break the invisible chains that bind you. What seemed like “fate” is actually unconscious repetition — and now it’s up to you to change it.</p></div>
+</section>
+<section class="phase" id="meeting">
+  <div class="rail"><span class="rail-num">Chapter Six</span>
+    <div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="24" cy="32" r="15"/><circle cx="40" cy="32" r="15" opacity=".65"/>
+<path d="M32 20.5 C35 24 36.5 28 36.5 32 C36.5 36 35 40 32 43.5 C29 40 27.5 36 27.5 32 C27.5 28 29 24 32 20.5Z" opacity=".9"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="phase-eyebrow">Phase II of III</p>
+    <h2>The Meeting</h2>
+    <p class="phase-range">Day 8 to Day 14</p>
+    <p class="phase-intro">Reconnection with the forgotten parts of the psyche.</p>
+    <div class="phase-bar"><span class="pb on"></span><span class="pb on"></span><span class="pb"></span></div>
+  </div>
+</section>
+<section id="day8">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">08</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Rediscovering your inner child</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Every adult carries within them an inner child — that spontaneous, creative, sensitive and full of life part. Over time, in order to survive the demands of the world, this child was repressed, adapted, forgotten. But she didn't disappear. She lives in your truest joys, your deepest sorrows and your most intense emotional reactions.</p>
+<p class="txt">Today, you will reach out to that forgotten part of yourself. Without reconnecting with your inner child, you will continue to seek outside what only it can give you: vitality, meaning and freedom.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Many emotional blocks come from disconnecting from the inner child. When you reconnect with it, you regain your ability to feel pleasure, be enchanted, create and trust. Without this reconnection, life becomes nothing but responsibility, pressure, and adaptation — and the soul withers.</p>
+<p class="txt">Today you will not only remember her. You will communicate with her.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Letter to the forgotten child</span><span class="action-meta">20 minutes</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> To establish real emotional contact with the purest and truest part of your being.</p><ol class="steps"><li><div><p class="step-t">Open the page</p><ul class="step-l"><li>Take your notebook and write at the top of the page: <em>“Letter to my inner child.”</em></li></ul></div></li><li><div><p class="step-t">Write directly to this child</p><ul class="step-l"><li>Use welcoming words without judgment.</li><li><em>“I remember you. I know you're still there.”</em></li><li><em>“I'm sorry I left you out.”</em></li><li><em>“Today I want to listen to you, welcome you and walk together.”</em></li><li>After writing the letter, close your eyes for a moment and imagine: What was this child like? Where did she get stuck? What does she most need to hear right now?</li></ul></div></li><li><div><p class="step-t">Record a final sentence</p><ul class="step-l"><li><em>“I see you. I’m here for you.”</em></li></ul></div></li></ol></div>
+    </div><p class="day-close">Rediscovering your inner child isn't regressing — it's reclaiming the truest, most alive part of you that has always been you. This is the beginning of an essential reconnection to live with more presence and joy.</p></div>
+</section>
+<section id="day9">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">09</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Embracing vulnerability as strength</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Being vulnerable is admitting that we feel fear, desire, need, sadness. For a long time, we believed that showing this was a sign of weakness. But true strength comes when we stop resisting what is inevitably human.</p>
+<p class="txt">Every time you pretend to be invulnerable, you distance yourself from your own life. And every time you accept your weak spot with courage, you create within yourself a truer center of gravity—one that doesn't crumble with every criticism, loss, or rejection.</p>
+<p class="txt">Today you will look at your vulnerability not as a flaw, but as the raw source of your vitality.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">The escape from vulnerability is the root of much modern suffering: anxiety, loneliness, shallow relationships, fear of exposure, overcontrol.</p>
+<p class="txt">Accepting that you feel fear, doubt, jealousy or fragility does not diminish you. On the contrary: it allows you to be whole where you were previously hiding.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">The gesture of opening</span><span class="action-meta">Physical practice + writing</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> To consciously face an internal space of vulnerability and transform it into a living force.</p><ol class="steps"><li><div><p class="step-t">Body focus</p><ul class="step-l"><li>Stand in a private area. Close your eyes for a few seconds. Take a deep breath.</li><li>As you exhale, slowly open your arms, as if you were opening yourself up to the world, even if you feel afraid.</li><li>Feel the discomfort. Stay like this for 30 seconds — vulnerable, visible, surrendered.</li></ul></div></li><li><div><p class="step-t">Writing</p><ul class="step-l"><li>After working with the body, open the notebook and write: <em>“Today, I opened myself up to…”</em></li><li>Complete freely. Don't analyze. Let whatever comes out come out.</li></ul></div></li><li><div><p class="step-t">Final declaration</p><ul class="step-l"><li>Write a reaffirmation sentence at the bottom of the page: <em>“I can be whole even when I am exposed.”</em></li></ul></div></li></ol></div>
+    </div><p class="day-close">Today, you stopped being a spectator of your own life. Accepting your vulnerability is regaining the freedom to be who you are, without mask or armor.</p></div>
+</section>
+<section id="day10">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">10</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Reconnecting with the creative impulse</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">The creative impulse does not belong only to artists. Creating is a natural human instinct — it is a living expression of the soul. However, most of us, at some point in our lives, have been taught to distrust our own creativity: “that's silly”, “that's not productive”, “that's useless”.</p>
+<p class="txt">The result is that many disconnect from this vital source and begin to live only according to the logic of obligation, function and survival.</p>
+<p class="txt">Today you will reawaken that creative force — not to be productive or perform, but to feel alive inside again.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Creativity is the internal movement that regenerates the soul. Without it, everything becomes repetitive, gray, automatic.</p>
+<p class="txt">Reconnecting with your creativity is restoring your ability to renew yourself, to surprise yourself and to find unexpected solutions to old problems. When you create, even in simple gestures, you rediscover a free, spontaneous and powerful part of yourself.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Blind drawing of the soul</span><span class="action-meta">Visualization + free creation</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> To release mental control and allow the soul to express itself spontaneously.</p><ol class="steps"><li><div><p class="step-t">Preparation</p><ul class="step-l"><li>Grab a blank sheet of paper and something to draw with (pencil, pen, chalk, whatever you have on hand).</li><li>Close your eyes for 30 seconds. Breathe deeply.</li></ul></div></li><li><div><p class="step-t">Brief preview</p><ul class="step-l"><li>Imagine that there is an energy pulsating inside you. It needs no form or explanation. It just wants to come out — as color, line, movement.</li></ul></div></li><li><div><p class="step-t">Free creation</p><ul class="step-l"><li>Without opening your eyes, draw for 2 to 3 minutes, letting your hand move on the paper by itself.</li><li>Without thinking, without judging, without correcting.</li></ul></div></li><li><div><p class="step-t">Symbolic reflection</p><ul class="step-l"><li>Once you're done, look at what's on the paper. Ask yourself: <em>“What does this drawing tell me about what is alive inside me today?”</em></li><li>Don't interpret it as art. See it like a mirror: lines, shapes, emotions — everything is valid.</li></ul></div></li></ol></div>
+    </div><p class="day-close">Today you have broken the barrier that separates the soul from expression. Creating without censorship is the first act of true inner freedom.</p></div>
+</section>
+<section id="day11">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">11</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Strengthening the inner voice</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You grew up learning to trust the external: rules, opinions, expectations, standards. Few have been taught to listen to the voice within — that quiet intuition that knows what is true for you, even when the world tells you otherwise.</p>
+<p class="txt">This inner voice is real. And it is the only guide that can lead you to a more meaningful life. But it only gets stronger with practice: the more you listen to it, the more it speaks; the more you ignore it, the more it becomes silent.</p>
+<p class="txt">Today you will train your ability to listen — not to the conditioned mind, but to what your soul already knows.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Without inner listening, you are vulnerable to external pressures and standards, living the life others expect, not the one your soul desires.</p>
+<p class="txt">Strengthening your inner voice is building a firm foundation: you stop seeking validation all the time and start acting from true clarity. This is one of the most important moves toward individuation — becoming who you really are.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Question for the soul</span><span class="action-meta">Active listening exercise</span></div>
+      <div class="action-body"><p class="objective"><b>Objective.</b> To practice direct self-talk and strengthen emotional self-confidence.</p><ol class="steps"><li><div><p class="step-t">Brief silence</p><ul class="step-l"><li>Sit quietly for 3 minutes. Breathe deeply, with your eyes closed.</li><li>Imagine that you are standing in front of a large, ancient tree — a symbol of wisdom and deep roots.</li></ul></div></li><li><div><p class="step-t">The question</p><ul class="step-l"><li>In your notebook, write: <em>“What do I need most right now to move forward in peace?”</em></li></ul></div></li><li><div><p class="step-t">Spontaneous response</p><ul class="step-l"><li>Without thinking too much, write down the first answer that comes to mind. It can be a word, an image, a short phrase.</li></ul></div></li><li><div><p class="step-t">Anchoring</p><ul class="step-l"><li>Read what you wrote. Ask yourself: <em>How can I honor that answer today, in a practical way?</em></li><li>Write down one small, concrete action you can do by the end of the day.</li></ul></div></li></ol></div>
+    </div><p class="day-close">Today you did something rare and powerful: instead of looking outside, you asked inside — and answered yourself.</p></div>
+</section>
+<section id="day12">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">12</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Listening to dreams: the unconscious begins to speak</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You've spent the last few days making space within yourself. What came to the surface? Vulnerability, intuition, forgotten parts. Today, you take a deeper step: you begin to listen to what your soul is trying to tell you — while you sleep.</p>
+<p class="txt">Carl Jung said that dreams are direct messages from the unconscious. They are not random nonsense. They are not inventions of the mind. They are symbolic maps of your inner truth.</p></div><div class="block"><p class="txt">It is in dreams that they appear:</p><ul class="simple-list"><li>The fears you won't admit</li><li>The desires you dare not live</li><li>The traumas that still hurt</li><li>And also the strengths you forgot you had</li></ul></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">You can do exercises, write, visualize... But until you listen to what your psyche is telling you at night, you will remain in control of the rational mind — and that is limited.</p>
+<p class="txt">Dreams speak without censorship, without justifications, without performance. They show you what you need to integrate, even if you don't want to see it yet.</p>
+<p class="txt">And more: the more you listen, the more the unconscious speaks. The more you ignore, the more the soul becomes silent. Today you begin to reopen that channel.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Reopening the dream channel</span><span class="action-meta">Evening + morning</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">At night: set an intention before bed</p><ul class="step-l"><li>Close your eyes and say internally: <em>“I want my unconscious to show me what I need to see.”</em></li><li>It can be generic or specific: <em>“Show me what I’m repeating without realizing it.”</em> · <em>“Let me see my forgotten strength.”</em></li></ul></div></li><li><div><p class="step-t">Avoid mental stimulation before bed</p><ul class="step-l"><li>Turn off screens and noise 30 minutes before. The mind needs to be receptive. (Yes, it makes a real difference.)</li></ul></div></li><li><div><p class="step-t">Leave a visible symbol next to the bed</p><ul class="step-l"><li>Something simple: an unlit candle, a crystal, a written word (e.g. “truth”, “access”, “listen”).</li><li>The unconscious responds to symbols — this activates the field.</li></ul></div></li><li><div><p class="step-t">Upon waking, tomorrow</p><ul class="step-l"><li>Before looking at your cell phone or talking to someone, write down everything you remember: words, images, emotions, symbols. Even if they seem silly, vague or meaningless.</li><li>Record the overall feeling of the dream: Restlessness? Peace? Confusion? Clarity?</li><li>If a notable figure appears, give it a name. <em>Ex: “The Woman on the Ladder”, “The Lion with a Human Voice”, “The Drowned City”.</em> This may be your first contact with a personal archetype.</li></ul></div></li></ol></div>
+    </div><div class="note-card">Keep this exercise active until the end of the cycle. Rereading dreams after 3 or 4 days brings symbolic clarity. Patterns emerge. Images repeat themselves. And you will realize that you are beginning to decipher the language of your soul.</div><p class="day-close">Today, you stopped just “reflecting” and started really listening. You have activated a channel with the unconscious — and it will respond. Maybe not what you want, but what you need to see.</p></div>
+</section>
+<section id="day13">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">13</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Creating your power archetype: the conscious alter ego</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You have already begun to access inner images through dream listening. Now it's time to take it a step further: consciously forming an internal archetype of strength, presence, and true action.</p>
+<p class="txt">Jung believed that archetypes are universal psychic forces, patterns that exist in all of us, waiting to be activated. When you create a personal archetype — based on something that already emerges from your psyche — you strengthen an identity that sustains, guides, and protects you.</p>
+<p class="txt">It's not about creating a fake character. It's accessing a real part of your psyche that has been dormant, giving it form, voice, direction and purpose. The archetype you create today will be the anchor for the next few days of action.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Without an internal image of strength, you become dependent on the environment, the expectations of others, and external validation. With a personal archetype, you create an inner core that reminds you of who you choose to be, even on difficult days. It is your presence in life, not just your reaction to events.</p>
+<p class="txt">This creation is not an ornament. It is a real psychic tool that will accompany you from now on.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Building the power archetype</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Choose the basis of your archetype</p><ul class="step-l"><li>Think about what has emerged in your dreams, reflections or internal sensations so far. If you don't remember anything clearly, use your intuition.</li><li>Define what best represents the force you want to activate: an animal (e.g. eagle, wolf, lion, snake) · an inner character (e.g. the Sage, the Warrior, the Guardian, the Healer) · an abstract image (e.g. Fire, Root, Mountain).</li><li>Don't rationalize. Feel what calls you the strongest.</li></ul></div></li><li><div><p class="step-t">Give your archetype an identity</p><ul class="step-l"><li>In your notebook, answer: <em>What is the name of my archetype?</em> (Example: “The Silent Force”, “The Fire Keeper”, “What Sees Beyond”)</li><li><em>What is the main quality he represents for me?</em> (Example: protection, clarity, courage, flexibility)</li><li><em>How does he move, speak, look, react?</em> (Example: calm and firm, bold and quick, attentive and silent)</li><li><em>What is the phrase he would use to guide me through difficult times?</em> (Example: “Don't back down”, “Trust what you see”, “The truth is enough”)</li></ul></div></li><li><div><p class="step-t">Activation ritual</p><ul class="step-l"><li>After writing all this: stand up straight, take three deep breaths.</li><li>Visualize the archetype emerging within you, as if it were wearing your skin, your voice, your gaze.</li><li>Repeat out loud the phrase he would use. Use a gesture or object to symbolize your activation.</li></ul></div></li></ol></div>
+    </div><div class="note-card">This archetype is not a mask. He is a legitimate force of your soul, which is now allowed to act in the world. In the coming days, you will work to integrate it more and more into your daily life.</div></div>
+</section>
+<section id="day14">
+  <div class="rail"><span class="rail-num">The Meeting</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">14</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The truth alarm</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Now that you have created your inner power archetype, it is time to bring it into your everyday life in a practical way. It is no use just accessing this power at special moments. It needs to be remembered, reactivated and lived continually.</p>
+<p class="txt">The ego is forgotten. Consciousness disperses. Routine tends to swallow up what you have achieved. Therefore, creating conscious anchors is essential.</p>
+<p class="txt">An anchor is not something mystical. It is simply a reminder that pulls you back into presence, into the conscious choice to be who you have decided to be. Today you will install these anchors.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Without daily reinforcement, even the greatest inner transformations can dissolve over time. Ordinary life will try to drag you back into the old pattern. But every anchor of presence you create is a thread that keeps your strength alive and active, even on difficult days.</p>
+<p class="txt">You don't have to watch yourself all the time. You just need little reminders that bring you back to yourself, strategically and intelligently.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Installation of practical anchors</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Creating power phrases</p><ul class="step-l"><li>In your notebook, write down three sentences that your power archetype would say to you in moments of challenge. Use simple, direct, and actionable sentences.</li><li><em>“Stand firm.” · “Trust what you see.” · “You are stronger than you think.” · “Now is the time to act.”</em></li><li>Choose phrases that really impact you emotionally, not generic phrases.</li></ul></div></li><li><div><p class="step-t">Programming conscious alarms</p><ul class="step-l"><li>Choose two times of your day when you tend to feel distracted, tired, or anxious. Examples: mid-afternoon, before meetings, just before bed.</li><li>Set an alarm on your cell phone for these times. In the alarm title, write one of the power phrases you created.</li><li>When the alarm goes off, stop for 10 seconds, breathe and remember the posture, gaze and presence of your archetype.</li></ul></div></li><li><div><p class="step-t">Optional physical anchor</p><ul class="step-l"><li>If you like, also choose a small physical object to carry with you for the next few days. It could be a stone, a ring, a symbolic keychain.</li><li>Every time you touch this object, remember who you chose to be.</li></ul></div></li></ol></div>
+    </div><div class="note-card">The goal is not to create dependency on alarms or symbols. It is training your mind to remember itself spontaneously. Conscious repetition creates new internal circuits. Soon, presence will be natural — no longer forced.</div></div>
+</section>
+<section class="phase" id="ascent">
+  <div class="rail"><span class="rail-num">Chapter Seven</span>
+    <div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M32 54 L32 14"/><path d="M25 21 L32 13 L39 21"/>
+<path d="M15 48 C22 44 42 44 49 48" opacity=".35"/>
+<path d="M12 38 C21 33 43 33 52 38" opacity=".28"/>
+<circle cx="32" cy="8" r="2.4" fill="currentColor" stroke="none" opacity=".7"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="phase-eyebrow">Phase III of III</p>
+    <h2>The Ascent</h2>
+    <p class="phase-range">Day 15 to Day 21</p>
+    <p class="phase-intro">Release, commitment and the return to life with a new position.</p>
+    <div class="phase-bar"><span class="pb on"></span><span class="pb on"></span><span class="pb on"></span></div>
+  </div>
+</section>
+<section id="day15">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">15</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The letter of liberation</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">To move forward consistently, it is not enough to activate new forces. It is also necessary to let go of what still keeps you tied to the past: hurts, guilt, silent pacts, resentments.</p>
+<p class="txt">Many of these internal links are not conscious. They were formed in moments of pain, fear, need or revolt. And even when you no longer talk about them, they continue to occupy space in your psyche.</p>
+<p class="txt">Today you will do something that few have the courage to do: consciously free yourself from the bonds that no longer serve your current truth. And this will be done through a simple but profoundly powerful symbolic act.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">The unconscious responds to images and gestures more than to good intentions. Writing it down and then symbolically releasing it is a way of communicating to your psyche that the cycle has ended.</p>
+<p class="txt">Without this conscious cut, you run the risk of carrying old burdens while trying to build a new identity. And this creates silent sabotage. Today, you close old doors to open new paths.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Liberation letter + fire ritual</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Writing the letter</p><ul class="step-l"><li>Take a sheet of paper and answer freely: <em>Who or what still holds me back emotionally?</em> (It could be a person, a situation, a belief, a role you played.)</li><li><em>What do I still carry: guilt, anger, pain, expectation, fear?</em></li><li>Now write a farewell letter, saying everything that needs to be said. Don't filter your words. Don't try to be polite or spiritual. Write truthfully, raw or soft, however you feel.</li><li>End the letter with something like: <em>“I am grateful for what I have experienced. I learn from what remains. But now I am free.”</em></li></ul></div></li><li><div><p class="step-t">Release ritual</p><ul class="step-l"><li>After writing: read the letter aloud, in a private space.</li><li>Then carefully burn the letter (in a metal bowl, sink, or safe place).</li><li>As the letter dissolves, repeat internally: <em>“I release. I follow. I belong to myself.”</em></li><li>If you cannot burn it, tear it into small pieces and discard it consciously, with the same internal ritual.</li></ul></div></li></ol></div>
+    </div><p class="day-close">What matters is not the fire. It's your inner decision to let go. The external gesture confirms the internal choice. And today you chose to move forward.</p></div>
+</section>
+<section id="day16">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">16</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Ho’oponopono with emotional direction</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Even after letting go of old ties, there are emotional memories that remain etched deep within the mind. Hurts, fears and unconscious patterns crystallize in the body and behavior, even without our conscious intention.</p>
+<p class="txt">Ho’oponopono is a traditional practice of reconciliation and purification. Although it comes from another cultural tradition and not from Jung directly, its principle is completely compatible with depth psychology: releasing what has been trapped internally through recognition, acceptance and symbolic cleansing.</p>
+<p class="txt">Today, you will use this technique in a focused way, with a clear objective: clear emotional records that continue to influence your life in an invisible way.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Until certain emotions are purified, they continue to move you in ways you don't realize. You act out of fear, not realizing that the fear is old. You avoid certain situations, without realizing that the pain you feel is no longer current.</p>
+<p class="txt">Clearing these memories is making real space for new experiences, without carrying the weight of the past. It is creating the future without dragging the chains of what has already ended.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Directed Ho’oponopono</span><span class="action-meta">10 minutes</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Choose an emotional theme to work on</p><ul class="step-l"><li>Before you begin, consciously choose one of the following focuses: a specific person (e.g. a relative, ex-partner, boss, friend) · a situation that caused pain (e.g., a betrayal, a loss, an injustice) · an emotion that still holds you back (e.g. fear of failure, shame, guilt).</li><li>Don't choose something light. Choose something that really weighs.</li></ul></div></li><li><div><p class="step-t">The practice</p><ul class="step-l"><li>Set aside 10 minutes in a quiet place. With your chosen emotional focus in mind, repeat internally or out loud, slowly and consciously:</li><li><em>“I am really sorry. Forgive me. I love you. I am grateful.”</em></li><li>The sequence may seem simple, but its power lies in the presence with which it is done. <em>“I’m sorry”</em> acknowledges the existence of pain. <em>“Forgive me”</em> acknowledges your participation in the cycle (even if unconsciously). <em>“I love you”</em> acknowledges the connection between you and the whole. <em>“I am grateful”</em> acknowledges learning and allows for detachment.</li><li>Do at least 3 complete cycles.</li></ul></div></li><li><div><p class="step-t">Final registration</p><ul class="step-l"><li>After finishing, open your notebook and answer: <em>What changed in my body sensation after the practice?</em></li><li><em>Do I feel greater space, relief, resilience, peace?</em></li><li>Take notes without judging.</li></ul></div></li></ol></div>
+    </div><p class="day-close">Today, you cleared the emotional field that holds old patterns. The release is silent but profound. What seemed inevitable begins to dissolve.</p></div>
+</section>
+<section id="day17">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">17</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The symbol of transformation</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You have already released bonds, cleared emotional records, and shaped your power archetype. Now it's time to create an external symbol that represents all of this.</p>
+<p class="txt">The unconscious responds better to images than to words. Therefore, a visible, concrete symbol, even if small, works as a psychic anchor: every time you see or touch this object, your mind recalls the inner decision that was made.</p>
+<p class="txt">The symbol is not an amulet. It is a physical extension of your inner choice of transformation.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Deep internal changes need external reinforcement. The mind needs reminders. The body needs gestures. The soul needs symbols.</p>
+<p class="txt">When you associate a new life stance with a symbolic object, it creates a point of strength. This point can be activated in moments of doubt, fear or unconscious repetition. It works as a silent reminder: <em>“You're not who you used to be.”</em></p></div><div class="action">
+      <div class="action-head"><span class="action-name">Creation or choice of personal symbol</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Define what the symbol should represent</p><ul class="step-l"><li>In a few words, write in your notebook: <em>What has changed in me since Day 1?</em></li><li><em>What part of me was recovered, activated or healed?</em></li><li><em>What truth do I want to uphold from now on?</em></li><li>The answer will help you know what needs to be represented symbolically.</li></ul></div></li><li><div><p class="step-t">Choose or create the symbol</p><ul class="step-l"><li>Now look for a simple object that represents this new phase. It doesn't have to be purchased or fancy. It can be: a stone you crossed paths with · a little key · a piece of fabric · a cord · an object you already have, but now takes on a new meaning.</li><li>If you want, you can also create something: a drawing · a symbol of its own · a folded paper with words inside · a small handmade totem.</li><li>Most importantly, it needs to make sense to you. It doesn't need to make sense to anyone else.</li></ul></div></li><li><div><p class="step-t">Activation ritual</p><ul class="step-l"><li>When finding or creating the symbol: hold it in your hands for a few minutes. Close your eyes. Take a deep breath and say, silently or out loud:</li><li><em>“This symbol represents my transformation. Every time I touch or see this object, I will be reminded of the strength within me, and the decision that has already been made.”</em></li><li>Then, keep it in a visible place or carry it with you for a few days.</li></ul></div></li></ol></div>
+    </div><p class="day-close">The symbol you created is now a point of presence. He doesn't protect you. It reminds you of who you already are.</p></div>
+</section>
+<section id="day18">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">18</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Active visualization: encountering the Self</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">By this point in the process, you've already gone through several layers: he felt, cleaned, released, created presence, gave shape to an archetype and chose a symbol of transformation.</p>
+<p class="txt">Now it's time to go even deeper: the Self, the central instance of your psyche — totality, nucleus of inner wisdom, organizing center of the soul.</p>
+<p class="txt">Carl Jung did not define the Self as an “ideal self” or an image of perfection. For him, the Self is the source that integrates everything you are: light and shadow, strength and fragility, reason and intuition.</p>
+<p class="txt">The Self often appears in dreams, visions, symbols, archetypal images. Today, you will be invited to approach him consciously, through an exercise that Jung called active visualization.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Contact with the Self strengthens the sense of direction, purpose and completion. It doesn’t tell you “what to do,” but it conveys a quiet, powerful awareness that you are connected to the core of who you truly are.</p>
+<p class="txt">Most people live displaced, seeking external references. When contact with the Self happens, you stop getting lost in distractions and anchor yourself in your own depth. It is from this point that mature decisions, sustainable changes and inner truth emerge.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Encounter with the Self</span><span class="action-meta">Guided visualization · 20 minutes</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Preparing the environment</p><ul class="step-l"><li>Set aside 20 minutes in a quiet place. Turn off notifications. Sit or lie down comfortably with your eyes closed.</li><li>Keep your transformation symbol close by.</li></ul></div></li><li><div><p class="step-t">Guided visualization</p><ul class="step-l"><li>Close your eyes. Breathe slowly and deeply.</li><li>Imagine yourself on a path that leads to a sacred place: a clearing, a temple, a cave, a mountain — whatever comes to mind.</li><li>In this place, you find a figure. It can be human, animal, light, shadow, presence. This figure is your symbolic Self. Notice your appearance, your energy, your distance.</li><li>Now, imagine that you can ask this figure one thing: <em>“What do I need to remember to live truthfully?”</em></li><li>Wait for the answer. It may come in a word, gesture, look, feeling, symbol. Receive the answer silently.</li><li>Give thanks, and slowly leave the place, returning to your breathing and your body.</li></ul></div></li><li><div><p class="step-t">Symbolic registration</p><ul class="step-l"><li>In your notebook, answer: <em>Who or what did I meet? What was the dominant feeling? What was the response received? What changes in me after this encounter?</em></li><li>If you want, draw the figure. Or choose a word to name this inner presence.</li></ul></div></li></ol></div>
+    </div><p class="day-close">This is a highlight of your process. You have accessed the core of your psyche without mediation, without filter, without self-image. You saw something of yourself that can no longer be forgotten.</p></div>
+</section>
+<section id="day19">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">19</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">The body as an expression of the soul</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Throughout this process, you have accessed your unconscious mind, your emotional memory and your internal symbols. But the body didn't sit on the sidelines — it just waited its turn.</p>
+<p class="txt">Today is the time to honor the body as a legitimate extension of the soul.</p>
+<p class="txt">In depth psychology, Jung recognized that emotions and archetypes are not just images: they manifest themselves physically — in posture, breathing, impulses and blocks. The body carries unspoken memories, old pains, repressed impulses. And it also holds the key to emotional liberation, when you allow it to move with truth.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Many times you understand something with your mind, but you continue to act, react and feel with the body of your “old self”.</p>
+<p class="txt">When you move your body consciously, with intention, you send a signal to the psyche: <em>“I accept this change. It is not just mental. It is lived.”</em> Today you will use your body as an instrument of integration and truth.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Symbolic walk and body release</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Walk with presence</p><ul class="step-l"><li><em>10 to 20 minutes.</em> Choose a time when you can walk without distractions. It can be on the street, at home, in a park. The essential thing is to be alone and present.</li><li>During the walk: breathe through your nose, mindfully. Feel the ground beneath your feet.</li><li>At each step, repeat mentally: <em>“I walk with presence.” · “I move with truth.” · “The new is already in me.”</em></li><li>This walk is a symbolic gesture: you are literally moving from the previous version of yourself to a new expression.</li></ul></div></li><li><div><p class="step-t">Emotional release with the body</p><ul class="step-l"><li><em>5 minutes.</em> After your walk, go to a space where you can move freely. Put on some instrumental music or be silent.</li><li>Move your shoulders, arms, hips, chest. If you feel like making a noise, sighing or crying, allow it.</li><li>Don't dance. Just let your body move as it wants. Even though it may seem strange, this is emotional release.</li><li>Finish by standing up, with your hands on your chest. Take a deep breath and say: <em>“My body already knows. My soul moves with it.”</em></li></ul></div></li></ol></div>
+    </div><p class="day-close">Today, you allowed your body to participate in your transformation. Not as a detail, but as a living channel of your inner truth. It is with it that you will act, love, support and follow.</p></div>
+</section>
+<section id="day20">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">20</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Commitment to the new me</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">Nothing truly changes without decision. You have gone through a deep process of self-knowledge, confronted the shadow, reconnected with your essence, activated your inner strength and cleared what no longer served you.</p>
+<p class="txt">But all of this can be lost… if you don’t consciously choose to accept who you have become.</p>
+<p class="txt">Committing to the new you is not a promise of perfection. It's the clear choice to not betray yourself anymore.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Internal change is only sustainable when it is converted into symbolic responsibility.</p>
+<p class="txt">If you don't declare what you want to sustain, old habits take over. Today, you will make clear to yourself — in writing — what is the new agreement you establish with your own truth.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Personal commitment statement</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Writing the pact with yourself</p><ul class="step-l"><li>In your notebook, or on a separate sheet of paper that you can keep, write: <em>“I commit to…”</em> And then state it clearly:</li><li><em>Who do you choose to be from now on?</em> · <em>What you no longer accept repeating</em> · <em>How do you want to position yourself in front of yourself and others?</em> · <em>What will you protect internally</em></li><li><em>“I promise not to silence what I feel out of fear of rejection. I choose to stand firm and sensitive. I take responsibility for standing my ground in silence and in words. From this day forward, I act as someone who respects themselves.”</em></li><li>Use your own words. They need to resonate with you.</li></ul></div></li><li><div><p class="step-t">Seal the commitment</p><ul class="step-l"><li>After writing: read aloud, with intention.</li><li>Sign your name at the end, with date.</li><li>Fold the paper and place it in a special place (altar, book, symbolic box).</li><li>You can return to this pact whenever you feel doubt, fear, or the urge to back down.</li></ul></div></li></ol></div>
+    </div><p class="day-close">The new me has already been accessed. Now it has been chosen. And that choice changes everything.</p></div>
+</section>
+<section id="day21">
+  <div class="rail"><span class="rail-num">The Ascent</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv"><div class="day-head">
+      <div class="day-n"><span class="big">21</span><span class="lab">Day</span></div>
+      <div style="flex:1;min-width:240px"><p class="day-title">Closing and rebirth ritual</p></div>
+    </div><div class="block"><div class="block-h"><span>Direct explanation</span><i></i></div><p class="txt">You have reached the end of the 21 days of transformation. But this end is not a definitive closure. It is a symbolic crossing — from the old to the new, from unconscious repetition to conscious choice.</p>
+<p class="txt">Jung said that individuation is not an end point, but a continuous process. Today you complete an important stage: the reunion with what was forgotten within you. And, at the same time, it opens up space to live with more presence, integrity and inner listening.</p>
+<p class="txt">Therefore, this last day is ritual. A gesture that symbolically marks the beginning of your new position in life.</p></div><div class="why"><div class="block-h"><span>Why this matters</span><i></i></div><p class="txt">Without a closing act, the mind tends to regard any process as just another sequence of ideas. But when there is a conscious ritual, the psyche recognizes that something has been completed — and this activates a new internal structure.</p>
+<p class="txt">What you have built here needs a firm finish. So as not to become just a memory, but a turning point.</p></div><div class="action">
+      <div class="action-head"><span class="action-name">Closing and integration ritual</span></div>
+      <div class="action-body"><ol class="steps"><li><div><p class="step-t">Revisit the path</p><ul class="step-l"><li>Re-read your notes from Day 1. Observe what has changed in your writing, in your way of perceiving and feeling.</li><li>Write down: <em>“What do I recognize that is new in myself now?”</em></li></ul></div></li><li><div><p class="step-t">Ritual with the transformation symbol</p><ul class="step-l"><li>Take the symbol you chose on Day 17. Hold it with both hands. Breathe.</li><li>Say, out loud or mentally: <em>“I honor the path I have walked. I follow what is true. From now on, I stand by who I choose to be.”</em></li><li>You can keep this symbol, carry it with you, or place it in a prominent place for a few days.</li></ul></div></li><li><div><p class="step-t">Symbolic restart bath</p><ul class="step-l"><li>During your shower today, imagine that the water takes away what no longer belongs.</li><li>Finally, take a deep breath and declare: <em>“Today I am reborn. Present. Whole. Available for the new.”</em></li></ul></div></li></ol></div>
+    </div></div>
+</section>
+<section id="whatnext">
+  <div class="rail"><span class="rail-num">Interlude</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">After Day 21</p>
+    <h2>What comes next</h2>
+    <div class="rule-short"></div>
+    <p class="txt">This is not the end of your process. It's the beginning of a new way of living with yourself. You can repeat steps of this cycle whenever you feel the need.</p>
+    <p class="txt">And from here, keep going deeper:</p>
+    <ul class="simple-list"><li>Your dreams</li><li>Its symbols</li><li>Your choices</li><li>Your actions</li></ul>
+    <p class="day-close">Transformation is not speed. It is permanence. And what is true remains.</p>
+  </div>
+</section>
+<section id="ch8">
+  <div class="rail"><span class="rail-num">Chapter Eight</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M10 44 C18 44 22 34 30 27 C36 22 44 19 50 18"/>
+<path d="M42 14 L52 17 L50 27"/><path d="M10 52 L54 52" opacity=".3"/></svg></div>
+      <div><p class="eyebrow">Closing the Cycle</p><h2>Next Steps</h2></div>
+    </div>
+    <div class="rule"></div>
+    <p class="txt dropcap">You have reached the end of a process that is not linear, not superficial and not common. For 21 days, you were invited to step out of automatic mode, look at what you avoid, listen to what you ignore, and touch parts of yourself that were dormant.</p>
+<p class="txt">And if you've come this far, it's because you've bravely gone through each phase: the descent to the roots, the reunion with the essential and the ascent back to life with a new perspective.</p>
+<p class="txt">But here's an important warning: what you accessed in this book does not end here. It marks the end of a cycle, but opens many others.</p>
+    <div class="block"><p class="txt">You now have:</p><ul class="simple-list"><li>A diary that records your inner listening</li><li>A symbol that represents your transformation</li><li>An activated power archetype</li><li>A pact with your truth</li><li>And, most importantly, awareness</li></ul>
+      <p class="txt" style="margin-top:18px">This can no longer be forgotten. It can be put to sleep, it can be ignored, but it cannot be erased.</p></div>
+    <div class="block"><div class="block-h"><span>How to keep the transformation alive</span><i></i></div>
+      <div class="cards"><div class="cd"><p class="cd-t">Come back whenever you need</p><p class="cd-p">There is no one way to use this book. You can repeat the entire cycle or return to specific days when you feel something closing in again.</p></div><div class="cd"><p class="cd-t">Keep the diary active</p><p class="cd-p">Even if you don't write daily, keep your notebook nearby. Whenever a strange dream arises, a conflict recurs, or an intuition manifests itself, write it down.</p></div><div class="cd"><p class="cd-t">Reinforce the symbol</p><p class="cd-p">Place your symbol in a visible place for at least 21 days after the end of the cycle. If you wish, create new symbols as other transformations arise.</p></div><div class="cd"><p class="cd-t">Honor your personal rituals</p><p class="cd-p">Walking, silence, presence alarm, release letter… They are simple, but effective. Don't depend on motivation. Depend on decision.</p></div><div class="cd"><p class="cd-t">Take it to real life</p><p class="cd-p">Don't turn this process into a mental ideal. It needs to be present in the small choices: in how you say “yes” or “no”; in how you position yourself; in how you take care of yourself; in how you act when no one is watching.</p></div><div class="cd blank" aria-hidden="true"></div></div></div>
+  </div>
+</section>
+<section id="ch9">
+  <div class="rail"><span class="rail-num">Chapter Nine</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M32 32 C32 26 37 22 43 22 C50 22 55 28 55 36 C55 46 46 54 34 54 C20 54 9 43 9 29 C9 15 20 5 34 5"/>
+<circle cx="32" cy="32" r="2.2" fill="currentColor" stroke="none"/></svg></div>
+      <div><p class="eyebrow">Continuing</p><h2>The Path to Self-Knowledge Does Not End Here</h2></div>
+    </div>
+    <div class="rule"></div>
+    <p class="txt dropcap">You have completed a cycle. For 21 days, you have accessed parts of yourself that were forgotten. You have touched truths that may never have been spoken. You have made silent choices that, in time, will become visible action.</p>
+<p class="txt">But what you started here doesn't end in these pages.</p>
+<p class="txt">The path to self-knowledge is not a straight line with an end point. It is spiral. It advances, retreats, deepens and transforms. Sometimes it feels repetitive — but with each turn, you see it with new eyes. And this is proof that it is different.</p>
+<p class="txt">So this chapter is not an “end.” It is a reminder: <b>Continue.</b></p>
+<p class="txt">Keep listening to your dreams. Keep noticing the subtle patterns. Continue treating yourself with the same truth that you used to go through this process. Keep saying no to what diminishes you — and yes to what strengthens you, even when it scares you.</p>
+    <p class="pull">You don't need to rush. Needs presence.</p>
+    <div class="block"><div class="block-h"><span>For when you want to go deeper</span><i></i></div>
+      <p class="txt">This book was the first step in a longer dive. If you feel that there are layers that still want to emerge, or if you need new support in difficult times, consider accessing the materials we have prepared with the same care and depth:</p>
+      <ul class="res"><li><span class="res-n">01</span><div><p class="res-t">Soul Survival Guide</p><p class="res-p">A straightforward and supportive guide to times of grief, transition, or emotional breakdown. Based on principles of depth psychology and restorative practices.</p><p class="res-q">“Jung’s Teachings for Difficult Times.”</p></div></li><li><span class="res-n">02</span><div><p class="res-t">Carl Jung's 12 Most Profound Lessons</p><p class="res-p">For those seeking practical wisdom and inspiration in times of searching or starting over. Each lesson is accompanied by real-world examples and quick exercises.</p><p class="res-q">“Wisdom for a meaningful life.”</p></div></li><li><span class="res-n">03</span><div><p class="res-t">Carl Jung for the Heart</p><p class="res-p">A small book of emotional support, with phrases, reflections and spaces for writing. It works like a symbolic and silent diary — for the days when thinking doesn’t work.</p><p class="res-q">“A diary of emotional healing.”</p></div></li></ul>
+      <div style="margin-top:24px"><p class="txt">These materials are available on The Intend, along with complementary content, unpublished reflections and guidance for those who wish to continue transforming themselves with awareness.</p>
+<p class="txt">Access it when you feel the call. Not to fill a void, but to move forward with more direction.</p>
+<p class="txt">Self-knowledge does not end. But now, he has another base: you.</p></div>
+    </div>
+  </div>
+</section>
+<section id="ch10">
+  <div class="rail"><span class="rail-num">Chapter Ten</span><div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <div class="ch-open">
+      <div class="ch-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="32" cy="32" r="22" opacity=".3"/>
+<path d="M18 32 C18 24 24 18 32 18 C40 18 46 24 46 32" opacity=".8"/>
+<path d="M18 32 C18 40 24 46 32 46 C40 46 46 40 46 32" opacity=".45"/>
+<circle cx="32" cy="32" r="6" opacity=".6"/></svg></div>
+      <div><p class="eyebrow">Resources</p><h2>Support Resources + Conclusion</h2></div>
+    </div>
+    <div class="rule"></div>
+    <div class="block"><div class="block-h"><span>To delve even deeper</span><i></i></div>
+      <p class="txt">If this process has sparked something important in you, consider exploring further:</p>
+      <ul class="simple-list"><li>Jungian approach therapy</li><li>Study groups on dreams and symbols</li><li>Reading Jung's books in accessible language</li><li>Active writing as a spiritual practice</li><li>Monthly emotional cleansing rituals</li></ul></div>
+    <div class="block"><p class="txt">And mainly: stay close to people who respect deep processes. Don't share your transformation with those who only know how to mock other people's pain. Preserve your soul as if it were sacred — because it is.</p></div>
+    <div class="block"><div class="block-h"><span>You haven't returned to the same point</span><i></i></div>
+      <p class="txt">Perhaps, when you finish this book, nothing around you has changed. But you changed. And that changes everything.</p>
+<p class="txt">From here on, there is only one invitation: live like someone who knows what is worth sustaining.</p></div>
+    <p class="pull">You are no longer in the dark.</p>
+    <div class="notice-card">
+      <div class="block-h"><span>Final silence</span><i></i></div>
+      <p class="txt">Not everything you experienced here needs to be said. Not everything needs to be understood immediately. Some things were just felt. Others were named. And others are still maturing in silence.</p>
+<p class="txt">The best way to end a deep cycle is not to rush into the next one. It is breathing in the space between what was and what will be.</p>
+<p class="txt">Close this book for a moment. Touch your transformation symbol. And be silent for a few minutes. No rush. No expectations. Just you, with what's left.</p>
+<p class="txt">This is the real closure. Simple. Invisible. Real.</p>
+    </div>
+  </div>
+</section>
+<section class="final-sec" id="letter">
+  <div class="rail"><span class="rail-num">Closing</span>
+    <div class="rail-glyph" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 25 L14 8"/><path d="M14 18 C9 18 6 15 6 10 C11 10 14 13 14 18Z"/><path d="M14 14 C19 14 22 11 22 6 C17 6 14 9 14 14Z"/></svg></div></div>
+  <div class="body-col rv">
+    <p class="eyebrow">A Note to You</p>
+    <h2>Thank you for trusting the path</h2>
+    <div class="rule"></div>
+    <div class="letter"><p>This book was created to touch you in places words normally cannot reach. If you've come this far, know this: it wasn't a coincidence.</p><p>The process you went through requires courage, presence and commitment. And if something in you has changed — even if silently — let that be honored. Not in a hurry. But with depth.</p><p>I am grateful for having trusted the path. I appreciate you trusting me.</p><p>This work is part of something larger, which continues beyond these pages. You can find new content, insights and guides on The Intend, created to support those who choose to live with more awareness, truth and meaning.</p><p>See you there — or wherever synchronicity finds us again.</p></div>
+    <p class="sign">With respect and presence,<b>The Intend</b></p>
+  </div>
+</section>
+<div class="foot">
+  <span class="foot-mark">The Intend</span>
+  <p class="foot-note">This book is a guide for personal reflection and self-knowledge. It is not therapy, diagnosis, or medical advice. If this process brings up material that feels overwhelming, or if you are living through a period of acute distress, please reach out to a qualified mental health professional — going deeper is always safer with support alongside you.</p>
+</div>
+</div>
+<script>
+(function(){
+  var els=document.querySelectorAll('.rv');
+  function showAll(){for(var i=0;i<els.length;i++)els[i].classList.add('in');}
+  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){showAll();return;}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.03});
+  for(var i=0;i<els.length;i++)io.observe(els[i]);
+  setTimeout(showAll,2600);
+  window.addEventListener('load',function(){setTimeout(showAll,1200);});
+})();
+</script>
+</body>
+</html>

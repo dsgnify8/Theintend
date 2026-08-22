@@ -30,13 +30,10 @@ function fromRow(r: any): Expert {
     photoY: r.photo_y ?? 0,
     availability: r.availability ?? null,
     keywords: Array.isArray(r.keywords) ? r.keywords : [],
-    instagram: r.instagram ?? '',
-    tiktok: r.tiktok ?? '',
-    twitter: r.twitter ?? '',
   };
 }
 
-export const EXPERTS_CACHE_KEY = 'experts.v2';
+export const EXPERTS_CACHE_KEY = 'experts.v1';
 
 async function fromDisk(): Promise<Expert[]> {
   const disk = await readCache<Expert[]>(EXPERTS_CACHE_KEY);
@@ -161,35 +158,6 @@ export function expertSlug(name: string): string {
     .slice(0, 40);
 }
 
-// Whatever was typed, reduced to a handle. Someone will paste a whole url and
-// someone else will type an at sign, and both should work.
-export function socialHandle(input) {
-  let v = String(input == null ? '' : input).trim();
-  if (!v) return '';
-  v = v.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
-  v = v.replace(/^(instagram\.com|tiktok\.com|twitter\.com|x\.com)\//i, '');
-  v = v.split(/[/?#]/)[0];
-  return v.replace(/^@+/, '');
-}
-
-export function socialUrl(kind, input) {
-  // Cleaned of every kind of whitespace, not just spaces at the ends. A value
-  // with a newline in it looks identical to a clean one and fails every time.
-  const raw = String(input == null ? '' : input).replace(/\s+/g, '').trim();
-  if (!raw) return null;
-
-  // Already a whole address, so use it rather than taking it apart and
-  // guessing how to put it back together.
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (/^(www\.)?(instagram|tiktok|twitter|x)\.com\//i.test(raw)) return 'https://' + raw.replace(/^www\./i, '');
-
-  const h = socialHandle(raw);
-  if (!h) return null;
-  if (kind === 'instagram') return `https://instagram.com/${h}`;
-  if (kind === 'tiktok') return `https://tiktok.com/@${h}`;
-  return `https://x.com/${h}`;
-}
-
 export async function deleteExpert(id: string) {
   const { error } = await supabase.from('experts').delete().eq('id', id);
   if (!error) await reloadExperts();
@@ -221,32 +189,13 @@ export async function updateExpert(
   patch: Partial<{
     name: string; title: string; category: string; blurb: string; bio: string;
     faqs: string[]; keywords: string[]; profile_url: string;
-    instagram: string; tiktok: string; twitter: string;
     photo: string; photo_scale: number; photo_x: number; photo_y: number;
     account_email: string; availability: any; sort: number;
   }>
 ) {
-  // Asks for the row back, because an update that matches nothing returns no
-  // error at all. Without this a blocked write and a successful one look the
-  // same, and the screen says Saved either way.
-  const { data, error } = await supabase
-    .from('experts')
-    .update(patch)
-    .eq('id', id)
-    .select('id');
-
-  if (error) return { error };
-
-  if (!data || data.length === 0) {
-    return {
-      error: {
-        message: `Wrote nothing for ${id}. Either that id is not in the table, or the update was refused.`,
-      },
-    };
-  }
-
-  await reloadExperts();
-  return { error: null };
+  const { error } = await supabase.from('experts').update(patch).eq('id', id);
+  if (!error) await reloadExperts();
+  return { error };
 }
 
 export async function uploadExpertImage(expertId: string, base64: string): Promise<string> {

@@ -26,9 +26,9 @@ export type Expert = {
 export const EXPERTS: Expert[] = [
   {
     id: 'omar-chtioui',
-    keywords: ['Trauma Integration', 'Breathwork', 'Somatic Exercises', 'Inner Guidance', 'Neuro System Regulation'],
+    keywords: ['Trauma Healing', 'Breathwork', 'Somatic Exercises', 'Inner Guidance'],
     name: 'Omar Chtioui',
-    title: 'Trauma Integration · Breathwork',
+    title: 'Trauma Healing · Breathwork',
     category: 'Breathwork',
     blurb: `For those ready to move beyond talk and into the body. Omar works with breath and the nervous system to help people access and release what has been stored for too long.`,
     bio: `Omar Chtioui is a Therapeutic Breath Practitioner and Trainer in the Arab world. His work explores the lasting impact of pregnancy and childbirth trauma on how we think, feel, and behave. He helps clients access deep inner awareness, understand their life path, and develop new coping mechanisms, working with the nervous system, developmental psychology, and chemical respiration.`,
