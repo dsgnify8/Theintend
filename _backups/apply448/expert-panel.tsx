@@ -37,10 +37,6 @@ export default function ExpertPanel() {
   const { items: bookings, loading: bookingsLoading } = useExpertBookings(expert?.id);
   const mySubs = useMySubmissions(expert?.id);
 
-  // With the other hooks, above every return. React counts them in order, so
-  // one that only runs sometimes crashes the moment the count changes.
-  const [tab, setTab] = useState<'up' | 'past'>('up');
-
   if (role !== 'expert' && role !== 'admin') {
     return <Screen router={router}><View style={styles.center}><Text style={styles.muted}>This area is for experts.</Text></View></Screen>;
   }
@@ -59,6 +55,7 @@ export default function ExpertPanel() {
   }
 
   const initials = expert.name.replace('Dr. ', '').split(' ').map((p) => p[0]).slice(0, 2).join('');
+  const [tab, setTab] = useState<'up' | 'past'>('up');
 
   // Split on the actual time rather than on when the booking was made. It was
   // listing everything under Coming up, oldest first.
