@@ -2,14 +2,14 @@
   "expo": {
     "name": "The-intend",
     "slug": "The-intend",
-    "version": "1.2.1",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "theintend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-  "buildNumber": "12",
+  "buildNumber": "10",
       "supportsTablet": true,
       "bundleIdentifier": "com.theintend.app",
       "infoPlist": {
