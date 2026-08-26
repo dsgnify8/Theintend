@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-  "buildNumber": "13",
+  "buildNumber": "12",
       "supportsTablet": true,
       "bundleIdentifier": "com.theintend.app",
       "infoPlist": {
