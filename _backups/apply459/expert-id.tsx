@@ -179,49 +179,31 @@ export default function ExpertProfile() {
         ) : null}
 
         {expert.id === HEALTH_PROGRAM_EXPERT_ID ? (
-          <View style={styles.hpDeckWrap}>
-            <Text style={styles.sectionTitle}>
-              Health <Text style={styles.sectionTitleItalic}>Programs</Text>
-            </Text>
-            <Text style={styles.hpDeckSub}>
-              Structured protocols by {expert.name.replace('Dr. ', '').split(' ')[0]}, followed week by week for a specific concern.
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hpDeck}>
-              {HEALTH_PROGRAMS.map((hp, i) => (
-                <Pressable
-                  key={hp.id}
-                  style={styles.hpDeckCard}
-                  onPress={() => router.push(`/health-program/${hp.id}`)}
-                >
-                  <LinearGradient
-                    colors={['#2E2721', '#3A322A', '#241F1B']}
-                    locations={[0, 0.6, 1]}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <LinearGradient
-                    colors={['rgba(241,228,190,0.2)', 'rgba(241,228,190,0.04)', 'rgba(241,228,190,0)']}
-                    style={styles.hpDeckHalo}
-                    pointerEvents="none"
-                  />
-                  <View style={styles.hpDeckTop}>
-                    <Text style={styles.hpDeckNum}>{String(i + 1).padStart(2, '0')}</Text>
-                    <Text style={styles.hpDeckTitle} numberOfLines={3}>{hp.title}</Text>
-                  </View>
-                  <View style={{ flex: 1 }} />
-                  <View style={styles.hpDeckRule} />
-                  <Text style={styles.hpDeckFocus} numberOfLines={2}>{hp.focus}</Text>
-                  <View style={styles.hpDeckFoot}>
-                    <Text style={styles.hpDeckPrice}>{"$" + HEALTH_PROGRAM_PRICE_USD}</Text>
-                    <Text style={styles.hpDeckWeeks}>{hp.weeks}</Text>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Pressable style={styles.hpAllLink} onPress={() => router.push('/health-programs')} hitSlop={8}>
-              <Text style={styles.hpAllText}>See all {HEALTH_PROGRAMS.length} programs</Text>
-              <Ionicons name="arrow-forward" size={14} color={COLORS.accent} />
-            </Pressable>
-          </View>
+          <Pressable style={styles.hpStrip} onPress={() => router.push('/health-programs')}>
+            <LinearGradient
+              colors={['#2E2721', '#3A322A', '#241F1B']}
+              locations={[0, 0.6, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={['rgba(241,228,190,0.16)', 'rgba(241,228,190,0)']}
+              style={styles.hpStripHalo}
+              pointerEvents="none"
+            />
+            <Text style={styles.hpStripLabel}>PROGRAMS BY {expert.name.replace('Dr. ', '').split(' ')[0].toUpperCase()}</Text>
+            {HEALTH_PROGRAMS.slice(0, 3).map((hp) => (
+              <View key={hp.id} style={styles.hpStripRow}>
+                <View style={styles.hpStripDot} />
+                <Text style={styles.hpStripName} numberOfLines={1}>{hp.title}</Text>
+              </View>
+            ))}
+            <View style={styles.hpStripFoot}>
+              <Text style={styles.hpStripMore}>
+                and {HEALTH_PROGRAMS.length - 3} more, from ${HEALTH_PROGRAM_PRICE_USD}
+              </Text>
+              <Ionicons name="arrow-forward" size={14} color={COLORS.pastel} />
+            </View>
+          </Pressable>
         ) : null}
 
         <Text style={styles.sectionTitle}>
@@ -425,25 +407,14 @@ const styles = StyleSheet.create({
   name: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink, textAlign: 'center' },
   title: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, textAlign: 'center', marginTop: 8 },
   sectionTitle: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginTop: 28, marginBottom: 12 },
-  hpDeckWrap: { marginTop: 8 },
-  hpDeckSub: { fontSize: 14, lineHeight: 21, color: COLORS.muted, marginTop: -4, marginBottom: 16 },
-  hpDeck: { paddingRight: 20, gap: 12 },
-  hpDeckCard: {
-    width: 220, minHeight: 220,
-    borderRadius: 20, overflow: 'hidden', padding: 18,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
-  },
-  hpDeckHalo: { position: 'absolute', top: 0, left: 0, right: 0, height: 110 },
-  hpDeckTop: { gap: 8 },
-  hpDeckNum: { fontFamily: FONT_SERIF, fontSize: 13, color: COLORS.pastel, opacity: 0.8 },
-  hpDeckTitle: { fontFamily: FONT_SERIF, fontSize: 19, lineHeight: 24, color: '#FFFFFF' },
-  hpDeckRule: { height: 1, backgroundColor: 'rgba(255,255,255,0.12)', marginTop: 14, marginBottom: 10 },
-  hpDeckFocus: { fontSize: 12, color: 'rgba(255,255,255,0.62)', lineHeight: 18 },
-  hpDeckFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
-  hpDeckPrice: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.pastel },
-  hpDeckWeeks: { fontSize: 11, color: 'rgba(255,255,255,0.48)' },
-  hpAllLink: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 14, paddingVertical: 6 },
-  hpAllText: { fontSize: 13, color: COLORS.accent, letterSpacing: 0.2 },
+  hpStrip: { borderRadius: 20, overflow: 'hidden', padding: 20, marginTop: 28 },
+  hpStripHalo: { position: 'absolute', top: 0, left: 0, right: 0, height: 80 },
+  hpStripLabel: { fontSize: 9.5, letterSpacing: 2.4, color: 'rgba(255,255,255,0.55)', marginBottom: 14 },
+  hpStripRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5 },
+  hpStripDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: COLORS.pastel, opacity: 0.7 },
+  hpStripName: { flex: 1, fontFamily: FONT_SERIF, fontSize: 15, color: '#FFFFFF' },
+  hpStripFoot: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.14)' },
+  hpStripMore: { flex: 1, fontSize: 12, color: COLORS.pastel, opacity: 0.9 },
   sectionTitleItalic: { fontFamily: FONT_ITALIC, fontSize: 22 },
   tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: COLORS.line },

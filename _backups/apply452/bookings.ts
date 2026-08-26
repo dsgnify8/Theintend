@@ -6,7 +6,6 @@ import { supabase } from './supabase';
 import { addBooking, removeBooking } from './store';
 import { deleteCalendarEvent, updateCalendarEvent } from './calendar';
 import { scheduleLocalReminder, sendPushToEmail } from './notifications';
-import { formatClock, formatClockInZone } from './time';
 
 export type DBBooking = {
   id: string;
@@ -281,7 +280,11 @@ function parseWhen(w: string): number | null {
 
 const WD3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function clockLabel(h: number, m: number) { return formatClock(h, m); }
+function clockLabel(h: number, m: number) {
+  const hh = ((h + 11) % 12) + 1;
+  const mm = m < 10 ? '0' + m : String(m);
+  return hh + ':' + mm + ' ' + (h < 12 ? 'AM' : 'PM');
+}
 
 type WhenLike = { starts_at?: string | null; when_text?: string | null; timezone?: string | null };
 
@@ -299,7 +302,17 @@ export function zoneCity(tz?: string | null): string | null {
   return part ? part.replace(/_/g, ' ') : null;
 }
 
-function timeInZone(iso: string, tz: string): string | null { return formatClockInZone(iso, tz); }
+function timeInZone(iso: string, tz: string): string | null {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz,
+    }).format(d);
+  } catch {
+    return null;
+  }
+}
 
 // For expert-facing screens: their own time, plus the client's when it differs.
 export function formatWhenForExpert(b: WhenLike): string {

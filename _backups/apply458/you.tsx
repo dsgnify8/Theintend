@@ -517,7 +517,6 @@ export default function YouScreen() {
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Settings</Text>
             {loggedIn ? <SettingRow icon="person-outline" label="Personal information" onPress={() => goSettings('/personal-info')} /> : null}
-            {loggedIn ? <SettingRow icon="receipt-outline" label="My orders" onPress={() => goSettings('/orders')} /> : null}
             {role === 'admin' ? <SettingRow icon="grid-outline" label="Admin panel" onPress={() => goSettings('/admin')} /> : null}
             {role === 'expert' ? <SettingRow icon="briefcase-outline" label="Expert panel" onPress={() => goSettings('/expert-panel')} /> : null}
             <SettingRow icon="help-circle-outline" label="Help & support" onPress={() => goSettings('/help-support')} />

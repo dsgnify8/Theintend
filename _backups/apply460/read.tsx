@@ -171,12 +171,7 @@ export default function LibraryScreen() {
 
         {ebooks.length ? (
           <TintBand>
-            <View style={styles.shelfHead}>
-              <Text style={styles.shelfTitle}>E-books</Text>
-              <Pressable onPress={() => router.push('/ebooks')} hitSlop={8}>
-                <Text style={styles.seeAll}>See all {'\u203A'}</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.shelfTitle}>E-books</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
               {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
             </ScrollView>

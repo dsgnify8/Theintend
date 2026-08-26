@@ -12,7 +12,6 @@ import { sendPushToEmail } from '@/lib/notifications';
 import { useService } from '@/lib/services';
 import { payWithSheet, priceToMinorUnits } from '@/lib/payments';
 import { TABBY_ENABLED } from '@/constants/stripe';
-import { formatClock } from '@/lib/time';
 import { payWithTabby, priceToMajorString } from '@/lib/tabby';
 
 // The same wash the library, admin and companion pages carry.
@@ -33,7 +32,7 @@ const WD_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS_AHEAD = 14;
 
-function hourLabel(h: number, m?: number) { return formatClock(h, m ?? 0); }
+function hourLabel(h: number, m?: number) { const hh = ((h + 11) % 12) + 1; const mm = (m ?? 0) < 10 ? '0' + (m ?? 0) : String(m ?? 0); return `${hh}:${mm} ${h < 12 ? 'AM' : 'PM'}`; }
 function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time'; } catch { return 'local time'; } }
 function tzId(): string | null { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; } }
 
@@ -75,19 +74,13 @@ function formatSlot(d: Date) {
   return `${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}, ${hourLabel(d.getHours(), d.getMinutes())}`;
 }
 function parseSlot(s: string): Date | null {
-  // AM/PM optional so a when_text saved in 24-hour format still parses.
-  const m = s.match(/(\d{1,2}) (\w{3}) (\d{4}), (\d{1,2}):(\d{2})(?: (AM|PM))?/);
+  const m = s.match(/(\d{1,2}) (\w{3}) (\d{4}), (\d{1,2}):(\d{2}) (AM|PM)/);
   if (!m) return null;
   const day = parseInt(m[1], 10);
   const mon = MON.indexOf(m[2]);
   const year = parseInt(m[3], 10);
-  let hr: number;
-  if (m[6]) {
-    hr = parseInt(m[4], 10) % 12;
-    if (m[6] === 'PM') hr += 12;
-  } else {
-    hr = parseInt(m[4], 10);
-  }
+  let hr = parseInt(m[4], 10) % 12;
+  if (m[6] === 'PM') hr += 12;
   const min = parseInt(m[5], 10);
   if (mon < 0) return null;
   return new Date(year, mon, day, hr, min, 0, 0);
@@ -145,8 +138,6 @@ export default function BookScreen() {
   const [busyRanges, setBusyRanges] = useState<{s: number; e: number}[]>([]);
   const [dayIdx, setDayIdx] = useState(0);
   const [slotMins, setSlotMins] = useState<number | null>(null);
-  // Which time-of-day groups are expanded on the picker.
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [requested, setRequested] = useState(false);
   const [chosenLabel, setChosenLabel] = useState('');
@@ -237,23 +228,14 @@ export default function BookScreen() {
     return out;
   }, [expert?.availability, svc?.durationMin, busyRanges, takenRanges]);
 
-  // Keep dayIdx in bounds if the days list shortens, and land on the first
-  // non-empty group of whichever day is active, so times show up without an
-  // extra tap. Switching days rewinds to the first group of the new day.
-  useEffect(() => {
-    if (!days.length) { setOpenGroups(new Set()); return; }
-    const safeIdx = Math.min(Math.max(0, dayIdx), days.length - 1);
-    if (safeIdx !== dayIdx) { setDayIdx(safeIdx); setSlotMins(null); return; }
-    const first = days[safeIdx].groups[0]?.title;
-    setOpenGroups(first ? new Set([first]) : new Set());
-  }, [days.length, dayIdx]);
+  useEffect(() => { if (dayIdx >= days.length) { setDayIdx(0); setSlotMins(null); } }, [days.length, dayIdx]);
 
   const bookingTitle = () => {
     if (svc && svc.kind === 'package') return `${svc.durationMin ?? 90} minute session with ${expert?.name ?? ''}`;
     return `${svc ? svc.name : type} with ${expert?.name ?? ''}`;
   };
 
-  const finalizeBooking = async (orderId?: string | null, silent?: boolean) => {
+  const finalizeBooking = async (orderId?: string | null) => {
     if (!expert || slotMins == null || !days[dayIdx]) return;
     const slot = new Date(days[dayIdx].date.getTime() + slotMins * 60000);
     const label = formatSlot(slot);
@@ -280,11 +262,9 @@ export default function BookScreen() {
       }
       // No calendar call here. applyNewTime moves the event this booking
       // already has, and creating one as well would leave two at two times.
-      if (!silent) {
-        setChosenLabel(label);
-        setWasRequest(false);
-        setRequested(true);
-      }
+      setChosenLabel(label);
+      setWasRequest(false);
+      setRequested(true);
       setSaving(false);
       return;
     }
@@ -353,11 +333,9 @@ export default function BookScreen() {
         if (eventId && bid) setBookingCalendarEvent(String(bid), eventId);
       })
       .catch(() => {});
-    if (!silent) {
-      setChosenLabel(label);
-      setWasRequest(false);
-      setRequested(true);
-    }
+    setChosenLabel(label);
+    setWasRequest(false);
+    setRequested(true);
     setSaving(false);
   };
 
@@ -389,15 +367,10 @@ export default function BookScreen() {
     setSaving(false);
     if (res.ok) {
       await markOrderPaid(orderId, res.paymentIntentId ?? null);
-      await finalizeBooking(orderId, true);
-      if (orderId) { router.replace(`/order/${orderId}`); }
+      finalizeBooking(orderId);
     } else {
       await markOrderFailed(orderId, res.error ?? 'unknown');
-      // The failed order is still worth showing so the user has a record and
-      // knows nothing was charged. Skips on plain cancel.
-      if (res.error === 'canceled') return;
-      if (orderId) { router.replace(`/order/${orderId}`); return; }
-      if (res.error) { Alert.alert('Payment', res.error); }
+      if (res.error && res.error !== 'canceled') { Alert.alert('Payment', res.error); }
     }
   };
 
@@ -420,14 +393,11 @@ export default function BookScreen() {
     setSaving(false);
     if (res.ok) {
       await markOrderPaid(orderId, res.paymentId ?? null);
-      await finalizeBooking(orderId, true);
-      if (orderId) { router.replace(`/order/${orderId}`); }
+      finalizeBooking(orderId);
     } else {
       await markOrderFailed(orderId, res.code ? res.code + ': ' + (res.error ?? '') : (res.error ?? 'unknown'));
-      if (res.error === 'canceled') return;
-      if (res.code === 'phone_required') { askForPhone(res.error); return; }
-      if (orderId) { router.replace(`/order/${orderId}`); return; }
-      if (res.error) { Alert.alert('Tabby', res.error); }
+      if (res.code === 'phone_required') { askForPhone(res.error); }
+      else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
     }
   };
 
@@ -534,34 +504,21 @@ export default function BookScreen() {
                   })}
                 </ScrollView>
 
-                {active?.groups.map((g) => {
-                  const open = openGroups.has(g.title);
-                  const count = g.slots.length;
-                  return (
-                    <View key={g.title}>
-                      <Pressable style={styles.groupHead} onPress={() => setOpenGroups((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(g.title)) next.delete(g.title); else next.add(g.title);
-                        return next;
-                      })} hitSlop={6}>
-                        <Text style={styles.groupLabel}>{g.title.toUpperCase()} · {count} {count === 1 ? 'time' : 'times'}</Text>
-                        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={COLORS.muted} />
-                      </Pressable>
-                      {open ? (
-                        <View style={styles.slotGrid}>
-                          {g.slots.map((sl) => {
-                            const on = sl.mins === slotMins;
-                            return (
-                              <Pressable key={sl.mins} onPress={() => setSlotMins(sl.mins)} style={[styles.slot, on && styles.slotOn]}>
-                                <Text style={[styles.slotText, on && styles.slotTextOn]}>{sl.label}</Text>
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                      ) : null}
+                {active?.groups.map((g) => (
+                  <View key={g.title}>
+                    <Text style={styles.groupLabel}>{g.title.toUpperCase()}</Text>
+                    <View style={styles.slotGrid}>
+                      {g.slots.map((sl) => {
+                        const on = sl.mins === slotMins;
+                        return (
+                          <Pressable key={sl.mins} onPress={() => setSlotMins(sl.mins)} style={[styles.slot, on && styles.slotOn]}>
+                            <Text style={[styles.slotText, on && styles.slotTextOn]}>{sl.label}</Text>
+                          </Pressable>
+                        );
+                      })}
                     </View>
-                  );
-                })}
+                  </View>
+                ))}
 
                 <Text style={styles.tzNote}>Times shown in {tzName()}. Busy times from the expert's Google Calendar are hidden.</Text>
 
@@ -631,8 +588,7 @@ const styles = StyleSheet.create({
   dateNum: { fontFamily: FONT_SERIF, fontSize: 20, color: COLORS.ink, marginVertical: 2 },
   dateMon: { fontSize: 11, color: COLORS.muted },
   dateOnText: { color: COLORS.bg },
-  groupHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: COLORS.line, marginTop: 8 },
-  groupLabel: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted },
+  groupLabel: { fontSize: 11, letterSpacing: 1.5, color: COLORS.muted, marginTop: 18 },
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   slot: { paddingVertical: 11, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: COLORS.line, backgroundColor: COLORS.card },
   slotOn: { backgroundColor: '#1A1A1A', borderColor: '#1A1A1A' },

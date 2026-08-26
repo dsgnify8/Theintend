@@ -3,7 +3,6 @@
 // has a record even if something fails before the booking is written.
 // Every function here is best effort: it swallows its own errors and must
 // never block or fail a booking.
-import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
 export type OrderInput = {
@@ -85,71 +84,4 @@ export async function markOrderFailed(id: string | null, error?: string | null) 
       .update({ status: 'failed', error: error ?? null, updated_at: new Date().toISOString() })
       .eq('id', id);
   } catch {}
-}
-
-// The order row shape after a select, in the same field names as the table.
-export type Order = {
-  id: string;
-  user_id: string | null;
-  email: string | null;
-  source: string | null;
-  provider: 'stripe' | 'tabby';
-  status: 'started' | 'paid' | 'fulfilled' | 'failed' | string;
-  amount_minor: number;
-  currency: string;
-  kind: 'single' | 'package';
-  expert_id: string | null;
-  service_id: string | null;
-  label: string;
-  intended_start: string | null;
-  intended_tz: string | null;
-  provider_ref: string | null;
-  booking_id: string | null;
-  package_id: string | null;
-  error: string | null;
-  created_at: string;
-  updated_at: string | null;
-};
-
-// One order by id, for the confirmation screen. Returns null when the row
-// does not exist or the reader is not allowed to see it.
-export async function getOrder(id: string): Promise<Order | null> {
-  try {
-    const { data } = await supabase.from('orders').select('*').eq('id', id).maybeSingle();
-    return (data as Order) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-// Every order the signed-in user has, newest first. Empty on any failure so
-// the screen never explodes.
-export function useMyOrders(): { orders: Order[]; loading: boolean; reload: () => void } {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const { data: u } = await supabase.auth.getUser();
-        const uid = u?.user?.id;
-        if (!uid) { if (alive) { setOrders([]); setLoading(false); } return; }
-        const { data } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', uid)
-          .order('created_at', { ascending: false });
-        if (!alive) return;
-        setOrders((data as Order[]) ?? []);
-        setLoading(false);
-      } catch {
-        if (alive) { setOrders([]); setLoading(false); }
-      }
-    })();
-    return () => { alive = false; };
-  }, [tick]);
-
-  return { orders, loading, reload: () => setTick((n) => n + 1) };
 }

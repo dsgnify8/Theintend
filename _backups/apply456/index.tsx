@@ -132,6 +132,8 @@ export default function YourAi() {
   // Only one row sits open at a time.
   const [openRow, setOpenRow] = useState<string | null>(null);
   const greeting = useRef(GREETINGS[Math.floor(Math.random() * GREETINGS.length)]).current;
+  // Which message is being written out, and how much of it is showing.
+  const [typeState, setTypeState] = useState<{ index: number; shown: number } | null>(null);
   const [still, setStill] = useState(false);
   // Messages already on screen when a past conversation is opened. Those do
   // not animate in, or the whole thread arrives at once.
@@ -145,6 +147,16 @@ export default function YourAi() {
     return () => { alive = false; };
   }, []);
 
+  // Reveals the reply a few characters at a time once it has landed.
+  useEffect(() => {
+    if (!typeState) return;
+    const full = messages[typeState.index]?.content ?? '';
+    if (typeState.shown >= full.length) { setTypeState(null); return; }
+    const t = setTimeout(() => {
+      setTypeState((st) => (st ? { ...st, shown: Math.min(full.length, st.shown + 7) } : null));
+    }, 16);
+    return () => clearTimeout(t);
+  }, [typeState, messages]);
   const scroller = useRef<ScrollView>(null);
 
   // Opens on an empty thread every time. Past conversations live behind the
@@ -158,7 +170,7 @@ export default function YourAi() {
   useEffect(() => {
     const t = setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 60);
     return () => clearTimeout(t);
-  }, [messages, sending]);
+  }, [messages, sending, typeState]);
 
   const send = async () => {
     const text = input.trim();
@@ -172,6 +184,7 @@ export default function YourAi() {
     if (res.ok && res.reply) {
       setMessages((m) => {
         const next = [...m, { role: 'assistant', content: res.reply! }];
+        if (!still) setTypeState({ index: next.length - 1, shown: 0 });
         return next;
       });
     } else {
@@ -233,19 +246,22 @@ export default function YourAi() {
                   {firstName ? `${greeting.title}, ${firstName}` : greeting.title}
                 </Text>
                 <Text style={styles.introBody}>{greeting.body}</Text>
-                <Text style={styles.introMeta}>Programmed by doctors and official sources.</Text>
               </View>
             ) : null}
 
-            {messages.map((m, i) => (
-              <Appear key={i} animate={!still && i >= settledBefore.current} style={[styles.row, m.role === 'user' ? styles.rowUser : styles.rowAi]}>
-                <View style={[styles.bubble, m.role === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
-                  <Text style={[styles.bubbleText, m.role === 'user' ? styles.bubbleTextUser : styles.bubbleTextAi]}>
-                    {m.content}
-                  </Text>
-                </View>
-              </Appear>
-            ))}
+            {messages.map((m, i) => {
+              const typingThis = typeState?.index === i;
+              const text = typingThis ? m.content.slice(0, typeState!.shown) : m.content;
+              return (
+                <Appear key={i} animate={!still && i >= settledBefore.current} style={[styles.row, m.role === 'user' ? styles.rowUser : styles.rowAi]}>
+                  <View style={[styles.bubble, m.role === 'user' ? styles.bubbleUser : styles.bubbleAi]}>
+                    <Text style={[styles.bubbleText, m.role === 'user' ? styles.bubbleTextUser : styles.bubbleTextAi]}>
+                      {text}
+                    </Text>
+                  </View>
+                </Appear>
+              );
+            })}
 
             {sending ? (
               <View style={[styles.row, styles.rowAi]}>
@@ -320,6 +336,7 @@ export default function YourAi() {
                     style={styles.histRow}
                     onPress={() => {
                       settledBefore.current = c.messages.length;
+                      setTypeState(null);
                       setMessages(c.messages.map((m) => ({ role: m.role, content: m.content })));
                       setReadingPast(true);
                       setHistOpen(false);
@@ -538,7 +555,6 @@ const styles = StyleSheet.create({
   intro: { paddingVertical: 40, paddingHorizontal: 8 },
   introTitle: { fontFamily: FONT_SERIF, fontSize: 26, color: COLORS.ink, marginBottom: 12 },
   introBody: { fontSize: 15, lineHeight: 23, color: COLORS.muted },
-  introMeta: { fontSize: 12, lineHeight: 18, color: COLORS.muted, opacity: 0.7, marginTop: 18, letterSpacing: 0.2 },
 
   thinking: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 4 },
   tdots: { flexDirection: 'row', alignItems: 'center', gap: 5 },

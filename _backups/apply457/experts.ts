@@ -9,12 +9,6 @@ import { readCache, writeCache } from './cache';
 import { EXPERTS as FALLBACK, type Expert } from '@/constants/experts';
 
 let cache: Expert[] | null = null;
-// When the cache was last confirmed against the server. Screens that mount a
-// hook using this will refresh it in the background if it is older than
-// STALE_MS, so a client who was already in the app when an expert saved new
-// availability picks up the change on their next screen change.
-let cacheAt = 0;
-const STALE_MS = 30 * 1000;
 let inflight: Promise<Expert[]> | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -55,7 +49,6 @@ async function load(): Promise<Expert[]> {
     if (error || !data || data.length === 0) return fromDisk();
     const mapped = data.map(fromRow);
     writeCache(EXPERTS_CACHE_KEY, mapped);
-    cacheAt = Date.now();
     return mapped;
   } catch {
     return fromDisk();
@@ -71,9 +64,6 @@ export function useExperts() {
   useEffect(() => {
     const l = () => setState({ experts: cache ?? FALLBACK, loading: false });
     listeners.add(l);
-    // Background refresh if the cache is old, so screens quietly get the
-    // latest without blocking on it.
-    if (cache && Date.now() - cacheAt > STALE_MS) { reloadExperts().catch(() => {}); }
     let timer: any;
     if (cache) {
       setState({ experts: cache, loading: false });
@@ -108,15 +98,8 @@ export async function getExpertForEmail(email: string): Promise<Expert | null> {
 }
 
 export async function reloadExperts() {
-  // Coalesce concurrent callers through the same inflight promise so a
-  // background stale-check and a foreground trigger cannot double-fetch.
-  const p = inflight ?? (inflight = load());
-  try {
-    cache = await p;
-    emit();
-  } finally {
-    if (inflight === p) inflight = null;
-  }
+  cache = await load();
+  emit();
 }
 
 export async function createExpert(row: any) {

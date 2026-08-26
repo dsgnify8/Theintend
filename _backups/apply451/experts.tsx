@@ -33,7 +33,7 @@ function initials(name: string) {
 
 export default function ExpertsScreen() {
   const [active, setActive] = useState<string>(ALL);
-  const [grid, setGrid] = useState(true);
+  const [grid, setGrid] = useState(false);
   const { experts, loading } = useExperts();
   const scrollY = useRef(new Animated.Value(0)).current;
 

@@ -237,23 +237,14 @@ export default function BookScreen() {
     return out;
   }, [expert?.availability, svc?.durationMin, busyRanges, takenRanges]);
 
-  // Keep dayIdx in bounds if the days list shortens, and land on the first
-  // non-empty group of whichever day is active, so times show up without an
-  // extra tap. Switching days rewinds to the first group of the new day.
-  useEffect(() => {
-    if (!days.length) { setOpenGroups(new Set()); return; }
-    const safeIdx = Math.min(Math.max(0, dayIdx), days.length - 1);
-    if (safeIdx !== dayIdx) { setDayIdx(safeIdx); setSlotMins(null); return; }
-    const first = days[safeIdx].groups[0]?.title;
-    setOpenGroups(first ? new Set([first]) : new Set());
-  }, [days.length, dayIdx]);
+  useEffect(() => { if (dayIdx >= days.length) { setDayIdx(0); setSlotMins(null); } }, [days.length, dayIdx]);
 
   const bookingTitle = () => {
     if (svc && svc.kind === 'package') return `${svc.durationMin ?? 90} minute session with ${expert?.name ?? ''}`;
     return `${svc ? svc.name : type} with ${expert?.name ?? ''}`;
   };
 
-  const finalizeBooking = async (orderId?: string | null, silent?: boolean) => {
+  const finalizeBooking = async (orderId?: string | null) => {
     if (!expert || slotMins == null || !days[dayIdx]) return;
     const slot = new Date(days[dayIdx].date.getTime() + slotMins * 60000);
     const label = formatSlot(slot);
@@ -280,11 +271,9 @@ export default function BookScreen() {
       }
       // No calendar call here. applyNewTime moves the event this booking
       // already has, and creating one as well would leave two at two times.
-      if (!silent) {
-        setChosenLabel(label);
-        setWasRequest(false);
-        setRequested(true);
-      }
+      setChosenLabel(label);
+      setWasRequest(false);
+      setRequested(true);
       setSaving(false);
       return;
     }
@@ -353,11 +342,9 @@ export default function BookScreen() {
         if (eventId && bid) setBookingCalendarEvent(String(bid), eventId);
       })
       .catch(() => {});
-    if (!silent) {
-      setChosenLabel(label);
-      setWasRequest(false);
-      setRequested(true);
-    }
+    setChosenLabel(label);
+    setWasRequest(false);
+    setRequested(true);
     setSaving(false);
   };
 
@@ -389,15 +376,10 @@ export default function BookScreen() {
     setSaving(false);
     if (res.ok) {
       await markOrderPaid(orderId, res.paymentIntentId ?? null);
-      await finalizeBooking(orderId, true);
-      if (orderId) { router.replace(`/order/${orderId}`); }
+      finalizeBooking(orderId);
     } else {
       await markOrderFailed(orderId, res.error ?? 'unknown');
-      // The failed order is still worth showing so the user has a record and
-      // knows nothing was charged. Skips on plain cancel.
-      if (res.error === 'canceled') return;
-      if (orderId) { router.replace(`/order/${orderId}`); return; }
-      if (res.error) { Alert.alert('Payment', res.error); }
+      if (res.error && res.error !== 'canceled') { Alert.alert('Payment', res.error); }
     }
   };
 
@@ -420,14 +402,11 @@ export default function BookScreen() {
     setSaving(false);
     if (res.ok) {
       await markOrderPaid(orderId, res.paymentId ?? null);
-      await finalizeBooking(orderId, true);
-      if (orderId) { router.replace(`/order/${orderId}`); }
+      finalizeBooking(orderId);
     } else {
       await markOrderFailed(orderId, res.code ? res.code + ': ' + (res.error ?? '') : (res.error ?? 'unknown'));
-      if (res.error === 'canceled') return;
-      if (res.code === 'phone_required') { askForPhone(res.error); return; }
-      if (orderId) { router.replace(`/order/${orderId}`); return; }
-      if (res.error) { Alert.alert('Tabby', res.error); }
+      if (res.code === 'phone_required') { askForPhone(res.error); }
+      else if (res.error && res.error !== 'canceled') { Alert.alert('Tabby', res.error); }
     }
   };
 
@@ -525,7 +504,7 @@ export default function BookScreen() {
                   {days.map((d, i) => {
                     const on = i === dayIdx;
                     return (
-                      <Pressable key={i} onPress={() => { setDayIdx(i); setSlotMins(null); }} style={[styles.datePill, on && styles.datePillOn]}>
+                      <Pressable key={i} onPress={() => { setDayIdx(i); setSlotMins(null); setOpenGroups(new Set()); }} style={[styles.datePill, on && styles.datePillOn]}>
                         <Text style={[styles.dateWd, on && styles.dateOnText]}>{WD[d.date.getDay()]}</Text>
                         <Text style={[styles.dateNum, on && styles.dateOnText]}>{d.date.getDate()}</Text>
                         <Text style={[styles.dateMon, on && styles.dateOnText]}>{MON[d.date.getMonth()]}</Text>

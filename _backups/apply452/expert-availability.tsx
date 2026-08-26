@@ -7,7 +7,6 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { getExpertForEmail, updateExpert } from '@/lib/experts';
 import { CalendarConnect } from '@/components/CalendarConnect';
-import { formatClock } from '@/lib/time';
 import type { Expert } from '@/constants/experts';
 
 const DAYS: [string, string][] = [
@@ -23,7 +22,13 @@ const DAY_MAX = 24 * 60;
 type DayRange = { on: boolean; startMin: number; endMin: number };
 type Availability = { days: Record<string, DayRange>; blockedDates: string[] };
 
-function label(mins: number) { return formatClock(Math.floor(mins / 60), mins % 60); }
+function label(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const hh = ((h + 11) % 12) + 1;
+  const mm = m < 10 ? '0' + m : String(m);
+  return hh + ':' + mm + ' ' + (h < 12 ? 'AM' : 'PM');
+}
 
 // Reads whatever shape is already saved. Older rows carry hour blocks in
 // `slots` or a start/end pair in whole hours, and both still have to open.
@@ -277,7 +282,7 @@ export default function ExpertAvailability() {
                 const on = m === cur;
                 return (
                   <Pressable key={m} style={[styles.pickRow, on && styles.pickRowOn]} onPress={() => onPick(m)}>
-                    <Text style={[styles.pickText, on && styles.pickTextOn]}>{m === DAY_MAX ? (formatClock(0, 0)) : label(m)}</Text>
+                    <Text style={[styles.pickText, on && styles.pickTextOn]}>{m === DAY_MAX ? '12:00 AM' : label(m)}</Text>
                     {on ? <Ionicons name="checkmark" size={17} color={COLORS.bg} /> : null}
                   </Pressable>
                 );

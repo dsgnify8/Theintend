@@ -171,12 +171,7 @@ export default function LibraryScreen() {
 
         {ebooks.length ? (
           <TintBand>
-            <View style={styles.shelfHead}>
-              <Text style={styles.shelfTitle}>E-books</Text>
-              <Pressable onPress={() => router.push('/ebooks')} hitSlop={8}>
-                <Text style={styles.seeAll}>See all {'\u203A'}</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.shelfTitle}>E-books</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
               {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
             </ScrollView>
@@ -230,8 +225,8 @@ function PracticeTile({ practice, uri, isAdmin }: { practice: Practice; uri?: st
       ) : null}
       <Ionicons name={practice.icon} size={22} color={COLORS.bg} />
       <View style={{ flex: 1 }} />
-      <Text style={styles.tileLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{practice.label}</Text>
-      <Text style={styles.tileLine} numberOfLines={2}>{practice.line}</Text>
+      <Text style={styles.tileLabel}>{practice.label}</Text>
+      <Text style={styles.tileLine}>{practice.line}</Text>
       {busy ? (
         <View style={styles.tileBusy}><ActivityIndicator color={COLORS.bg} /></View>
       ) : null}
@@ -345,7 +340,7 @@ const styles = StyleSheet.create({
   adminHint: { fontSize: 11, color: COLORS.accent, marginTop: -8, marginBottom: 12 },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  tile: { width: '48.5%', aspectRatio: 1.2, borderRadius: 20, padding: 16, marginBottom: 12, overflow: 'hidden' },
+  tile: { width: '48.5%', height: 148, borderRadius: 20, padding: 16, marginBottom: 12, overflow: 'hidden' },
   tileLabel: { fontFamily: FONT_SERIF, fontSize: 19, color: COLORS.bg },
   tileLine: { fontSize: 12, color: COLORS.bg, opacity: 0.8, marginTop: 3 },
   tileBusy: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(43,38,34,0.45)', alignItems: 'center', justifyContent: 'center' },
