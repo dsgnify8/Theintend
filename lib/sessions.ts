@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
+import { getLocale } from './i18n';
 import {
   CLASSES as FB_CLASSES,
   PROGRAMS as FB_PROGRAMS,
@@ -19,14 +20,23 @@ let inflight: Promise<Data> | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
-function classFromRow(r: any): SessionClass {
+function classFromRow(r: any, forceEn = false): SessionClass {
+  // Locale-aware. Arabic wins when i18n.ar.<field> exists, otherwise the
+  // English canonical is used. expert_name and expert_title are kept as
+  // stored for now; the experts table itself is Arabic-aware from apply472
+  // and a follow-up will make session cards look up expert names by id.
+  // forceEn is for the admin editor list so it always reads English
+  // regardless of app locale.
+  const isAr = !forceEn && getLocale() === 'ar';
+  const ar = (r.i18n && r.i18n.ar) || {};
+  const pick = <T,>(en: T, arVal: any): T => (isAr && arVal ? arVal : en);
   return {
     id: r.id,
-    title: r.title,
+    title: pick(r.title, ar.title),
     expertId: r.expert_id,
     expertName: r.expert_name,
     expertTitle: r.expert_title ?? '',
-    category: r.category ?? 'Breathwork',
+    category: pick(r.category ?? 'Breathwork', ar.category),
     durationHours: Number(r.duration_hours ?? 1),
     date: r.date ?? '',
     time: r.time ?? '',
@@ -34,26 +44,31 @@ function classFromRow(r: any): SessionClass {
     link: r.link ?? '',
     color: r.color ?? '#5C4632',
     banner: r.image ? { uri: r.image } : (FB_CLASSES.find((c) => c.id === r.id)?.banner ?? null),
-    description: r.description ?? '',
+    description: pick(r.description ?? '', ar.description),
   };
 }
 
-function programFromRow(r: any): Program {
+function programFromRow(r: any, forceEn = false): Program {
+  // Same locale-aware pattern as classFromRow.
+  const isAr = !forceEn && getLocale() === 'ar';
+  const ar = (r.i18n && r.i18n.ar) || {};
+  const pick = <T,>(en: T, arVal: any): T => (isAr && arVal ? arVal : en);
+  const enCategory = r.category ?? (FB_PROGRAMS.find((p) => p.id === r.id)?.category ?? '');
   return {
     id: r.id,
-    title: r.title,
+    title: pick(r.title, ar.title),
     expertId: r.expert_id,
     expertName: r.expert_name,
     // Fall back to the built-in category if a row predates the category column.
-    category: r.category ?? (FB_PROGRAMS.find((p) => p.id === r.id)?.category ?? ''),
+    category: pick(enCategory, ar.category),
     weeks: r.weeks ?? 0,
     sessions: r.sessions_count ?? 0,
-    cadence: r.cadence ?? '',
+    cadence: pick(r.cadence ?? '', ar.cadence),
     price: r.price ?? '',
     requiresForm: !!r.requires_form,
     color: r.color ?? '#6F7A6B',
     banner: r.image ? { uri: r.image } : (FB_PROGRAMS.find((p) => p.id === r.id)?.banner ?? null),
-    description: r.description ?? '',
+    description: pick(r.description ?? '', ar.description),
   };
 }
 
@@ -146,4 +161,61 @@ export async function createSession(row: any) {
   const { error } = await supabase.from('sessions').upsert(row, { onConflict: 'id' });
   if (!error) await reloadSessions();
   return { error };
+}
+
+// For the admin editor. Fetches the raw session row so both languages come
+// in side by side, unaffected by the locale-aware cache. Works for both
+// classes and programs; the caller uses row.kind to know which. Preserves
+// the raw i18n object so a save can merge instead of replace.
+export async function loadSessionForEdit(id: string): Promise<{
+  kind: 'class' | 'program';
+  en: any;
+  ar: { title: string; description: string; category: string; cadence: string };
+  i18nRaw: any;
+} | null> {
+  try {
+    const { data } = await supabase.from('sessions').select('*').eq('id', id).maybeSingle();
+    if (!data) return null;
+    const kind = data.kind === 'program' ? 'program' : 'class';
+    const en = kind === 'class' ? classFromRow(data, true) : programFromRow(data, true);
+    const i18nRaw = (data as any).i18n ?? {};
+    const ar = i18nRaw.ar ?? {};
+    return {
+      kind,
+      en,
+      ar: {
+        title: ar.title ?? '',
+        description: ar.description ?? '',
+        category: ar.category ?? '',
+        cadence: ar.cadence ?? '',
+      },
+      i18nRaw,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// For admin list rendering. Directly queries all live sessions for an
+// expert and returns them in English regardless of app locale, since admin
+// UI is English throughout. Splits into classes and programs by kind.
+export async function loadExpertSessionsRaw(expertId: string): Promise<{
+  classes: SessionClass[];
+  programs: Program[];
+}> {
+  try {
+    const { data } = await supabase
+      .from('sessions').select('*').eq('expert_id', expertId).eq('status', 'live')
+      .order('sort', { ascending: true });
+    if (!data) return { classes: [], programs: [] };
+    const classes: SessionClass[] = [];
+    const programs: Program[] = [];
+    for (const r of data as any[]) {
+      if (r.kind === 'program') programs.push(programFromRow(r, true));
+      else classes.push(classFromRow(r, true));
+    }
+    return { classes, programs };
+  } catch {
+    return { classes: [], programs: [] };
+  }
 }

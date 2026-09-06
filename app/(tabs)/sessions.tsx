@@ -11,8 +11,11 @@ import { useService, useServices } from '@/lib/services';
 import { EXPERTS } from '@/constants/experts';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
+import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 
-const TABS = ['One to one', 'Programs'];
+const TAB_KEYS = ['One to one', 'Programs'] as const;
+type TabKey = typeof TAB_KEYS[number];
+const tabLabel = (k: TabKey) => k === 'One to one' ? t('sess.oneToOne') : t('sess.programs');
 
 // "60 Minute Session (5 sessions)" reads as "60 Minute Session" here, because
 // the count is already shown in the pill above.
@@ -42,7 +45,7 @@ type FeedProgram = {
 
 export default function SessionsScreen() {
   const router = useRouter();
-  const [tab, setTab] = useState('One to one');
+  const [tab, setTab] = useState<TabKey>('One to one');
   const [filterOpen, setFilterOpen] = useState(false);
   const [cats, setCats] = useState<string[]>([]);
   const [maxSessions, setMaxSessions] = useState(10);
@@ -61,7 +64,7 @@ export default function SessionsScreen() {
         key: s.id,
         title: s.name,
         expertName: expertName(s.expertId),
-        pills: [s.tagline, s.sessionsTotal ? `${s.sessionsTotal} sessions` : ''].filter(Boolean) as string[],
+        pills: [s.tagline, s.sessionsTotal ? t('sess.nSessions', { n: s.sessionsTotal }) : ''].filter(Boolean) as string[],
         price: s.price,
         sessions: s.sessionsTotal ?? 0,
         category: undefined,
@@ -73,7 +76,7 @@ export default function SessionsScreen() {
         key: p.id,
         title: p.title,
         expertName: p.expertName,
-        pills: [`${p.weeks} weeks`, `${p.sessions} sessions`, p.cadence].filter(Boolean) as string[],
+        pills: [t('sess.nWeeks', { n: p.weeks }), t('sess.nSessions', { n: p.sessions }), p.cadence].filter(Boolean) as string[],
         price: p.price,
         sessions: p.sessions ?? 0,
         category: p.category,
@@ -107,15 +110,15 @@ export default function SessionsScreen() {
           ) : null}
         </View>
 
-        <Text style={styles.h1}>Sessions</Text>
-        <Text style={styles.sub}>One to one sessions and guided programs with your experts.</Text>
+        <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('sess.title')}</Text>
+        <Text style={[styles.sub, isRTL() && AR_TEXT]}>{t('sess.sub')}</Text>
 
         <View style={styles.segment}>
-          {TABS.map((t) => {
-            const on = t === tab;
+          {TAB_KEYS.map((k) => {
+            const on = k === tab;
             return (
-              <Pressable key={t} onPress={() => setTab(t)} style={[styles.segItem, on && styles.segItemOn]}>
-                <Text style={[styles.segText, on && styles.segTextOn]}>{t}</Text>
+              <Pressable key={k} onPress={() => setTab(k)} style={[styles.segItem, on && styles.segItemOn]}>
+                <Text style={[styles.segText, on && styles.segTextOn]}>{tabLabel(k)}</Text>
               </Pressable>
             );
           })}
@@ -127,7 +130,7 @@ export default function SessionsScreen() {
           filteredPrograms.map((p) => <ProgramCard key={p.key} item={p} />)
         ) : (
           <View style={styles.noResult}>
-            <Text style={styles.noResultText}>No programs match these filters yet.</Text>
+            <Text style={[styles.noResultText, isRTL() && AR_TEXT]}>{t('sess.noPrograms')}</Text>
           </View>
         )}
       </ScrollView>
@@ -137,9 +140,9 @@ export default function SessionsScreen() {
           <Pressable style={styles.backdrop} onPress={() => setFilterOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Filter programs</Text>
+            <Text style={[styles.sheetTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('filter.programs')}</Text>
 
-            <Text style={styles.filterLabel}>Categories</Text>
+            <Text style={[styles.filterLabel, isRTL() && AR_TEXT]}>{t('filter.categories')}</Text>
             <View style={styles.catWrap}>
               {SESSION_CATEGORIES.map((c) => {
                 const on = cats.includes(c);
@@ -153,7 +156,7 @@ export default function SessionsScreen() {
 
             {(
               <View>
-                <Text style={styles.filterLabel}>Sessions {'\u00B7'} up to {maxSessions}</Text>
+                <Text style={[styles.filterLabel, isRTL() && AR_TEXT]}>{t('filter.sessionsUpTo', { dot: '\u00B7', n: maxSessions })}</Text>
                 <Slider
                   minimumValue={1}
                   maximumValue={10}
@@ -169,10 +172,10 @@ export default function SessionsScreen() {
 
             <View style={styles.sheetActions}>
               <Pressable onPress={clearAll}>
-                <Text style={styles.clearText}>Clear</Text>
+                <Text style={styles.clearText}>{t('filter.clear')}</Text>
               </Pressable>
               <Pressable style={styles.applyBtn} onPress={() => setFilterOpen(false)}>
-                <Text style={styles.applyText}>Show results</Text>
+                <Text style={styles.applyText}>{t('filter.showResults')}</Text>
               </Pressable>
             </View>
           </View>
@@ -199,17 +202,23 @@ function HighlightCard({ item }: { item: Highlight }) {
       <LinearGradient colors={CARD_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <View style={styles.hHead}>
         {lead ? <Text style={styles.hLead}>{lead.toUpperCase()}</Text> : null}
-        <Text style={styles.hName}>
-          {parts ? <Text style={styles.hWith}>with </Text> : null}{name}
-        </Text>
+        {isRTL() ? (
+          <Text style={[styles.hName, { fontFamily: FONT_SERIF_AR }]}>
+            {parts ? t('sess.withPrefix') : ''}{name}
+          </Text>
+        ) : (
+          <Text style={styles.hName}>
+            {parts ? <Text style={styles.hWith}>with </Text> : null}{name}
+          </Text>
+        )}
       </View>
       <Text style={styles.hCopy}>{item.copy}</Text>
       <View style={styles.hFoot}>
         <Text style={styles.hExpert}>{expert?.name ?? ''}</Text>
         {item.free ? (
-          <Text style={styles.freeTag}>FREE</Text>
+          <Text style={[styles.freeTag, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('sess.free')}</Text>
         ) : svc?.price ? (
-          <Text style={styles.hPrice}>{svc.price}</Text>
+          <Text style={[styles.hPrice, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{svc.price}</Text>
         ) : null}
       </View>
     </Pressable>
@@ -223,10 +232,10 @@ function ProgramCard({ item }: { item: FeedProgram }) {
       <View style={styles.metaRow}>
         {item.pills.map((p, i) => <Text key={i} style={styles.pill}>{p}</Text>)}
       </View>
-      <Text style={styles.programTitle}>{stripSessionCount(item.title)}</Text>
+      <Text style={[styles.programTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{stripSessionCount(item.title)}</Text>
       <View style={styles.hFoot}>
         <Text style={styles.hExpert}>{item.expertName}</Text>
-        <Text style={styles.hPrice}>{item.price}</Text>
+        <Text style={[styles.hPrice, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{item.price}</Text>
       </View>
     </Pressable>
   );

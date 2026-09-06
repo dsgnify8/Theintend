@@ -25,6 +25,9 @@ import {
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { CormorantGaramond_500Medium_Italic } from '@expo-google-fonts/cormorant-garamond';
 import { PinyonScript_400Regular } from '@expo-google-fonts/pinyon-script';
+import { ReemKufi_500Medium } from '@expo-google-fonts/reem-kufi';
+import { IBMPlexSansArabic_400Regular, IBMPlexSansArabic_500Medium } from '@expo-google-fonts/ibm-plex-sans-arabic';
+import { initI18n } from '@/lib/i18n';
 import { startIap, stopIap } from '@/lib/iap';
 import { wireProgramPurchases } from '@/lib/programs';
 import * as Notifications from 'expo-notifications';
@@ -121,7 +124,16 @@ export default function RootLayout() {
     Inter_600SemiBold,
     CormorantGaramond_500Medium_Italic,
     PinyonScript_400Regular,
+    ReemKufi_500Medium,
+    IBMPlexSansArabic_400Regular,
+    IBMPlexSansArabic_500Medium,
   });
+
+  // The language system is bilingual. On first render, this reads the stored
+  // choice and syncs the RTL flag. If they diverge (someone changed language
+  // last session), initI18n reloads the app to bring them in line.
+  const [i18nReady, setI18nReady] = useState(false);
+  useEffect(() => { initI18n().then(() => setI18nReady(true)).catch(() => setI18nReady(true)); }, []);
 
   const fontsReady = fontsLoaded || fontWaited;
 
@@ -139,10 +151,10 @@ export default function RootLayout() {
   // Lift the native splash as soon as the app is mounted and auth has settled.
   // This deliberately does not wait on the welcome flag.
   useEffect(() => {
-    if (!mounted || loading || !fontsReady) return;
+    if (!mounted || loading || !fontsReady || !i18nReady) return;
     const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 60);
     return () => clearTimeout(t);
-  }, [mounted, loading, fontsReady]);
+  }, [mounted, loading, fontsReady, i18nReady]);
 
   // First launch only: send them to login so they can sign up, sign in, or skip.
   // The flag is written as we go, so this happens exactly once on the device.

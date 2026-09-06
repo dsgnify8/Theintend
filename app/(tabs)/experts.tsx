@@ -9,6 +9,7 @@ import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
 import { FramedImage } from '@/components/FramedImage';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
+import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { Ionicons } from '@expo/vector-icons';
 
 const ALL = 'All';
@@ -72,13 +73,10 @@ export default function ExpertsScreen() {
       >
         <Animated.View style={[styles.hero, { opacity: heroFade, transform: [{ translateY: heroShift }] }]}>
           <Text style={styles.kicker}>THE INTEND</Text>
-          <Text style={styles.h1}>Experts</Text>
+          <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('experts.title')}</Text>
           <View style={styles.heroRule} />
-          <Text style={styles.sub}>Find your person.</Text>
-          <Text style={styles.heroNote}>
-            Every one of them works differently. Read them properly, then choose the one you
-            recognise something in.
-          </Text>
+          <Text style={[styles.sub, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('experts.sub')}</Text>
+          <Text style={[styles.heroNote, isRTL() && AR_TEXT]}>{t('experts.heroNote')}</Text>
           <View style={styles.cue}>
             <View style={styles.cueLine} />
           </View>
@@ -90,7 +88,7 @@ export default function ExpertsScreen() {
             const on = c === active;
             return (
               <Pressable key={c} onPress={() => setActive(c)} style={styles.filter} hitSlop={6}>
-                <Text style={[styles.filterText, on && styles.filterTextOn]}>{c.toUpperCase()}</Text>
+                <Text style={[styles.filterText, on && styles.filterTextOn, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{c === ALL ? t('experts.all') : c.toUpperCase()}</Text>
                 <View style={[styles.filterRule, on && styles.filterRuleOn]} />
               </Pressable>
             );
@@ -109,7 +107,7 @@ export default function ExpertsScreen() {
         {loading ? (
           <View style={styles.loader}><ActivityIndicator color={COLORS.accent} /></View>
         ) : visible.length === 0 ? (
-          <Text style={styles.empty}>No one in this category yet.</Text>
+          <Text style={[styles.empty, isRTL() && AR_TEXT]}>{t('experts.empty')}</Text>
         ) : (
           <View style={grid ? styles.grid : styles.list}>
             {visible.map((e, i) =>
@@ -122,7 +120,7 @@ export default function ExpertsScreen() {
       </Animated.ScrollView>
 
       <Animated.View style={[styles.bar, { opacity: barFade }]} pointerEvents="none">
-        <Text style={styles.barTitle}>Experts</Text>
+        <Text style={[styles.barTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('experts.title')}</Text>
       </Animated.View>
     </SafeAreaView>
   );
@@ -163,7 +161,7 @@ function ExpertCard({ expert, index }: { expert: Expert; index: number }) {
       <View style={[styles.foot, right && styles.footRight]}>
         <Text style={[styles.blurb, right && styles.textRight]} numberOfLines={3}>{expert.blurb}</Text>
         <Pressable onPress={() => router.push(`/expert/${expert.id}`)} hitSlop={8}>
-          <Text style={[styles.link, right && styles.textRight]}>See profile {'\u203A'}</Text>
+          <Text style={[styles.link, right && styles.textRight]}>{t('experts.seeProfile')} {'\u203A'}</Text>
         </Pressable>
       </View>
     </View>

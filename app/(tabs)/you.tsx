@@ -20,6 +20,7 @@ import { useMyPackages } from '@/lib/packages';
 import { formatWhenLocal } from '@/lib/bookings';
 import { useNotificationFeed } from '@/lib/notificationsFeed';
 import { refreshProfile, signOut, updateProfile, useAuth } from '@/lib/auth';
+import { t, isRTL, setLocale, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { noteKey, saveSessionNote, useSessionNotes } from '@/lib/sessionNotes';
 import { uploadAvatar } from '@/lib/upload';
 
@@ -71,6 +72,7 @@ export default function YouScreen() {
   }, []));
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [likedCat, setLikedCat] = useState('All');
   const [sesTab, setSesTab] = useState<'upcoming' | 'past'>('upcoming');
   const [savTab, setSavTab] = useState<'saved' | 'liked'>('saved');
@@ -82,17 +84,17 @@ export default function YouScreen() {
   // and the twelve hour check should be made against the real time.
   const changeTime = async (b: Booking) => {
     if (!b.id) {
-      Alert.alert('We will move this for you', 'This booking was made before times could be changed here. Message us and we will sort it.');
+      Alert.alert(t('change.movingTitle'), t('change.movingBody'));
       return;
     }
     const row: any = await getBookingById(b.id);
     if (!row) {
-      Alert.alert('We could not open that', 'Try again in a moment.');
+      Alert.alert(t('change.couldNotOpen'), t('change.tryLater'));
       return;
     }
     const check = canChangeTime(row);
     if (!check.allowed) {
-      Alert.alert('This one needs us', check.reason);
+      Alert.alert(t('change.needsUs'), check.reason);
       return;
     }
     const go = () => router.push({
@@ -101,11 +103,11 @@ export default function YouScreen() {
     });
     if (check.confirmNeeded) {
       Alert.alert(
-        'This one is soon',
-        `Your session is in about ${check.hoursAway} hours. Would you still like to move it?`,
+        t('change.soonTitle'),
+        t('change.soonBody', { hours: check.hoursAway ?? '' }),
         [
-          { text: 'Leave it', style: 'cancel' },
-          { text: 'Choose a new time', onPress: go },
+          { text: t('common.leaveIt'), style: 'cancel' },
+          { text: t('booking.chooseNew'), onPress: go },
         ],
       );
       return;
@@ -212,10 +214,10 @@ export default function YouScreen() {
   const photoOptions = () => {
     if (!loggedIn) { router.push('/login'); return; }
     if (profile?.avatar_url) {
-      Alert.alert('Profile photo', undefined, [
-        { text: 'Choose new photo', onPress: pickAndUpload },
-        { text: 'Remove photo', style: 'destructive', onPress: () => updateProfile({ avatar_url: null }) },
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(t('photo.title'), undefined, [
+        { text: t('photo.choose'), onPress: pickAndUpload },
+        { text: t('photo.remove'), style: 'destructive', onPress: () => updateProfile({ avatar_url: null }) },
+        { text: t('common.cancel'), style: 'cancel' },
       ]);
     } else {
       pickAndUpload();
@@ -263,9 +265,9 @@ export default function YouScreen() {
             </View>
             <View style={styles.profileText}>
               <Text style={styles.name} numberOfLines={2}>{displayName}</Text>
-              {loggedIn ? <Text style={styles.handle} numberOfLines={1}>{profile?.email || 'Your space at The Intend'}</Text> : null}
+              {loggedIn ? <Text style={styles.handle} numberOfLines={1}>{profile?.email || t('you.yourSpace')}</Text> : null}
               {loggedIn && role !== 'user' ? (
-                <View style={styles.roleBadge}><Text style={styles.roleText}>{role.toUpperCase()}</Text></View>
+                <View style={styles.roleBadge}><Text style={styles.roleText}>{isRTL() && (role === 'admin' || role === 'expert') ? t(`role.${role}` as any) : role.toUpperCase()}</Text></View>
               ) : null}
             </View>
           </View>
@@ -273,10 +275,10 @@ export default function YouScreen() {
           <View style={styles.rhythmStrip}>
             <View style={styles.rhythmFigure}>
               <Text style={styles.rhythmNum}>{streakInfo.streak}</Text>
-              <Text style={styles.rhythmUnit}>{streakInfo.streak === 1 ? 'day' : 'days'}</Text>
+              <Text style={styles.rhythmUnit}>{streakInfo.streak === 1 ? t('rhythm.day') : t('rhythm.days')}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rhythmLabel}>CURRENT STREAK</Text>
+              <Text style={[styles.rhythmLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('rhythm.current')}</Text>
               <View style={styles.weekRow}>
                 {WEEK.map((d, i) => {
                   const on = streakInfo.week[i];
@@ -298,22 +300,22 @@ export default function YouScreen() {
         </View>
 
         <View style={styles.band}>
-          <Text style={styles.sectionLabel}>YOUR SESSIONS</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('sessions.section')}</Text>
           <PackagesBlock />
 
           <View style={styles.segRow}>
             <Pressable style={[styles.seg, sesTab === 'upcoming' && styles.segOn]} onPress={() => setSesTab('upcoming')}>
-              <Text style={[styles.segText, sesTab === 'upcoming' && styles.segTextOn]}>Upcoming</Text>
+              <Text style={[styles.segText, sesTab === 'upcoming' && styles.segTextOn]}>{t('sessions.upcoming')}</Text>
             </Pressable>
             <Pressable style={[styles.seg, sesTab === 'past' && styles.segOn]} onPress={() => setSesTab('past')}>
-              <Text style={[styles.segText, sesTab === 'past' && styles.segTextOn]}>Past</Text>
+              <Text style={[styles.segText, sesTab === 'past' && styles.segTextOn]}>{t('sessions.past')}</Text>
             </Pressable>
           </View>
 
           {sesTab === 'upcoming' ? (
             <>
               {upcoming.length === 0 ? (
-                <Empty text="No upcoming sessions yet." />
+                <Empty text={t('sessions.noneUpcoming')} />
               ) : (
                 upcoming.map((b) => (
                   <BookingRow
@@ -325,12 +327,12 @@ export default function YouScreen() {
                 ))
               )}
               <Pressable style={styles.cta} onPress={() => router.navigate('/sessions')}>
-                <Text style={styles.ctaText}>Browse sessions</Text>
+                <Text style={styles.ctaText}>{t('sessions.browse')}</Text>
               </Pressable>
             </>
           ) : (
             past.length === 0 ? (
-              <Empty text="Your completed sessions will appear here." />
+              <Empty text={t('sessions.pastEmpty')} />
             ) : (
               past.map((b) => <PastRow key={`${b.refId}-${b.when}`} b={b} />)
             )
@@ -339,7 +341,7 @@ export default function YouScreen() {
 
         {resume.length ? (
           <View style={[styles.band, styles.bandTint]}>
-            <Text style={styles.sectionLabel}>PICK UP WHERE YOU LEFT OFF</Text>
+            <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('resume.section')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
               {resume.map((r) => (
                 <Pressable key={r.key} style={styles.resumeCard} onPress={() => router.push(r.route as any)}>
@@ -358,12 +360,12 @@ export default function YouScreen() {
         ) : null}
 
         <View style={styles.band}>
-          <Text style={styles.sectionLabel}>MY COMPANION</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('companion.section')}</Text>
           <Pressable style={styles.aiCard} onPress={() => router.push(loggedIn ? '/your-ai' : '/login')}>
             <View style={styles.aiIcon}><Ionicons name="sparkles" size={19} color={COLORS.bg} /></View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.aiTitle}>My Companion</Text>
-              <Text style={styles.aiSub}>Think out loud. See what is really going on.</Text>
+              <Text style={[styles.aiTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('companion.title')}</Text>
+              <Text style={styles.aiSub}>{t('companion.sub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.bg} />
           </Pressable>
@@ -372,9 +374,9 @@ export default function YouScreen() {
 
 
         <View style={[styles.band, styles.bandTint]}>
-          <Text style={styles.sectionLabel}>YOUR JOURNAL</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('journal.section')}</Text>
           {journalEntries.length === 0 ? (
-            <Empty text="Nothing written yet. Your entries will collect here." />
+            <Empty text={t('journal.empty')} />
           ) : (
             journalEntries.slice(0, 4).map((e) => {
               const first = e.items.find((it) => (it.answer ?? '').trim().length > 0);
@@ -393,32 +395,32 @@ export default function YouScreen() {
             })
           )}
           <Pressable style={styles.cta} onPress={() => router.push('/journaling')}>
-            <Text style={styles.ctaText}>Open journal</Text>
+            <Text style={styles.ctaText}>{t('journal.open')}</Text>
           </Pressable>
         </View>
 
         <View style={styles.band}>
-          <Text style={styles.sectionLabel}>SAVED AND LIKED</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('savedLiked.section')}</Text>
           <View style={styles.pillRow}>
             <Pressable style={[styles.pill, savTab === 'saved' && styles.pillOn]} onPress={() => setSavTab('saved')}>
               <Ionicons name="bookmark-outline" size={14} color={savTab === 'saved' ? COLORS.bg : COLORS.muted} />
-              <Text style={[styles.pillText, savTab === 'saved' && styles.pillTextOn]}>Saved</Text>
+              <Text style={[styles.pillText, savTab === 'saved' && styles.pillTextOn]}>{t('savedLiked.saved')}</Text>
             </Pressable>
             <Pressable style={[styles.pill, savTab === 'liked' && styles.pillOn]} onPress={() => setSavTab('liked')}>
               <Ionicons name="heart-outline" size={14} color={savTab === 'liked' ? COLORS.bg : COLORS.muted} />
-              <Text style={[styles.pillText, savTab === 'liked' && styles.pillTextOn]}>Liked</Text>
+              <Text style={[styles.pillText, savTab === 'liked' && styles.pillTextOn]}>{t('savedLiked.liked')}</Text>
             </Pressable>
           </View>
 
           {savTab === 'saved' ? (
             saved.length === 0 ? (
-              <Empty text="Nothing saved yet. Tap the bookmark on any article or e-book." />
+              <Empty text={t('savedLiked.savedEmpty')} />
             ) : (
               saved.map((it) => <SavedRow key={it.id} a={it} onPress={() => router.push(it.route as any)} />)
             )
           ) : (
             liked.length === 0 ? (
-              <Empty text="Nothing liked yet. Tap the heart on anything you want to keep." />
+              <Empty text={t('savedLiked.likedEmpty')} />
             ) : (
               <>
                 {likedCats.length > 2 ? (
@@ -439,21 +441,21 @@ export default function YouScreen() {
           )}
         </View>
         <View style={[styles.band, styles.bandTint]}>
-          <Text style={styles.sectionLabel}>YOUR PROGRESS</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('progress.section')}</Text>
           <View style={styles.countRow}>
-            <Count label="Read" value={demo ? DEMO_STATS.reads : String(reads.length)} />
+            <Count label={t('progress.read')} value={demo ? DEMO_STATS.reads : String(reads.length)} />
             <View style={styles.countDiv} />
-            <Count label="Sessions" value={demo ? DEMO_STATS.sessions : String(bookings.length)} />
+            <Count label={t('progress.sessions')} value={demo ? DEMO_STATS.sessions : String(bookings.length)} />
             <View style={styles.countDiv} />
-            <Count label="Journals" value={demo ? DEMO_STATS.journals : String(journalEntries.length)} />
+            <Count label={t('progress.journals')} value={demo ? DEMO_STATS.journals : String(journalEntries.length)} />
             <View style={styles.countDiv} />
-            <Count label="Workbooks" value={demo ? DEMO_STATS.worksheets : String(worksheetsDone.length)} />
+            <Count label={t('progress.workbooks')} value={demo ? DEMO_STATS.worksheets : String(worksheetsDone.length)} />
           </View>
           <Pressable style={styles.progressCard} onPress={() => router.push('/progress')}>
             <View style={styles.progressIcon}><Ionicons name="trending-up" size={20} color={COLORS.bg} /></View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.progressTitle}>Progress & achievements</Text>
-              <Text style={styles.progressSub}>Your journey so far</Text>
+              <Text style={[styles.progressTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('progress.title')}</Text>
+              <Text style={styles.progressSub}>{t('progress.sub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
           </Pressable>
@@ -467,10 +469,10 @@ export default function YouScreen() {
             {FADE_BANDS.map((o, i) => <View key={i} style={[styles.lockFadeBand, { opacity: o }]} />)}
           </View>
           <View style={styles.lockCard}>
-            <Text style={styles.lockTitle}>Your profile</Text>
-            <Text style={styles.lockText}>Sign in or create an account to view your profile, see your bookings and track your progress.</Text>
+            <Text style={[styles.lockTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lock.title')}</Text>
+            <Text style={[styles.lockText, isRTL() && AR_TEXT]}>{t('lock.text')}</Text>
             <Pressable style={styles.lockBtn} onPress={() => router.push('/login')}>
-              <Text style={styles.lockBtnText}>Sign in or create account</Text>
+              <Text style={styles.lockBtnText}>{t('lock.cta')}</Text>
             </Pressable>
           </View>
         </View>
@@ -482,9 +484,9 @@ export default function YouScreen() {
           <View style={styles.sheet}>
             <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Notifications</Text>
+            <Text style={[styles.sheetTitle, isRTL() && { fontFamily: FONT_SERIF_AR, letterSpacing: 0 }]}>{t('notifs.title')}</Text>
             {notifs.items.length === 0 ? (
-              <Text style={styles.notifEmpty}>Nothing right now. Upcoming sessions and packages waiting to be booked will show up here.</Text>
+              <Text style={[styles.notifEmpty, isRTL() && AR_TEXT]}>{t('notifs.empty')}</Text>
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
                 {notifs.items.map((n) => (
@@ -515,23 +517,61 @@ export default function YouScreen() {
           <View style={styles.sheet}>
             <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Settings</Text>
-            {loggedIn ? <SettingRow icon="person-outline" label="Personal information" onPress={() => goSettings('/personal-info')} /> : null}
-            {loggedIn ? <SettingRow icon="receipt-outline" label="My orders" onPress={() => goSettings('/orders')} /> : null}
-            {role === 'admin' ? <SettingRow icon="grid-outline" label="Admin panel" onPress={() => goSettings('/admin')} /> : null}
-            {role === 'expert' ? <SettingRow icon="briefcase-outline" label="Expert panel" onPress={() => goSettings('/expert-panel')} /> : null}
-            <SettingRow icon="help-circle-outline" label="Help & support" onPress={() => goSettings('/help-support')} />
-            <SettingRow icon="lock-closed-outline" label="Privacy" onPress={() => goSettings('/privacy')} />
+            <Text style={[styles.sheetTitle, isRTL() && { fontFamily: FONT_SERIF_AR, letterSpacing: 0 }]}>{t('settings.title')}</Text>
+            {loggedIn ? <SettingRow icon="person-outline" label={t('settings.personalInfo')} onPress={() => goSettings('/personal-info')} /> : null}
+            {loggedIn ? <SettingRow icon="receipt-outline" label={t('settings.myOrders')} onPress={() => goSettings('/orders')} /> : null}
+            {role === 'admin' ? <SettingRow icon="grid-outline" label={t('settings.adminPanel')} onPress={() => goSettings('/admin')} /> : null}
+            {role === 'expert' ? <SettingRow icon="briefcase-outline" label={t('settings.expertPanel')} onPress={() => goSettings('/expert-panel')} /> : null}
+            <SettingRow icon="language-outline" label={t('settings.language')} onPress={() => { setSettingsOpen(false); setTimeout(() => setLanguageOpen(true), 220); }} />
+            <SettingRow icon="help-circle-outline" label={t('settings.helpSupport')} onPress={() => goSettings('/help-support')} />
+            <SettingRow icon="lock-closed-outline" label={t('settings.privacy')} onPress={() => goSettings('/privacy')} />
             {loggedIn ? (
               <SettingRow
                 icon="log-out-outline"
-                label="Sign out"
+                label={t('settings.signOut')}
                 destructive
                 onPress={async () => { setSettingsOpen(false); await signOut(); router.replace('/login'); }}
               />
             ) : (
-              <SettingRow icon="log-in-outline" label="Sign in" onPress={() => goSettings('/login')} />
+              <SettingRow icon="log-in-outline" label={t('settings.signIn')} onPress={() => goSettings('/login')} />
             )}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={languageOpen} transparent animationType="slide" onRequestClose={() => setLanguageOpen(false)}>
+        <View style={styles.modalRoot}>
+          <Pressable style={styles.backdrop} onPress={() => setLanguageOpen(false)} />
+          <View style={styles.sheet}>
+            <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            <View style={styles.sheetHandle} />
+            <Text style={[styles.sheetTitle, isRTL() && { fontFamily: FONT_SERIF_AR, letterSpacing: 0 }]}>{t('language.title')}</Text>
+            <Text style={[styles.langSub, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{t('language.subtitle')}</Text>
+            {(['en', 'ar'] as const).map((code) => {
+              const on = code === (isRTL() ? 'ar' : 'en');
+              const label = code === 'en' ? t('language.english') : t('language.arabic');
+              return (
+                <Pressable
+                  key={code}
+                  style={[styles.langRow, on && styles.langRowOn]}
+                  onPress={() => {
+                    if (on) { setLanguageOpen(false); return; }
+                    Alert.alert(
+                      t('language.title'),
+                      t('language.restartNote'),
+                      [
+                        { text: t('common.cancel'), style: 'cancel' },
+                        { text: t('common.continue'), onPress: () => { setLanguageOpen(false); setLocale(code); } },
+                      ],
+                    );
+                  }}
+                >
+                  <Text style={[styles.langLabel, isRTL() && code === 'ar' && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{label}</Text>
+                  {on ? <Ionicons name="checkmark" size={18} color={COLORS.accent} /> : null}
+                </Pressable>
+              );
+            })}
+            <Text style={[styles.langNote, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{t('language.restartNote')}</Text>
           </View>
         </View>
       </Modal>
@@ -566,7 +606,7 @@ function PackagesBlock() {
   if (active.length === 0) return null;
   return (
     <View style={{ marginBottom: 22 }}>
-      <Text style={styles.h3}>Your packages</Text>
+      <Text style={[styles.h3, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('pkg.yours')}</Text>
       {active.map((p) => {
         const remaining = Math.max(p.total - p.used, 0);
         const packageSessions = dbBookings
@@ -581,7 +621,7 @@ function PackagesBlock() {
                 <View key={i} style={[styles.pkgDot, i < p.used ? styles.pkgDotUsed : styles.pkgDotOpen]} />
               ))}
             </View>
-            <Text style={styles.pkgCount}>{remaining} of {p.total} sessions remaining</Text>
+            <Text style={[styles.pkgCount, isRTL() && AR_TEXT]}>{t('pkg.remaining', { remaining, total: p.total })}</Text>
 
             {packageSessions.length ? (
               <View style={styles.pkgList}>
@@ -594,12 +634,12 @@ function PackagesBlock() {
                       <Text style={styles.pkgWhen}>{formatWhenLocal(b)}</Text>
                       {b.link && /^https?:\/\//i.test(b.link) ? (
                         <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6}>
-                          <Text style={styles.pkgJoin}>Open join link</Text>
+                          <Text style={styles.pkgJoin}>{t('pkg.openLink')}</Text>
                         </Pressable>
                       ) : b.link ? (
-                        <Text style={styles.pkgWaiting}>Location: {b.link}</Text>
+                        <Text style={styles.pkgWaiting}>{t('pkg.location', { link: b.link ?? '' })}</Text>
                       ) : (
-                        <Text style={styles.pkgWaiting}>Waiting for the link from your expert</Text>
+                        <Text style={styles.pkgWaiting}>{t('pkg.waitingLink')}</Text>
                       )}
                     </View>
                   </View>
@@ -608,7 +648,7 @@ function PackagesBlock() {
             ) : null}
 
             <Pressable style={styles.pkgBtn} onPress={() => router.push(`/book/${p.expert_id}?service=${p.service_id}&pkg=${p.id}`)}>
-              <Text style={styles.pkgBtnText}>Choose a date for session {nextNo} of {p.total}</Text>
+              <Text style={styles.pkgBtnText}>{t('pkg.choose', { n: nextNo, total: p.total })}</Text>
             </Pressable>
           </View>
         );
@@ -652,23 +692,23 @@ function MoodInsightCard() {
   let reco: { lead: string; title: string; subtitle: string; onPress: () => void } | null = null;
   if (recoKind === 'expert') {
     const e = EXPERTS.find((x) => x.id === r.expertId);
-    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+    if (e) reco = { lead: t('mood.expertReco'), title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
   } else if (recoKind === 'sound') {
     const sd = SOUNDS.find((x) => x.id === r.soundId);
-    if (sd) reco = { lead: 'A sound to settle into', title: sd.title, subtitle: sd.purpose, onPress: () => router.push(`/sound/${sd.id}`) };
+    if (sd) reco = { lead: t('mood.soundReco'), title: sd.title, subtitle: sd.purpose, onPress: () => router.push(`/sound/${sd.id}`) };
   } else {
     const a = pickArticleForMood(level, articles);
-    if (a) reco = { lead: 'A read that might land', title: a.title, subtitle: `${a.readMinutes ?? 5} min read`, onPress: () => router.push(`/article/${a.id}`) };
+    if (a) reco = { lead: t('mood.readReco'), title: a.title, subtitle: t('mood.minRead', { min: a.readMinutes ?? 5 }), onPress: () => router.push(`/article/${a.id}`) };
   }
   if (!reco) {
     const e = EXPERTS.find((x) => x.id === r.expertId);
-    if (e) reco = { lead: 'An expert who could help', title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
+    if (e) reco = { lead: t('mood.expertReco'), title: e.name, subtitle: e.title, onPress: () => router.push(`/expert/${e.id}`) };
   }
 
   return (
     <View style={styles.insightCard}>
-      <Text style={styles.insightEyebrow}>A GENTLE NOTE</Text>
-      <Text style={styles.insightText}>We{'\u2019'}ve noticed you{'\u2019'}ve been feeling {moodLabel} lately.</Text>
+      <Text style={[styles.insightEyebrow, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('mood.gentleNote')}</Text>
+      <Text style={[styles.insightText, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('mood.noticed', { mood: moodLabel })}</Text>
       {reco ? (
         <Pressable style={styles.insightReco} onPress={reco.onPress}>
           <View style={{ flex: 1 }}>
@@ -690,23 +730,23 @@ function BookingRow({ b, onPress, onChange }: { b: Booking; onPress: () => void;
       <View style={{ flex: 1 }}>
         <Text style={styles.bookingTitle}>{b.title}</Text>
         {needsNewTime(b) ? (
-          <Text style={styles.bookingMoved}>Your expert had to move this. Choose a new time that suits you.</Text>
+          <Text style={[styles.bookingMoved, isRTL() && AR_TEXT]}>{t('booking.movedByExpert')}</Text>
         ) : (
           <Text style={styles.bookingMeta}>{b.when}</Text>
         )}
-        <Text style={styles.bookingMeta}>with {b.expert}</Text>
+        <Text style={styles.bookingMeta}>{t('booking.withExpert', { name: b.expert ?? '' })}</Text>
         {b.link ? (
           /^https?:\/\//i.test(b.link) ? (
             <Pressable onPress={() => Linking.openURL(b.link!)} hitSlop={6} style={{ marginTop: 6 }}>
-              <Text style={styles.bookingLink}>Open join link</Text>
+              <Text style={styles.bookingLink}>{t('pkg.openLink')}</Text>
             </Pressable>
           ) : (
-            <Text style={[styles.bookingMeta, { marginTop: 6 }]}>Location: {b.link}</Text>
+            <Text style={[styles.bookingMeta, { marginTop: 6 }]}>{t('pkg.location', { link: b.link ?? '' })}</Text>
           )
         ) : null}
         {onChange ? (
           <Pressable onPress={onChange} hitSlop={8} style={styles.changeWrap}>
-            <Text style={styles.changeLink}>{needsNewTime(b) ? 'Choose a new time' : 'Change time'}</Text>
+            <Text style={styles.changeLink}>{needsNewTime(b) ? t('booking.chooseNew') : t('booking.changeTime')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -729,7 +769,7 @@ function PastRow({ b }: { b: Booking }) {
     setSaving(true);
     const { error } = await saveSessionNote(key, draft.trim());
     setSaving(false);
-    if (error) { Alert.alert('Could not save', error.message ?? 'Please try again.'); return; }
+    if (error) { Alert.alert(t('change.saveErrorTitle'), error.message ?? t('change.saveErrorBody')); return; }
     setOpen(false);
   };
 
@@ -739,24 +779,24 @@ function PastRow({ b }: { b: Booking }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.pastTitle} numberOfLines={2}>{b.title}</Text>
           <Text style={styles.pastMeta}>{b.when}</Text>
-          {b.expert ? <Text style={styles.pastMeta}>with {b.expert}</Text> : null}
+          {b.expert ? <Text style={styles.pastMeta}>{t('booking.withExpert', { name: b.expert ?? '' })}</Text> : null}
         </View>
         {b.expertId ? (
           <Pressable style={styles.rebook} onPress={() => router.push(`/book/${b.expertId}`)} hitSlop={6}>
-            <Text style={styles.rebookText}>Book again</Text>
+            <Text style={styles.rebookText}>{t('booking.bookAgain')}</Text>
           </Pressable>
         ) : null}
       </View>
 
       {note ? (
         <Pressable style={styles.noteBox} onPress={start}>
-          <Text style={styles.noteLabel}>YOUR NOTE</Text>
+          <Text style={[styles.noteLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('booking.yourNoteLabel')}</Text>
           <Text style={styles.noteText}>{note}</Text>
         </Pressable>
       ) : (
         <Pressable style={styles.noteAdd} onPress={start} hitSlop={6}>
           <Ionicons name="create-outline" size={15} color={COLORS.ink} />
-          <Text style={styles.noteAddText}>Add a note from this session</Text>
+          <Text style={styles.noteAddText}>{t('booking.addNote')}</Text>
         </Pressable>
       )}
 
@@ -766,19 +806,19 @@ function PastRow({ b }: { b: Booking }) {
           <View style={styles.sheet}>
             <LinearGradient colors={SHEET_WASH} style={StyleSheet.absoluteFill} pointerEvents="none" />
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Your note</Text>
+            <Text style={[styles.sheetTitle, isRTL() && { fontFamily: FONT_SERIF_AR, letterSpacing: 0 }]}>{t('booking.yourNoteTitle')}</Text>
             <Text style={styles.noteHint}>{b.title}</Text>
             <TextInput
               style={styles.noteInput}
               value={draft}
               onChangeText={setDraft}
-              placeholder="What came up, what you want to remember, what you are taking with you."
+              placeholder={t('booking.noteHint')}
               placeholderTextColor={COLORS.muted}
               multiline
               autoFocus
             />
             <Pressable style={[styles.noteSave, saving && { opacity: 0.6 }]} onPress={save} disabled={saving}>
-              {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.noteSaveText}>Save note</Text>}
+              {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.noteSaveText}>{t('booking.saveNote')}</Text>}
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -963,4 +1003,9 @@ const styles = StyleSheet.create({
   sheetTitle: { fontSize: 10, letterSpacing: 2.4, color: COLORS.muted, marginBottom: 18, marginTop: 2 },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', paddingVertical: 16, paddingHorizontal: 16, marginBottom: 8 },
   setLabel: { flex: 1, fontFamily: FONT_SANS, fontSize: 15, color: COLORS.ink },
+  langSub: { fontFamily: FONT_SANS, fontSize: 13, color: COLORS.muted, marginTop: -12, marginBottom: 12 },
+  langRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', paddingVertical: 18, paddingHorizontal: 18, marginBottom: 10 },
+  langRowOn: { borderColor: COLORS.accent, backgroundColor: 'rgba(140, 130, 120, 0.06)' },
+  langLabel: { fontFamily: FONT_SANS, fontSize: 16, color: COLORS.ink },
+  langNote: { fontFamily: FONT_SANS, fontSize: 12, color: COLORS.muted, marginTop: 8, lineHeight: 18 },
 });

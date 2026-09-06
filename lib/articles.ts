@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { type Article, type Block, type Run, FALLBACK_ARTICLES } from '@/constants/articles';
 import { supabase } from './supabase';
 import { readCache, writeCache } from './cache';
+import { getLocale } from './i18n';
 
 async function loadOverrides(): Promise<Record<string, any>> {
   try {
@@ -21,24 +22,42 @@ async function loadOverrides(): Promise<Record<string, any>> {
 
 function applyOverride(base: Article, ov: any): Article {
   if (!ov) return base;
-  if (ov.title) base.title = ov.title;
-  if (ov.category) base.category = ov.category;
-  if (ov.excerpt) base.excerpt = ov.excerpt;
+  // Overrides carry the same shape as the source row: title/category/excerpt/body
+  // for the English canonical, plus an i18n.ar.* mirror for Arabic. Locale
+  // decides which side wins per field, and each field falls back to English
+  // when the Arabic value is missing so a half-translated override still reads.
+  const isAr = getLocale() === 'ar';
+  const ar = (ov.i18n && ov.i18n.ar) || {};
+  const title = isAr && ar.title ? ar.title : ov.title;
+  const category = isAr && ar.category ? ar.category : ov.category;
+  const excerpt = isAr && ar.excerpt ? ar.excerpt : ov.excerpt;
+  const arBody = isAr && Array.isArray(ar.body) && ar.body.length ? ar.body : null;
+  const enBody = Array.isArray(ov.body) && ov.body.length ? ov.body : null;
+  const body = arBody ?? enBody;
+  if (title) base.title = title;
+  if (category) base.category = category;
+  if (excerpt) base.excerpt = excerpt;
   if (ov.image) base.image = ov.image;
-  if (ov.body && Array.isArray(ov.body) && ov.body.length) base.body = ov.body as Block[];
+  if (body) base.body = body as Block[];
   return base;
 }
 
 function rowToArticle(r: any): Article {
+  // Same locale-aware pattern as applyOverride, applied to the published row
+  // in articles_cache.
+  const isAr = getLocale() === 'ar';
+  const ar = (r.i18n && r.i18n.ar) || {};
+  const arBody = isAr && Array.isArray(ar.body) && ar.body.length ? ar.body : null;
+  const enBody = Array.isArray(r.body) ? (r.body as Block[]) : [];
   return {
     id: r.post_id,
-    title: r.title ?? 'Untitled',
-    category: r.category ?? 'Article',
-    excerpt: r.excerpt ?? '',
+    title: (isAr && ar.title) || r.title || 'Untitled',
+    category: (isAr && ar.category) || r.category || 'Article',
+    excerpt: (isAr && ar.excerpt) || r.excerpt || '',
     image: r.image ?? null,
     author: r.author ?? undefined,
     readMinutes: r.read_minutes ?? 4,
-    body: Array.isArray(r.body) ? (r.body as Block[]) : [],
+    body: (arBody ?? enBody) as Block[],
   };
 }
 
@@ -132,15 +151,62 @@ export async function reloadArticles() {
 
 // Admin edits. These write to article_overrides and leave the published row in
 // articles_cache untouched, so an edit can always be undone by deleting the
-// override. The website reads the same two tables.
+// override. The website reads the same two tables. When ar is provided, the
+// Arabic version is packed into the i18n jsonb column under the ar key.
 export async function saveArticleOverride(
   postId: string,
-  patch: { title?: string; category?: string; excerpt?: string; image?: string; body?: Block[] }
+  patch: {
+    title?: string;
+    category?: string;
+    excerpt?: string;
+    image?: string | null;
+    body?: Block[];
+    ar?: { title?: string; category?: string; excerpt?: string; body?: Block[] };
+  }
 ) {
-  const row = { post_id: postId, ...patch, updated_at: new Date().toISOString() };
+  const { ar, ...rest } = patch;
+  const row: any = { post_id: postId, ...rest, updated_at: new Date().toISOString() };
+  // Only touch the i18n column when Arabic is included in the patch, so an
+  // English-only edit does not wipe existing Arabic content.
+  if (ar) row.i18n = { ar };
   const { error } = await supabase.from('article_overrides').upsert(row, { onConflict: 'post_id' });
   if (!error) await reloadArticles();
   return { error };
+}
+
+// For the admin editor. Fetches the raw base and override rows so both
+// languages can be edited side by side, unlike useArticle which returns the
+// localised, merged version. Returns empty strings and arrays for anything
+// unset, so the editor never has to null-check.
+export async function loadArticleForEdit(postId: string): Promise<{
+  en: { title: string; category: string; excerpt: string; image: string | null; body: Block[] };
+  ar: { title: string; category: string; excerpt: string; body: Block[] };
+}> {
+  const [b, o] = await Promise.all([
+    supabase.from('articles_cache').select('*').eq('post_id', postId).maybeSingle(),
+    supabase.from('article_overrides').select('*').eq('post_id', postId).maybeSingle(),
+  ]);
+  const base = b.data ?? {};
+  const ov = o.data ?? {};
+  const baseAr = base.i18n?.ar ?? {};
+  const ovAr = ov.i18n?.ar ?? {};
+  const bodyOr = (a: any, b: any): Block[] =>
+    Array.isArray(a) && a.length ? a as Block[] : (Array.isArray(b) ? b as Block[] : []);
+  return {
+    en: {
+      title: ov.title ?? base.title ?? '',
+      category: ov.category ?? base.category ?? '',
+      excerpt: ov.excerpt ?? base.excerpt ?? '',
+      image: ov.image ?? base.image ?? null,
+      body: bodyOr(ov.body, base.body),
+    },
+    ar: {
+      title: ovAr.title ?? baseAr.title ?? '',
+      category: ovAr.category ?? baseAr.category ?? '',
+      excerpt: ovAr.excerpt ?? baseAr.excerpt ?? '',
+      body: bodyOr(ovAr.body, baseAr.body),
+    },
+  };
 }
 
 export async function clearArticleOverride(postId: string) {

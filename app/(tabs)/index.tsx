@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { COLORS, FONT_ITALIC, FONT_SERIF, USER } from '@/constants/brand';
+import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { useArticles } from '@/lib/articles';
 import { CLASSES, PROGRAMS } from '@/constants/sessions';
 import { EXPERTS } from '@/constants/experts';
@@ -28,9 +29,9 @@ import { useHomeEbooks } from '@/lib/ebooks';
 // evening. Morning starts at 5.
 function greeting() {
   const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Good morning';
-  if (h >= 12 && h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h >= 5 && h < 12) return t('greeting.morning');
+  if (h >= 12 && h < 18) return t('greeting.afternoon');
+  return t('greeting.evening');
 }
 
 const SKY = require('@/assets/images/home-sky.jpg');
@@ -288,18 +289,18 @@ export default function HomeScreen() {
           <Image source={SKY} style={StyleSheet.absoluteFill} resizeMode="cover" />
           <LinearGradient colors={SKY_FADE} locations={SKY_STOPS} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <Text style={styles.kicker}>THE INTEND</Text>
-        <Text style={styles.greeting}>
+        <Text style={[styles.greeting, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>
           {greeting()}{firstName ? `, ${firstName}` : ''}.
         </Text>
         {!loggedIn && !authLoading ? (
           <Pressable style={styles.signinPrompt} onPress={() => router.push('/login')}>
-            <Text style={styles.signinPromptText}>Sign in or create an account to track your journey</Text>
+            <Text style={[styles.signinPromptText, isRTL() && AR_TEXT]}>{t('home.signinPrompt')}</Text>
             <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.94)" />
           </Pressable>
         ) : null}
 
         <View style={styles.moodCard}>
-          <Text style={styles.moodQ}>How are you today?</Text>
+          <Text style={[styles.moodQ, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('home.moodQ')}</Text>
           <View style={styles.facesRow}>
             {MOODS.map((m, i) => (
               <Pressable key={m.key} onPress={() => pressFace(i)} hitSlop={8} style={styles.faceBtn}>
@@ -322,7 +323,7 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
-        <Text style={[styles.label, styles.labelOn]}>UPCOMING SESSION</Text>
+        <Text style={[styles.label, styles.labelOn, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('home.upcomingSession')}</Text>
         {upcoming ? (
           <Pressable
             style={styles.sessionCard}
@@ -336,7 +337,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.sessionTitle}>{upcoming.title}</Text>
               <Text style={styles.sessionMeta}>{upcoming.when}</Text>
-              <Text style={styles.sessionMeta}>with {upcoming.expert}</Text>
+              <Text style={styles.sessionMeta}>{t('booking.withExpert', { name: upcoming.expert ?? '' })}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
           </Pressable>
@@ -351,37 +352,37 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.sessionTitle}>{suggested.h.title}</Text>
               <Text style={styles.sessionMeta}>
-                {suggested.when ? `Upcoming ${formatWhenLocal({ starts_at: suggested.when.toISOString() })}` : 'Upcoming soon'}
+                {suggested.when ? t('home.upcomingWhen', { when: formatWhenLocal({ starts_at: suggested.when.toISOString() }) }) : t('home.upcomingSoon')}
               </Text>
-              <Text style={styles.sessionMeta}>with {suggested.name}</Text>
+              <Text style={styles.sessionMeta}>{t('booking.withExpert', { name: suggested.name ?? '' })}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
           </Pressable>
         ) : (
           <Pressable style={styles.emptyCard} onPress={() => router.navigate('/sessions')}>
-            <Text style={styles.emptyText}>No sessions booked yet.</Text>
-            <Text style={styles.emptyLink}>Browse what's coming up</Text>
+            <Text style={[styles.emptyText, isRTL() && AR_TEXT]}>{t('home.noSessions')}</Text>
+            <Text style={[styles.emptyLink, isRTL() && AR_TEXT]}>{t('home.browseUpcoming')}</Text>
           </Pressable>
         )}
         </View>
 
         {reading ? (
           <View>
-            <Text style={styles.label}>CONTINUE READING</Text>
+            <Text style={[styles.label, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('home.continueReading')}</Text>
             <Pressable style={styles.readCard} onPress={() => router.push(`/article/${reading.id}`)}>
               <Text style={styles.readCat}>{reading.category.toUpperCase()}</Text>
               <Text style={styles.readTitle}>{reading.title}</Text>
               <View style={styles.track}>
                 <View style={[styles.trackFill, { width: `${Math.max(pct, 3)}%` }]} />
               </View>
-              <Text style={styles.pctText}>{pct}% complete</Text>
+              <Text style={styles.pctText}>{t('home.pctComplete', { pct })}</Text>
             </Pressable>
           </View>
         ) : null}
 
         {articles.length > 0 ? (
           <View>
-            <Text style={styles.section}>What readers are loving</Text>
+            <Text style={[styles.section, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('home.whatReadersLove')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredRow} style={{ marginBottom: 28 }}>
               {homeArticles.map((a, i) => (
                 <Pressable key={a.id} style={styles.featuredCard} onPress={() => router.push(`/article/${a.id}`)}>
@@ -397,15 +398,15 @@ export default function HomeScreen() {
                       <Text style={styles.readCoverTitle} numberOfLines={3}>{a.title}</Text>
                     </View>
                   </View>
-                  <Text style={styles.featuredKind}>{a.readMinutes} min read</Text>
+                  <Text style={styles.featuredKind}>{t('mood.minRead', { min: a.readMinutes })}</Text>
                 </Pressable>
               ))}
             </ScrollView>
           </View>
         ) : null}
 
-        <Text style={styles.featureHead}>From the library</Text>
-        <Text style={styles.featureSub}>A page from the newest e-book.</Text>
+        <Text style={[styles.featureHead, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('home.fromLibraryHead')}</Text>
+        <Text style={[styles.featureSub, isRTL() && AR_TEXT]}>{t('home.fromLibrarySub')}</Text>
         <ScrollView
           ref={bookRef}
           horizontal
@@ -439,7 +440,7 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        <Text style={styles.section}>This week's expert highlight</Text>
+        <Text style={[styles.section, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('home.expertHighlight')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expertRow}>
           {homeExperts.map((e: any) => (
             <Pressable key={e.id} style={styles.expertCard} onPress={() => router.push(`/expert/${e.id}`)}>
@@ -467,7 +468,7 @@ export default function HomeScreen() {
           style={styles.snippetBand}
           onPress={() => router.push(snippetBook ? `/ebook/${snippetBook.id}` : '/read')}
         >
-          <Text style={styles.snippetKicker}>FROM THE LIBRARY</Text>
+          <Text style={[styles.snippetKicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('home.fromLibraryLabel')}</Text>
           <Text style={styles.snippetText}>{snippet.passage}</Text>
           <View style={styles.snippetCtaRow}>
             <Text style={styles.snippetCta}>{snippet.cta}</Text>
@@ -478,13 +479,11 @@ export default function HomeScreen() {
 
         <View style={styles.hpHead}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.hpLabel}>HEALTH PROGRAMS</Text>
-            <Text style={styles.featureHead}>
-              Followed <Text style={styles.featureHeadItalic}>week by week</Text>
-            </Text>
+            <Text style={[styles.hpLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('home.healthProgramsLabel')}</Text>
+            <Text style={[styles.featureHead, isRTL() && { fontFamily: FONT_SERIF_AR }, isRTL() && AR_TEXT]}>{t('home.followedWeek')}</Text>
           </View>
           <Pressable onPress={() => router.push('/health-programs')} hitSlop={8}>
-            <Text style={styles.hpAll}>All {HEALTH_PROGRAMS.length} {'\u203A'}</Text>
+            <Text style={styles.hpAll}>{t('home.allCount', { n: HEALTH_PROGRAMS.length })} {'\u203A'}</Text>
           </Pressable>
         </View>
 
@@ -522,11 +521,11 @@ export default function HomeScreen() {
 
         <Pressable style={styles.quoteCard} onPress={() => router.push('/affirmations')}>
           <View style={styles.quoteInner}>
-  <Text style={styles.quoteKicker}>QUOTE OF THE DAY</Text>
+  <Text style={[styles.quoteKicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('home.quoteOfDay')}</Text>
             <Text style={styles.quoteMark}>{'\u201C'}</Text>
             <Text key={quoteSettled ? 'settled' : 'first'} style={styles.quoteText}>{quote}</Text>
             <View style={styles.quoteRule} />
-            <Text style={styles.quoteCta}>Start your affirmations</Text>
+            <Text style={[styles.quoteCta, isRTL() && AR_TEXT]}>{t('home.startAffirmations')}</Text>
           </View>
         </Pressable>
       </ScrollView>

@@ -7,6 +7,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { readCache, writeCache } from './cache';
 import { EXPERTS as FALLBACK, type Expert } from '@/constants/experts';
+import { getLocale } from './i18n';
 
 let cache: Expert[] | null = null;
 // When the cache was last confirmed against the server. Screens that mount a
@@ -20,14 +21,22 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 function fromRow(r: any): Expert {
+  // Locale-aware read. The experts table has an i18n jsonb column that stores
+  // Arabic and future language variants. When the app is in Arabic, prefer
+  // i18n.ar.* for each user-facing field, otherwise fall back to the source
+  // column so a half-translated row still reads cleanly.
+  const isAr = getLocale() === 'ar';
+  const ar = (r.i18n && r.i18n.ar) || {};
+  const pick = <T,>(en: T, arVal: any): T => (isAr && arVal ? arVal : en);
+  const pickArray = (en: any[], arVal: any): any[] => (isAr && Array.isArray(arVal) && arVal.length ? arVal : en);
   return {
     id: r.id,
-    name: r.name,
-    title: r.title,
-    category: r.category,
-    blurb: r.blurb,
-    bio: r.bio,
-    faqs: r.faqs ?? [],
+    name: pick(r.name, ar.name),
+    title: pick(r.title, ar.title),
+    category: pick(r.category, ar.category),
+    blurb: pick(r.blurb, ar.blurb),
+    bio: pick(r.bio, ar.bio),
+    faqs: pickArray(r.faqs ?? [], ar.faqs),
     profileUrl: r.profile_url ?? '',
     photo: r.photo ?? null,
     accountEmail: r.account_email ?? null,
@@ -35,11 +44,56 @@ function fromRow(r: any): Expert {
     photoX: r.photo_x ?? 0,
     photoY: r.photo_y ?? 0,
     availability: r.availability ?? null,
-    keywords: Array.isArray(r.keywords) ? r.keywords : [],
+    keywords: pickArray(Array.isArray(r.keywords) ? r.keywords : [], ar.keywords),
     instagram: r.instagram ?? '',
     tiktok: r.tiktok ?? '',
     twitter: r.twitter ?? '',
   };
+}
+
+// For the admin editor. Fetches the raw expert row so both languages can be
+// edited side by side, unlike useExpert which returns the localised version.
+// Returns empty strings for anything unset and passes the raw i18n object
+// back so the caller can preserve unrelated language keys (fr, fa, etc.)
+// when they later exist.
+export async function loadExpertForEdit(id: string): Promise<{
+  en: {
+    name: string; title: string; category: string; blurb: string; bio: string;
+    photo: string | null; accountEmail: string;
+    instagram: string; tiktok: string; twitter: string;
+  };
+  ar: { name: string; title: string; blurb: string; bio: string };
+  i18nRaw: any;
+} | null> {
+  try {
+    const { data } = await supabase.from('experts').select('*').eq('id', id).maybeSingle();
+    if (!data) return null;
+    const i18nRaw = (data as any).i18n ?? {};
+    const ar = i18nRaw.ar ?? {};
+    return {
+      en: {
+        name: (data as any).name ?? '',
+        title: (data as any).title ?? '',
+        category: (data as any).category ?? '',
+        blurb: (data as any).blurb ?? '',
+        bio: (data as any).bio ?? '',
+        photo: (data as any).photo ?? null,
+        accountEmail: (data as any).account_email ?? '',
+        instagram: (data as any).instagram ?? '',
+        tiktok: (data as any).tiktok ?? '',
+        twitter: (data as any).twitter ?? '',
+      },
+      ar: {
+        name: ar.name ?? '',
+        title: ar.title ?? '',
+        blurb: ar.blurb ?? '',
+        bio: ar.bio ?? '',
+      },
+      i18nRaw,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export const EXPERTS_CACHE_KEY = 'experts.v2';
@@ -241,6 +295,7 @@ export async function updateExpert(
     instagram: string; tiktok: string; twitter: string;
     photo: string; photo_scale: number; photo_x: number; photo_y: number;
     account_email: string; availability: any; sort: number;
+    i18n: any;
   }>
 ) {
   // Asks for the row back, because an update that matches nothing returns no

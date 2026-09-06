@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, View,
@@ -10,15 +10,24 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { useExpert } from '@/lib/experts';
-import { useExpertServices } from '@/lib/services';
+import { loadExpertServicesRaw, loadServiceForEdit, type FullService } from '@/lib/services';
 import { removeService, saveService, serviceSlug } from '@/lib/adminServices';
 
 const WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
+
+// RTL style for Arabic input values. Admin panel is English throughout;
+// only the value the admin types when the Arabic tab is active gets Arabic
+// formatting.
+const AR_INPUT = { textAlign: 'right' as const, writingDirection: 'rtl' as const, letterSpacing: 0 };
+
+type Lang = 'en' | 'ar';
 
 const BLANK = {
   id: '', name: '', tagline: '', description: '', price: '',
   durationMin: '60', online: true, inPerson: false, location: '',
   kind: 'single', sessionsTotal: '', _isNew: true, _idTouched: false,
+  // Arabic content, held alongside English so a save writes both languages.
+  arName: '', arTagline: '', arDescription: '', i18nRaw: {},
 };
 
 export default function AdminExpertServices() {
@@ -26,11 +35,26 @@ export default function AdminExpertServices() {
   const { id: expertId } = useLocalSearchParams<{ id: string }>();
   const { role } = useAuth();
   const { expert } = useExpert(expertId ? String(expertId) : undefined);
-  const { services, loading } = useExpertServices(expertId ? String(expertId) : undefined);
+  // Admin list is always English regardless of app locale, so we query the
+  // raw rows directly and hold the list in local state. reload() re-fetches
+  // after any save or delete.
+  const [services, setServices] = useState<FullService[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const [lang, setLang] = useState<Lang>('en');
   const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+
+  const reloadList = async () => {
+    if (!expertId) return;
+    setLoading(true);
+    const rows = await loadExpertServicesRaw(String(expertId));
+    setServices(rows);
+    setLoading(false);
+  };
+
+  useEffect(() => { reloadList(); /* eslint-disable-next-line */ }, [expertId]);
 
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
@@ -63,6 +87,17 @@ export default function AdminExpertServices() {
 
     setBusy(true);
     setStatus(null);
+    // Merge Arabic into any existing i18n so unrelated language keys (fr, fa)
+    // are preserved.
+    const nextI18n = {
+      ...(form.i18nRaw ?? {}),
+      ar: {
+        ...((form.i18nRaw ?? {}).ar ?? {}),
+        name: (form.arName ?? '').trim(),
+        tagline: (form.arTagline ?? '').trim(),
+        description: (form.arDescription ?? '').trim(),
+      },
+    };
     const { error } = await saveService({
       id,
       expert_id: String(expertId),
@@ -76,10 +111,12 @@ export default function AdminExpertServices() {
       location: form.inPerson ? (form.location?.trim() || null) : null,
       kind: form.kind,
       sessions_total: form.kind === 'package' ? Number(form.sessionsTotal) || null : null,
+      i18n: nextI18n,
     });
     setBusy(false);
     if (error) { setStatus(`Could not save: ${error.message}`); return; }
     setForm(null);
+    reloadList();
   };
 
   const remove = (s: any) => {
@@ -94,27 +131,37 @@ export default function AdminExpertServices() {
           onPress: async () => {
             const { error } = await removeService(s.id);
             if (error) Alert.alert('That did not work', error.message ?? 'Try again.');
-            else setForm(null);
+            else { setForm(null); reloadList(); }
           },
         },
       ],
     );
   };
 
-  const edit = (s: any) => {
+  const edit = async (s: any) => {
     setStatus(null);
+    setLang('en');
+    // Fetch the raw row so both languages come in fresh, regardless of what
+    // the list is currently displaying. Fixes the pre-Stage-3 bug where an
+    // edit populated the form from the locale-transformed cache.
+    const raw = await loadServiceForEdit(s.id);
+    if (!raw) { setStatus('Could not load that one.'); return; }
     setForm({
-      id: s.id,
-      name: s.name ?? '',
-      tagline: s.tagline ?? '',
-      description: s.description ?? '',
-      price: s.price ?? '',
-      durationMin: s.durationMin ? String(s.durationMin) : '',
-      online: !!s.online,
-      inPerson: !!s.inPerson,
-      location: s.location ?? '',
-      kind: s.kind ?? 'single',
-      sessionsTotal: s.sessionsTotal ? String(s.sessionsTotal) : '',
+      id: raw.en.id,
+      name: raw.en.name,
+      tagline: raw.en.tagline,
+      description: raw.en.description,
+      price: raw.en.price,
+      durationMin: raw.en.durationMin ? String(raw.en.durationMin) : '',
+      online: !!raw.en.online,
+      inPerson: !!raw.en.inPerson,
+      location: raw.en.location ?? '',
+      kind: raw.en.kind ?? 'single',
+      sessionsTotal: raw.en.sessionsTotal ? String(raw.en.sessionsTotal) : '',
+      arName: raw.ar.name,
+      arTagline: raw.ar.tagline,
+      arDescription: raw.ar.description,
+      i18nRaw: raw.i18nRaw,
       _isNew: false,
       _idTouched: true,
     });
@@ -138,7 +185,32 @@ export default function AdminExpertServices() {
             <View style={styles.card}>
               <Text style={styles.formHead}>{form._isNew ? 'New session' : form.name}</Text>
 
-              <Field label="Name" value={form.name} onChangeText={(t: string) => set('name', t)} placeholder="Initial consultation" />
+              {/* Language tab for the three text fields below. Labels stay English
+                  per admin rules; only the input value swaps and gets RTL. */}
+              <View style={styles.tabBar}>
+                <Pressable onPress={() => setLang('en')} style={[styles.tab, lang === 'en' && styles.tabOn]}>
+                  <Text style={[styles.tabText, lang === 'en' && styles.tabTextOn]}>English</Text>
+                </Pressable>
+                <Pressable onPress={() => setLang('ar')} style={[styles.tab, lang === 'ar' && styles.tabOn]}>
+                  <Text style={[styles.tabText, lang === 'ar' && styles.tabTextOn]}>Arabic</Text>
+                </Pressable>
+              </View>
+
+              {lang === 'ar' ? (
+                <>
+                  <Field label="Name" value={form.arName ?? ''} onChangeText={(t: string) => set('arName', t)} rtl />
+                  <Field label="Short line" value={form.arTagline ?? ''} onChangeText={(t: string) => set('arTagline', t)} note="Under the name on the card." rtl />
+                  <Field label="Description" value={form.arDescription ?? ''} onChangeText={(t: string) => set('arDescription', t)} multiline note="What happens in it, and who it suits." rtl />
+                </>
+              ) : (
+                <>
+                  <Field label="Name" value={form.name} onChangeText={(t: string) => set('name', t)} placeholder="Initial consultation" />
+                  <Field label="Short line" value={form.tagline} onChangeText={(t: string) => set('tagline', t)} note="Under the name on the card." />
+                  <Field label="Description" value={form.description} onChangeText={(t: string) => set('description', t)} multiline note="What happens in it, and who it suits." />
+                </>
+              )}
+
+              {/* Id and everything below are shared across languages. */}
               <Field
                 label="Id"
                 value={form._idTouched ? form.id : suggestedId}
@@ -146,8 +218,6 @@ export default function AdminExpertServices() {
                 note={form._isNew ? 'Follows the name.' : 'Fixed, because bookings point at it.'}
                 editable={form._isNew}
               />
-              <Field label="Short line" value={form.tagline} onChangeText={(t: string) => set('tagline', t)} note="Under the name on the card." />
-              <Field label="Description" value={form.description} onChangeText={(t: string) => set('description', t)} multiline note="What happens in it, and who it suits." />
 
               <View style={styles.two}>
                 <View style={{ flex: 1 }}>
@@ -244,7 +314,7 @@ export default function AdminExpertServices() {
   );
 }
 
-function Field({ label, value, onChangeText, note, placeholder, multiline, editable = true, keyboardType }: any) {
+function Field({ label, value, onChangeText, note, placeholder, multiline, editable = true, keyboardType, rtl }: any) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -257,7 +327,7 @@ function Field({ label, value, onChangeText, note, placeholder, multiline, edita
         multiline={multiline}
         keyboardType={keyboardType}
         autoCapitalize={label === 'Id' ? 'none' : 'sentences'}
-        style={[styles.input, multiline && styles.inputMulti, !editable && styles.inputOff]}
+        style={[styles.input, multiline && styles.inputMulti, !editable && styles.inputOff, rtl && AR_INPUT]}
       />
       {note ? <Text style={styles.note}>{note}</Text> : null}
     </View>
@@ -314,4 +384,9 @@ const styles = StyleSheet.create({
   rowTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
   rowMeta: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 3 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, paddingVertical: 24, textAlign: 'center' },
+  tabBar: { flexDirection: 'row', backgroundColor: COLORS.bg, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: COLORS.line, marginBottom: 16 },
+  tab: { flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center' },
+  tabOn: { backgroundColor: COLORS.ink },
+  tabText: { fontSize: 13, color: COLORS.ink },
+  tabTextOn: { color: COLORS.bg },
 });

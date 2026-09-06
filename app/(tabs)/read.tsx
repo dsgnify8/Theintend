@@ -13,6 +13,7 @@ import { useDraft } from '@/lib/worksheets';
 import { useAuth } from '@/lib/auth';
 import { useAppImages, uploadAppImage } from '@/lib/appImages';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
+import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { HEALTH_PROGRAM_AUTHOR, programCountWord } from '@/constants/healthPrograms';
 import { useShelfEbooks } from '@/lib/ebooks';
 
@@ -72,7 +73,7 @@ async function pickAndSave(key: string, onBusy: (b: boolean) => void) {
   try {
     await uploadAppImage(key, res.assets[0].base64);
   } catch (e: any) {
-    Alert.alert('Upload failed', e?.message ?? 'Could not save that image.');
+    Alert.alert(t('lib.uploadFailed'), e?.message ?? t('lib.uploadError'));
   }
   onBusy(false);
 }
@@ -97,13 +98,13 @@ export default function LibraryScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.band, styles.masthead]}>
           <Text style={styles.kicker}>THE INTEND</Text>
-          <Text style={styles.h1}>Library</Text>
+          <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.title')}</Text>
           <View style={styles.titleRule} />
-          <Text style={styles.sub}>Everything here is yours to use at your own pace.</Text>
+          <Text style={[styles.sub, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.sub')}</Text>
         </View>
 
         <TintBand>
-          <Text style={styles.sectionLabel}>PRACTICES</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('lib.practices')}</Text>
           <View style={styles.grid}>
             {PRACTICES.map((p) => (
               <PracticeTile key={p.key} practice={p} uri={images[p.key]} isAdmin={isAdmin} />
@@ -112,7 +113,7 @@ export default function LibraryScreen() {
         </TintBand>
 
         <View style={styles.band}>
-          <Text style={styles.sectionLabel}>READ</Text>
+          <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('lib.read')}</Text>
           <Pressable style={styles.feature} onPress={() => router.push('/articles')}>
             {lead?.image ? (
               <ImageBackground source={{ uri: lead.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
@@ -125,15 +126,19 @@ export default function LibraryScreen() {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.featureBody}>
-              <Text style={styles.featureEyebrow}>ARTICLES</Text>
-              <Text style={styles.featureTitle}>
-                The <Text style={styles.featureTitleAccent}>reading</Text> room
-              </Text>
+              <Text style={[styles.featureEyebrow, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('lib.articles')}</Text>
+              {isRTL() ? (
+                <Text style={[styles.featureTitle, { fontFamily: FONT_SERIF_AR }]}>{t('lib.readingRoom')}</Text>
+              ) : (
+                <Text style={styles.featureTitle}>
+                  The <Text style={styles.featureTitleAccent}>reading</Text> room
+                </Text>
+              )}
               <Text style={styles.featureLine}>
-                {loading ? 'Essays and guides from our experts.' : `${articles.length} pieces on healing, patterns, money and the body.`}
+                {loading ? t('lib.readingLoading') : t('lib.readingCount', { n: articles.length })}
               </Text>
               <View style={styles.featureCta}>
-                <Text style={styles.featureCtaText}>Enter</Text>
+                <Text style={styles.featureCtaText}>{t('lib.enter')}</Text>
                 <Ionicons name="arrow-forward" size={15} color={COLORS.ink} />
               </View>
             </View>
@@ -153,16 +158,17 @@ export default function LibraryScreen() {
               pointerEvents="none"
             />
             <View style={styles.hpBody}>
-              <Text style={styles.hpEyebrow}>HEALTH PROGRAMS</Text>
-              <Text style={styles.hpTitle}>
-                {programCountWord()} <Text style={styles.hpTitleAccent}>protocols</Text>
-              </Text>
-              <Text style={styles.hpLine}>
-                Structured week by week, for the things that do not resolve on their own. Written
-                by {HEALTH_PROGRAM_AUTHOR}.
-              </Text>
+              <Text style={[styles.hpEyebrow, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('home.healthProgramsLabel')}</Text>
+              {isRTL() ? (
+                <Text style={[styles.hpTitle, { fontFamily: FONT_SERIF_AR }]}>{t('lib.hpTitleAr')}</Text>
+              ) : (
+                <Text style={styles.hpTitle}>
+                  {programCountWord()} <Text style={styles.hpTitleAccent}>protocols</Text>
+                </Text>
+              )}
+              <Text style={[styles.hpLine, isRTL() && AR_TEXT]}>{t('lib.hpLine', { author: HEALTH_PROGRAM_AUTHOR })}</Text>
               <View style={styles.hpCta}>
-                <Text style={styles.hpCtaText}>Open</Text>
+                <Text style={styles.hpCtaText}>{t('lib.open')}</Text>
                 <Ionicons name="arrow-forward" size={15} color="#241F1B" />
               </View>
             </View>
@@ -172,9 +178,9 @@ export default function LibraryScreen() {
         {ebooks.length ? (
           <TintBand>
             <View style={styles.shelfHead}>
-              <Text style={styles.shelfTitle}>E-books</Text>
+              <Text style={[styles.shelfTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.ebooks')}</Text>
               <Pressable onPress={() => router.push('/ebooks')} hitSlop={8}>
-                <Text style={styles.seeAll}>See all {'\u203A'}</Text>
+                <Text style={styles.seeAll}>{t('lib.seeAll')} {'\u203A'}</Text>
               </Pressable>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
@@ -186,9 +192,9 @@ export default function LibraryScreen() {
         {SOUNDS.length ? (
           <View style={styles.band}>
             <View style={styles.shelfHead}>
-              <Text style={styles.shelfTitle}>Sounds & Frequencies</Text>
+              <Text style={[styles.shelfTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.soundsFrequencies')}</Text>
               <Pressable onPress={() => router.push('/sounds')} hitSlop={8}>
-                <Text style={styles.seeAll}>See all {'\u203A'}</Text>
+                <Text style={styles.seeAll}>{t('lib.seeAll')} {'\u203A'}</Text>
               </Pressable>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
@@ -198,7 +204,7 @@ export default function LibraryScreen() {
         ) : null}
 
         <TintBand>
-          <Text style={styles.shelfTitle}>Workbooks</Text>
+          <Text style={[styles.shelfTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.workbooks')}</Text>
           <View style={{ marginTop: 4 }}>
             {WORKSHEETS.map((w) => <WorkbookCard key={w.id} item={w} />)}
           </View>
@@ -311,7 +317,7 @@ function WorkbookCard({ item }: { item: any }) {
           <LinearGradient colors={PASTEL_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
           <Ionicons name="compass-outline" size={20} color={COLORS.ink} />
         </View>
-        {inProgress ? <View style={styles.wbPill}><Text style={styles.wbPillText}>In progress</Text></View> : null}
+        {inProgress ? <View style={styles.wbPill}><Text style={styles.wbPillText}>{t('lib.inProgress')}</Text></View> : null}
       </View>
       <Text style={styles.wbTitle}>{item.title}</Text>
       <Text style={styles.wbSub}>{item.subtitle}</Text>
@@ -320,7 +326,7 @@ function WorkbookCard({ item }: { item: any }) {
         <Text style={styles.wbMeta}>{item.minutes}</Text>
         <View style={styles.wbStart}>
           <LinearGradient colors={PASTEL_GRAD} style={StyleSheet.absoluteFill} pointerEvents="none" />
-          <Text style={styles.wbStartText}>{inProgress ? 'Resume' : 'Start'}</Text>
+          <Text style={styles.wbStartText}>{inProgress ? t('lib.resume') : t('lib.start')}</Text>
         </View>
       </View>
     </Pressable>

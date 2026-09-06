@@ -168,7 +168,11 @@ Deno.serve(async (req) => {
     if (!r.ok) return json({ error: `ai ${r.status}` }, 502);
     const d = await r.json();
     let reply = (d.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('').trim();
-    reply = reply.replace(/[\u2013\u2014]/g, ',');
+    // Strip em and en dashes as before. When the response is in Arabic, swap
+    // for the Arabic comma so the punctuation matches the script; English
+    // comma inside otherwise-Arabic text reads jarringly.
+    const isArabicReply = /[\u0600-\u06FF]/.test(reply);
+    reply = reply.replace(/[\u2013\u2014]/g, isArabicReply ? '،' : ',');
     if (!reply) return json({ error: 'no_reply' }, 502);
 
     // store both turns

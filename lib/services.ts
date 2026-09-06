@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { EXPERT_SERVICES as FALLBACK, type Service } from '@/constants/services';
+import { getLocale } from './i18n';
 
 export type FullService = Service & {
   kind: 'single' | 'package';
@@ -19,12 +20,19 @@ let inflight: Promise<FullService[]> | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
-function fromRow(r: any): FullService {
+function fromRow(r: any, forceEn = false): FullService {
+  // Locale-aware, mirrors the pattern in lib/experts.ts. When the app is in
+  // Arabic and i18n.ar.<field> exists, that wins; otherwise the English
+  // canonical is used. forceEn is for the admin editor list so it always
+  // reads English regardless of app locale.
+  const isAr = !forceEn && getLocale() === 'ar';
+  const ar = (r.i18n && r.i18n.ar) || {};
+  const pick = <T,>(en: T, arVal: any): T => (isAr && arVal ? arVal : en);
   return {
     id: r.id,
     expertId: r.expert_id,
-    name: r.name,
-    tagline: r.tagline ?? '',
+    name: pick(r.name, ar.name),
+    tagline: pick(r.tagline ?? '', ar.tagline),
     durationMin: r.duration_min ?? null,
     price: r.price ?? '',
     online: !!r.online,
@@ -32,7 +40,7 @@ function fromRow(r: any): FullService {
     image: r.image ?? null,
     kind: r.kind === 'package' ? 'package' : 'single',
     sessionsTotal: r.sessions_total ?? null,
-    description: r.description ?? '',
+    description: pick(r.description ?? '', ar.description),
     location: r.location ?? null,
     packageId: r.package_id ?? null,
   };
@@ -92,4 +100,44 @@ export function useService(id?: string) {
 export async function reloadServices() {
   cache = await load();
   emit();
+}
+
+// For the admin editor. Fetches the raw service row so both languages can be
+// edited side by side without depending on the locale-aware cache. Preserves
+// the raw i18n object so a save does not wipe unrelated language keys.
+export async function loadServiceForEdit(id: string): Promise<{
+  en: FullService;
+  ar: { name: string; tagline: string; description: string };
+  i18nRaw: any;
+} | null> {
+  try {
+    const { data } = await supabase.from('services').select('*').eq('id', id).maybeSingle();
+    if (!data) return null;
+    const i18nRaw = (data as any).i18n ?? {};
+    const ar = i18nRaw.ar ?? {};
+    return {
+      en: fromRow(data, true),
+      ar: {
+        name: ar.name ?? '',
+        tagline: ar.tagline ?? '',
+        description: ar.description ?? '',
+      },
+      i18nRaw,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// For admin list rendering. Directly queries the row so it always returns
+// English regardless of app locale, since admin UI is English throughout.
+export async function loadExpertServicesRaw(expertId: string): Promise<FullService[]> {
+  try {
+    const { data } = await supabase
+      .from('services').select('*').eq('expert_id', expertId).order('sort', { ascending: true });
+    if (!data) return [];
+    return (data as any[]).map((r) => fromRow(r, true));
+  } catch {
+    return [];
+  }
 }

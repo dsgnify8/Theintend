@@ -18,6 +18,10 @@ export type ServiceRow = {
   location: string | null;
   kind: 'single' | 'package';
   sessions_total: number | null;
+  // Optional Arabic content, packed into the i18n jsonb column under ar.
+  // When present it merges with any existing i18n keys so unrelated
+  // languages (fr, fa) are not wiped.
+  i18n?: any;
 };
 
 // An id that reads as what it is, since it appears in booking rows for years.

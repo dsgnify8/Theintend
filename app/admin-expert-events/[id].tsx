@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, View,
@@ -12,9 +12,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { useExpert } from '@/lib/experts';
-import { createSession, deleteSession, uploadSessionImage, useSessions } from '@/lib/sessions';
+import { createSession, deleteSession, loadExpertSessionsRaw, loadSessionForEdit, uploadSessionImage } from '@/lib/sessions';
 
 const WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
+
+// RTL style for Arabic input values. Admin panel is English throughout;
+// only the value the admin types when the Arabic tab is active gets Arabic
+// formatting.
+const AR_INPUT = { textAlign: 'right' as const, writingDirection: 'rtl' as const, letterSpacing: 0 };
+
+type Lang = 'en' | 'ar';
 
 const BLANK = {
   kind: 'class',
@@ -24,6 +31,8 @@ const BLANK = {
   // A program
   weeks: '', sessionsCount: '', cadence: '', price: '', requiresForm: false,
   _isNew: true, _idTouched: false,
+  // Arabic content, held alongside English so a save writes both languages.
+  arTitle: '', arDescription: '', arCategory: '', arCadence: '', i18nRaw: {},
 };
 
 function slug(expertId: string, title: string) {
@@ -36,20 +45,34 @@ export default function AdminExpertEvents() {
   const { id: expertId } = useLocalSearchParams<{ id: string }>();
   const { role } = useAuth();
   const { expert } = useExpert(expertId ? String(expertId) : undefined);
-  const { classes, programs, loading } = useSessions();
+  // Admin list is always English regardless of app locale, so we query the
+  // raw rows directly and hold the split in local state. reloadList()
+  // re-fetches after any save or delete.
+  const [classes, setClasses] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const reloadList = async () => {
+    if (!expertId) return;
+    setLoading(true);
+    const { classes: cls, programs: prg } = await loadExpertSessionsRaw(String(expertId));
+    setClasses(cls);
+    setPrograms(prg);
+    setLoading(false);
+  };
 
+  const [lang, setLang] = useState<Lang>('en');
   const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
+  useEffect(() => { reloadList(); /* eslint-disable-next-line */ }, [expertId]);
+
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
   const isClass = form?.kind === 'class';
 
-  const mine = useMemo(() => ({
-    classes: classes.filter((c: any) => c.expertId === expertId),
-    programs: programs.filter((p: any) => p.expertId === expertId),
-  }), [classes, programs, expertId]);
+  // classes and programs are already per-expert from loadExpertSessionsRaw.
+  const mine = useMemo(() => ({ classes, programs }), [classes, programs]);
 
   const suggestedId = useMemo(
     () => (form?._isNew && !form?._idTouched && form?.title ? slug(String(expertId), form.title) : form?.id ?? ''),
@@ -91,6 +114,20 @@ export default function AdminExpertEvents() {
     setBusy(true);
     setStatus(null);
 
+    // Merge Arabic into any existing i18n so unrelated language keys (fr, fa)
+    // are preserved. cadence only makes sense on programs; empty string on
+    // classes is fine and is what the read side sees anyway.
+    const nextI18n = {
+      ...(form.i18nRaw ?? {}),
+      ar: {
+        ...((form.i18nRaw ?? {}).ar ?? {}),
+        title: (form.arTitle ?? '').trim(),
+        description: (form.arDescription ?? '').trim(),
+        category: (form.arCategory ?? '').trim(),
+        cadence: isClass ? '' : (form.arCadence ?? '').trim(),
+      },
+    };
+
     const shared = {
       id,
       kind: form.kind,
@@ -102,6 +139,7 @@ export default function AdminExpertEvents() {
       color: form.color || '#5C4632',
       image: form.image?.trim() || null,
       status: 'live',
+      i18n: nextI18n,
     };
 
     const row = isClass
@@ -127,6 +165,7 @@ export default function AdminExpertEvents() {
     setBusy(false);
     if (error) { setStatus(`Could not save: ${error.message}`); return; }
     setForm(null);
+    reloadList();
   };
 
   const remove = (item: any, kind: string) => {
@@ -141,32 +180,44 @@ export default function AdminExpertEvents() {
           onPress: async () => {
             const { error } = await deleteSession(item.id);
             if (error) Alert.alert('That did not work', error.message ?? 'Try again.');
-            else setForm(null);
+            else { setForm(null); reloadList(); }
           },
         },
       ],
     );
   };
 
-  const edit = (item: any, kind: 'class' | 'program') => {
+  const edit = async (item: any, kind: 'class' | 'program') => {
     setStatus(null);
+    setLang('en');
+    // Fetch the raw row so both languages come in fresh. Fixes the
+    // pre-Stage-3 bug where editing while the app was in Arabic locale
+    // wrote Arabic back into English columns.
+    const raw = await loadSessionForEdit(item.id);
+    if (!raw) { setStatus('Could not load that one.'); return; }
+    const en = raw.en;
     setForm({
-      kind,
-      id: item.id,
-      title: item.title ?? '',
-      description: item.description ?? '',
-      category: item.category ?? '',
-      color: item.color ?? '#5C4632',
-      image: typeof item.banner === 'object' && item.banner?.uri ? item.banner.uri : '',
-      date: item.date ?? '',
-      time: item.time ?? '',
-      durationHours: item.durationHours ? String(item.durationHours) : '1',
-      link: item.link ?? '',
-      weeks: item.weeks ? String(item.weeks) : '',
-      sessionsCount: item.sessions ? String(item.sessions) : '',
-      cadence: item.cadence ?? '',
-      price: item.price ?? '',
-      requiresForm: !!item.requiresForm,
+      kind: raw.kind,
+      id: en.id,
+      title: en.title ?? '',
+      description: en.description ?? '',
+      category: en.category ?? '',
+      color: en.color ?? '#5C4632',
+      image: typeof en.banner === 'object' && en.banner?.uri ? en.banner.uri : '',
+      date: en.date ?? '',
+      time: en.time ?? '',
+      durationHours: en.durationHours ? String(en.durationHours) : '1',
+      link: en.link ?? '',
+      weeks: en.weeks ? String(en.weeks) : '',
+      sessionsCount: en.sessions ? String(en.sessions) : '',
+      cadence: en.cadence ?? '',
+      price: en.price ?? '',
+      requiresForm: !!en.requiresForm,
+      arTitle: raw.ar.title,
+      arDescription: raw.ar.description,
+      arCategory: raw.ar.category,
+      arCadence: raw.ar.cadence,
+      i18nRaw: raw.i18nRaw,
       _isNew: false,
       _idTouched: true,
     });
@@ -207,16 +258,45 @@ export default function AdminExpertEvents() {
                   : 'Several sessions over weeks, bought once.'}
               </Text>
 
-              <Field label="Title" value={form.title} onChangeText={(t: string) => set('title', t)} />
-              <Field
-                label="Id"
-                value={form._idTouched ? form.id : suggestedId}
-                onChangeText={(t: string) => { set('_idTouched', true); set('id', t.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }}
-                note={form._isNew ? 'Follows the title.' : 'Fixed, because bookings point at it.'}
-                editable={form._isNew}
-              />
-              <Field label="Description" value={form.description} onChangeText={(t: string) => set('description', t)} multiline />
-              <Field label="Category" value={form.category} onChangeText={(t: string) => set('category', t)} note={`Left empty it uses ${expert?.category || 'theirs'}.`} />
+              {/* Language tab. Controls the value of Title, Description,
+                  Category, and (for programs) How often. Field labels stay
+                  English per admin rules; only the input value swaps. */}
+              <View style={styles.tabBar}>
+                <Pressable onPress={() => setLang('en')} style={[styles.tab, lang === 'en' && styles.tabOn]}>
+                  <Text style={[styles.tabText, lang === 'en' && styles.tabTextOn]}>English</Text>
+                </Pressable>
+                <Pressable onPress={() => setLang('ar')} style={[styles.tab, lang === 'ar' && styles.tabOn]}>
+                  <Text style={[styles.tabText, lang === 'ar' && styles.tabTextOn]}>Arabic</Text>
+                </Pressable>
+              </View>
+
+              {lang === 'ar' ? (
+                <>
+                  <Field label="Title" value={form.arTitle ?? ''} onChangeText={(t: string) => set('arTitle', t)} rtl />
+                  <Field
+                    label="Id"
+                    value={form._idTouched ? form.id : suggestedId}
+                    onChangeText={(t: string) => { set('_idTouched', true); set('id', t.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }}
+                    note={form._isNew ? 'Follows the English title.' : 'Fixed, because bookings point at it.'}
+                    editable={form._isNew}
+                  />
+                  <Field label="Description" value={form.arDescription ?? ''} onChangeText={(t: string) => set('arDescription', t)} multiline rtl />
+                  <Field label="Category" value={form.arCategory ?? ''} onChangeText={(t: string) => set('arCategory', t)} note={`Left empty it uses ${expert?.category || 'theirs'}.`} rtl />
+                </>
+              ) : (
+                <>
+                  <Field label="Title" value={form.title} onChangeText={(t: string) => set('title', t)} />
+                  <Field
+                    label="Id"
+                    value={form._idTouched ? form.id : suggestedId}
+                    onChangeText={(t: string) => { set('_idTouched', true); set('id', t.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); }}
+                    note={form._isNew ? 'Follows the title.' : 'Fixed, because bookings point at it.'}
+                    editable={form._isNew}
+                  />
+                  <Field label="Description" value={form.description} onChangeText={(t: string) => set('description', t)} multiline />
+                  <Field label="Category" value={form.category} onChangeText={(t: string) => set('category', t)} note={`Left empty it uses ${expert?.category || 'theirs'}.`} />
+                </>
+              )}
 
               <Text style={styles.label}>Banner</Text>
               <View style={styles.pickRow}>
@@ -260,7 +340,11 @@ export default function AdminExpertEvents() {
                       <Field label="Sessions" value={form.sessionsCount} onChangeText={(t: string) => set('sessionsCount', t.replace(/[^0-9]/g, ''))} keyboardType="number-pad" />
                     </View>
                   </View>
-                  <Field label="How often" value={form.cadence} onChangeText={(t: string) => set('cadence', t)} placeholder="Weekly, 60 minutes" />
+                  {lang === 'ar' ? (
+                    <Field label="How often" value={form.arCadence ?? ''} onChangeText={(t: string) => set('arCadence', t)} placeholder="Weekly, 60 minutes" rtl />
+                  ) : (
+                    <Field label="How often" value={form.cadence} onChangeText={(t: string) => set('cadence', t)} placeholder="Weekly, 60 minutes" />
+                  )}
                   <Field label="Price" value={form.price} onChangeText={(t: string) => set('price', t)} placeholder="4,200 AED" note="As people should read it." />
                   <View style={styles.row}>
                     <View style={{ flex: 1 }}>
@@ -350,7 +434,7 @@ function ItemRow({ title, meta, onEdit, onRemove }: any) {
   );
 }
 
-function Field({ label, value, onChangeText, note, placeholder, multiline, editable = true, keyboardType, autoCapitalize }: any) {
+function Field({ label, value, onChangeText, note, placeholder, multiline, editable = true, keyboardType, autoCapitalize, rtl }: any) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -363,7 +447,7 @@ function Field({ label, value, onChangeText, note, placeholder, multiline, edita
         multiline={multiline}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize ?? (label === 'Id' ? 'none' : 'sentences')}
-        style={[styles.input, multiline && styles.inputMulti, !editable && styles.inputOff]}
+        style={[styles.input, multiline && styles.inputMulti, !editable && styles.inputOff, rtl && AR_INPUT]}
       />
       {note ? <Text style={styles.note}>{note}</Text> : null}
     </View>
@@ -427,4 +511,9 @@ const styles = StyleSheet.create({
   rowTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
   rowMeta: { fontSize: 12, lineHeight: 18, color: COLORS.muted, marginTop: 3 },
   emptyText: { fontSize: 14, lineHeight: 21, color: COLORS.muted, paddingVertical: 24, textAlign: 'center' },
+  tabBar: { flexDirection: 'row', backgroundColor: COLORS.bg, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: COLORS.line, marginBottom: 16 },
+  tab: { flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center' },
+  tabOn: { backgroundColor: COLORS.ink },
+  tabText: { fontSize: 13, color: COLORS.ink },
+  tabTextOn: { color: COLORS.bg },
 });
