@@ -5,7 +5,7 @@
 // so nothing on a shelf has to care which it is holding.
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from './supabase';
-import { LIBRARY, localizeLibraryItem, type LibraryItem } from '@/constants/library';
+import { LIBRARY, type LibraryItem } from '@/constants/library';
 import { getLocale } from './i18n';
 
 export type Ebook = {
@@ -110,14 +110,10 @@ export function useShelfEbooks(): { items: ShelfItem[]; loading: boolean; reload
 
   // An uploaded book with the same id replaces the bundled one, so a book can
   // be revised without a build. Both keep their place in the order, since the
-  // replaced one holds the position its bundled version had. Bundled items are
-  // run through localizeLibraryItem so their title/author/description follow
-  // the app locale (Arabic content lives on the LibraryItem itself; uploaded
-  // items already come from a locale-aware DB path via fromRow).
+  // replaced one holds the position its bundled version had.
   const uploadedIds = new Set(uploaded.map((b) => b.id));
-  const bundled = (LIBRARY.filter((i) => i.type === 'E-book'))
-    .filter((i) => !uploadedIds.has(i.id))
-    .map(localizeLibraryItem) as ShelfItem[];
+  const bundled = (LIBRARY.filter((i) => i.type === 'E-book') as ShelfItem[])
+    .filter((i) => !uploadedIds.has(i.id));
 
   return { items: [...bundled, ...uploaded.map(asShelfItem)], loading, reload };
 }

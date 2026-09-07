@@ -95,37 +95,3 @@ export function t(key: StringKey, vars?: Record<string, string | number>): strin
   }
   return s;
 }
-
-
-// Tab bar labels. Self-contained rather than driven from strings.ts because
-// the tab bar mounts once at app start and setLocale reloads the app, so a
-// simple isRTL lookup suffices. Also keeps this file dependency-free for the
-// tabs layout.
-type TabName = 'home' | 'experts' | 'read' | 'sessions' | 'you';
-const TAB_EN: Record<TabName, string> = {
-  home: 'Home', experts: 'Experts', read: 'Library', sessions: 'Bookings', you: 'You',
-};
-const TAB_AR: Record<TabName, string> = {
-  home: 'الرئيسية', experts: 'الخبيرات', read: 'المكتبة', sessions: 'الحجوزات', you: 'أنتِ',
-};
-export function tabLabel(name: TabName): string {
-  return (isRTL() ? TAB_AR : TAB_EN)[name];
-}
-
-// Expert category labels. The categories are stored on the expert record as
-// English strings ('Breathwork', 'Wealth', etc.) and used both for filtering
-// and as chip labels. In English the chips read as ALL CAPS (Latin uppercase);
-// in Arabic there is no uppercase, so the return is the Arabic word as-is.
-// Unknown categories fall back to the English category so no chip ever
-// disappears if a new one is added without a translation.
-const CATEGORY_AR: Record<string, string> = {
-  'Breathwork': 'التنفس',
-  'Wealth': 'الثروة',
-  'Identity': 'الهوية',
-  'Skin & Longevity': 'البشرة والعمر',
-  'Body & Somatics': 'الجسد والحركة',
-};
-export function categoryLabel(cat: string): string {
-  if (isRTL()) return CATEGORY_AR[cat] ?? cat;
-  return cat.toUpperCase();
-}

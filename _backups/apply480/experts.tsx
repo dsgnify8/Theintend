@@ -9,7 +9,7 @@ import { type Expert } from '@/constants/experts';
 import { useExperts } from '@/lib/experts';
 import { FramedImage } from '@/components/FramedImage';
 import { COLORS, FONT_ITALIC, FONT_SERIF } from '@/constants/brand';
-import { t, isRTL, AR_TEXT, categoryLabel, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
+import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { Ionicons } from '@expo/vector-icons';
 
 const ALL = 'All';
@@ -88,7 +88,7 @@ export default function ExpertsScreen() {
             const on = c === active;
             return (
               <Pressable key={c} onPress={() => setActive(c)} style={styles.filter} hitSlop={6}>
-                <Text style={[styles.filterText, on && styles.filterTextOn, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{c === ALL ? t('experts.all') : categoryLabel(c)}</Text>
+                <Text style={[styles.filterText, on && styles.filterTextOn, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{c === ALL ? t('experts.all') : c.toUpperCase()}</Text>
                 <View style={[styles.filterRule, on && styles.filterRuleOn]} />
               </Pressable>
             );
@@ -149,7 +149,7 @@ function ExpertCard({ expert, index }: { expert: Expert; index: number }) {
         <Text style={styles.numeral}>{String(index + 1).padStart(2, '0')}</Text>
 
         <View style={styles.tag}>
-          <Text style={styles.tagText}>{categoryLabel(expert.category)}</Text>
+          <Text style={styles.tagText}>{expert.category.toUpperCase()}</Text>
         </View>
 
         <View style={[styles.overlay, right && styles.overlayRight]}>

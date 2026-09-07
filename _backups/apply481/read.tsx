@@ -17,15 +17,13 @@ import { t, isRTL, AR_TEXT, FONT_SERIF_AR, FONT_SANS_AR } from '@/lib/i18n';
 import { HEALTH_PROGRAM_AUTHOR, programCountWord } from '@/constants/healthPrograms';
 import { useShelfEbooks } from '@/lib/ebooks';
 
-type Practice = { key: string; label: string; arLabel: string; line: string; arLine: string; icon: any; color: string; route: string };
+type Practice = { key: string; label: string; line: string; icon: any; color: string; route: string };
 
-// arLabel and arLine are Claude's first-pass drafts; Nz to polish. Fall back
-// to English happens in the tile render if either Arabic string is empty.
 const PRACTICES: Practice[] = [
-  { key: 'practice:sounds',       label: 'Sounds',       arLabel: 'أصوات',    line: 'Settle and rest',   arLine: 'استقري واستريحي', icon: 'musical-notes-outline', color: '#5A5B7A', route: '/sounds' },
-  { key: 'practice:breathwork',   label: 'Breathwork',   arLabel: 'تنفّس',    line: 'Regulate the body', arLine: 'نظّمي جسدكِ',      icon: 'leaf-outline',          color: '#6F7A6B', route: '/breathwork' },
-  { key: 'practice:journaling',   label: 'Journaling',   arLabel: 'كتابة',    line: 'Think on paper',    arLine: 'فكّري على الورق',  icon: 'create-outline',        color: '#7C6F62', route: '/journaling' },
-  { key: 'practice:affirmations', label: 'Affirmations', arLabel: 'تأكيدات',  line: 'I am',              arLine: 'أنا',              icon: 'sparkles-outline',      color: '#9A7B4F', route: '/affirmations' },
+  { key: 'practice:sounds', label: 'Sounds', line: 'Settle and rest', icon: 'musical-notes-outline', color: '#5A5B7A', route: '/sounds' },
+  { key: 'practice:breathwork', label: 'Breathwork', line: 'Regulate the body', icon: 'leaf-outline', color: '#6F7A6B', route: '/breathwork' },
+  { key: 'practice:journaling', label: 'Journaling', line: 'Think on paper', icon: 'create-outline', color: '#7C6F62', route: '/journaling' },
+  { key: 'practice:affirmations', label: 'Affirmations', line: 'I am', icon: 'sparkles-outline', color: '#9A7B4F', route: '/affirmations' },
 ];
 
 // A different order each day, the same order all day. Random on every render
@@ -238,8 +236,8 @@ function PracticeTile({ practice, uri, isAdmin }: { practice: Practice; uri?: st
       ) : null}
       <Ionicons name={practice.icon} size={22} color={COLORS.bg} />
       <View style={{ flex: 1 }} />
-      <Text style={[styles.tileLabel, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{isRTL() && practice.arLabel ? practice.arLabel : practice.label}</Text>
-      <Text style={[styles.tileLine, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]} numberOfLines={2}>{isRTL() && practice.arLine ? practice.arLine : practice.line}</Text>
+      <Text style={styles.tileLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{practice.label}</Text>
+      <Text style={styles.tileLine} numberOfLines={2}>{practice.line}</Text>
       {busy ? (
         <View style={styles.tileBusy}><ActivityIndicator color={COLORS.bg} /></View>
       ) : null}
