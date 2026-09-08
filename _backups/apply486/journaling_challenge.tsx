@@ -4,17 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { CHALLENGE_PROMPTS, challengeTitle, challengePromptAt } from '@/constants/journal';
-import { t, isRTL, getLocale, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { CHALLENGE_TITLE, CHALLENGE_PROMPTS } from '@/constants/journal';
 import { getChallenge, saveChallengeDay, type ChallengeData } from '@/lib/journal';
 
 const TOTAL = CHALLENGE_PROMPTS.length;
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MON_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function fmtDate(iso: string) {
   const d = new Date(iso);
-  const mon = getLocale() === 'ar' ? MON_AR : MON;
-  return `${d.getDate()} ${mon[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default function ChallengeScreen() {
@@ -71,7 +68,7 @@ export default function ChallengeScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-        <Text style={styles.backText}>{t('journal.back')}</Text>
+        <Text style={styles.backText}>Journal</Text>
       </Pressable>
 
       {loading ? (
@@ -79,8 +76,8 @@ export default function ChallengeScreen() {
       ) : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
           <View style={styles.header}>
-            <Text style={[styles.kicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{isRTL() ? challengeTitle() : challengeTitle().toUpperCase()}</Text>
-            <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{t('journal.dayOf', { n: day, total: TOTAL })}</Text>
+            <Text style={styles.kicker}>{CHALLENGE_TITLE.toUpperCase()}</Text>
+            <Text style={styles.h1}>Day {day} of {TOTAL}</Text>
           </View>
 
           <View style={styles.stripWrap}>
@@ -99,28 +96,28 @@ export default function ChallengeScreen() {
 
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={styles.paper}>
-              <Text style={[styles.prompt, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{challengePromptAt(day - 1)}</Text>
+              <Text style={styles.prompt}>{CHALLENGE_PROMPTS[day - 1]}</Text>
               <TextInput
-                style={[styles.input, isRTL() && { textAlign: 'right', writingDirection: 'rtl' }]}
+                style={styles.input}
                 value={text}
-                onChangeText={(txt) => { setText(txt); setSaved(false); }}
-                placeholder={t('journal.writeHere')}
+                onChangeText={(t) => { setText(t); setSaved(false); }}
+                placeholder="Write here"
                 placeholderTextColor={COLORS.muted}
                 multiline
                 textAlignVertical="top"
               />
             </View>
 
-            <Text style={[styles.autosaveNote, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{saved ? t('journal.saved') : t('journal.autosaveShort')}{current?.updatedAt ? `  ·  ${t('journal.lastWritten', { date: fmtDate(current.updatedAt) })}` : ''}</Text>
+            <Text style={styles.autosaveNote}>{saved ? 'Saved' : 'Your writing saves automatically'}{current?.updatedAt ? `  ·  last written ${fmtDate(current.updatedAt)}` : ''}</Text>
 
-            <View style={[styles.navRow, isRTL() && { flexDirection: 'row-reverse' }]}>
-              <Pressable style={[styles.navBtn, day <= 1 && styles.btnOff, isRTL() && { flexDirection: 'row-reverse' }]} disabled={day <= 1} onPress={() => goTo(day - 1)}>
-                <Ionicons name={isRTL() ? 'chevron-forward' : 'chevron-back'} size={18} color={COLORS.ink} />
-                <Text style={[styles.navText, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.previous')}</Text>
+            <View style={styles.navRow}>
+              <Pressable style={[styles.navBtn, day <= 1 && styles.btnOff]} disabled={day <= 1} onPress={() => goTo(day - 1)}>
+                <Ionicons name="chevron-back" size={18} color={COLORS.ink} />
+                <Text style={styles.navText}>Previous</Text>
               </Pressable>
-              <Pressable style={[styles.navBtn, day >= TOTAL && styles.btnOff, isRTL() && { flexDirection: 'row-reverse' }]} disabled={day >= TOTAL} onPress={() => goTo(day + 1)}>
-                <Text style={[styles.navText, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.nextDay')}</Text>
-                <Ionicons name={isRTL() ? 'chevron-back' : 'chevron-forward'} size={18} color={COLORS.ink} />
+              <Pressable style={[styles.navBtn, day >= TOTAL && styles.btnOff]} disabled={day >= TOTAL} onPress={() => goTo(day + 1)}>
+                <Text style={styles.navText}>Next day</Text>
+                <Ionicons name="chevron-forward" size={18} color={COLORS.ink} />
               </Pressable>
             </View>
           </ScrollView>

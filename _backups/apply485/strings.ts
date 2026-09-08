@@ -162,7 +162,7 @@ export const STRINGS = {
   'home.expertHighlight':   { en: "This week's expert highlight", ar: 'خبيرة الأسبوع' },
   'home.fromLibraryLabel':  { en: 'FROM THE LIBRARY',      ar: 'من المكتبة' },
   'home.healthProgramsLabel': { en: 'HEALTH PROGRAMS',     ar: 'برامج الصحة' },
-  'home.followedWeek':      { en: 'Followed week by week', ar: 'أسبوعاً تلو الآخر' },
+  'home.followedWeek':      { en: 'Followed week by week', ar: 'تُتابَع أسبوعاً تلو الآخر' },
   'home.allCount':          { en: 'All {n}',               ar: 'الكل ({n})' },
   'home.quoteOfDay':        { en: 'QUOTE OF THE DAY',      ar: 'اقتباس اليوم' },
   'home.startAffirmations': { en: 'Start your affirmations', ar: 'ابدئي تأكيداتكِ' },
@@ -212,51 +212,6 @@ export const STRINGS = {
   'filter.sessionsUpTo':    { en: 'Sessions {dot} up to {n}', ar: 'الجلسات {dot} حتى {n}' },
   'filter.clear':           { en: 'Clear',                 ar: 'مسح' },
   'filter.showResults':     { en: 'Show results',          ar: 'عرض النتائج' },
-
-  // Sounds page
-  'sounds.title':           { en: 'Sounds & Frequencies',   ar: 'الأصوات والترددات' },
-  'sounds.sub':             { en: 'Harmonic soundscapes for focus, calm, sleep and energy.', ar: 'مشاهد صوتية منسجمة للتركيز والهدوء والنوم والطاقة.' },
-
-  // Breathwork page
-  'breath.title':           { en: 'Breathwork',             ar: 'التنفس' },
-  'breath.sub':             { en: 'Short, guided breathing sessions to calm the body and steady the mind.', ar: 'جلسات قصيرة موجّهة للتنفس، لتهدئة الجسد وتثبيت الذهن.' },
-
-  // Journaling
-  'journal.kicker':            { en: 'YOUR JOURNAL',                   ar: 'دفتركِ' },
-  'journal.h1':                { en: 'A quiet page for your thoughts', ar: 'صفحة هادئة لأفكاركِ' },
-  'journal.lede':              { en: 'Write freely. Everything you write is saved as you go, and each page you keep is dated so you can return to it.', ar: 'اكتبي بحرية. كلّ ما تكتبينه يُحفظ تلقائياً، وكلّ صفحة تحتفظين بها تحمل تاريخها لتعودي إليها.' },
-  'journal.morning':           { en: 'Morning',                        ar: 'الصباح' },
-  'journal.night':             { en: 'Night',                          ar: 'الليل' },
-  'journal.numPrompts':        { en: '{n} prompts',                    ar: '{n} أسئلة' },
-  'journal.numSaved':          { en: '{n} saved',                      ar: '{n} محفوظة' },
-  'journal.numSavedEntries':   { en: '{n} saved entries',              ar: '{n} صفحة محفوظة' },
-  'journal.exploreByTheme':    { en: 'Explore by theme',               ar: 'استكشفي حسب الموضوع' },
-  'journal.deeperPractice':    { en: 'A deeper practice',              ar: 'ممارسة أعمق' },
-  'journal.challengeKicker':   { en: '30 DAY PRACTICE',                ar: 'ممارسة ثلاثين يوماً' },
-  'journal.challengeSub':      { en: 'One prompt a day for thirty days. Turn the page each day and look back on everything you have written.', ar: 'سؤال واحد كلّ يوم لثلاثين يوماً. اقلبي الصفحة كلّ يوم وعودي إلى كلّ ما كتبتِه.' },
-  'journal.challengeProgress': { en: '{n} of {total} days written',    ar: '{n} من {total} يوماً مكتوبة' },
-  'journal.open':              { en: 'Open',                           ar: 'افتحي' },
-  'journal.back':              { en: 'Journal',                        ar: 'الدفتر' },
-  'journal.writeHere':         { en: 'Write here',                     ar: 'اكتبي هنا' },
-  'journal.autosaveNote':      { en: 'Your writing saves automatically. Keep a finished page by filing it below, dated, so you can look back on it.', ar: 'كتابتكِ تُحفظ تلقائياً. احتفظي بصفحة مكتملة بحفظها أدناه، بتاريخها، لتعودي إليها.' },
-  'journal.savedNote':         { en: 'Filed to your past entries below. This page is fresh again.', ar: 'حُفظت في صفحاتكِ السابقة أدناه. هذه الصفحة عادت جديدة.' },
-  'journal.savePage':          { en: 'Save this page to my journal',   ar: 'احفظي هذه الصفحة في دفتري' },
-  'journal.pastEntries':       { en: 'Your past entries',              ar: 'صفحاتكِ السابقة' },
-  'journal.pastEmpty':         { en: 'Nothing here yet. Each page you file appears here with its own date.', ar: 'لا شيء هنا بعد. كلّ صفحة تحفظينها تظهر هنا بتاريخها.' },
-  'journal.promptsWritten':    { en: '{n} of {total} prompts written', ar: '{n} من {total} أسئلة مكتوبة' },
-  'journal.dayOf':             { en: 'Day {n} of {total}',             ar: 'اليوم {n} من {total}' },
-  'journal.saved':             { en: 'Saved',                          ar: 'محفوظ' },
-  'journal.autosaveShort':     { en: 'Your writing saves automatically', ar: 'كتابتكِ تُحفظ تلقائياً' },
-  'journal.lastWritten':       { en: 'last written {date}',            ar: 'آخر كتابة {date}' },
-  'journal.previous':          { en: 'Previous',                       ar: 'السابق' },
-  'journal.nextDay':           { en: 'Next day',                       ar: 'اليوم التالي' },
-  'journal.notFound':          { en: 'This journal could not be found.', ar: 'تعذّر العثور على هذه الصفحة.' },
-  'common.back':               { en: 'Back',                           ar: 'رجوع' },
-
-  // Journal entry viewer
-  'common.delete':             { en: 'Delete',                         ar: 'حذف' },
-  'journal.deleteTitle':       { en: 'Delete this entry?',             ar: 'حذف هذه الصفحة؟' },
-  'journal.deleteBody':        { en: 'This page will be removed for good.', ar: 'ستُحذف هذه الصفحة نهائياً.' },
 } as const satisfies Record<string, Entry>;
 
 export type StringKey = keyof typeof STRINGS;

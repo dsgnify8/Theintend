@@ -2,8 +2,7 @@ import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { BREATH_PROGRAMS, localizeBreathProgram, type BreathProgram } from '@/constants/breathwork';
-import { t, isRTL, tabLabel, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { BREATH_PROGRAMS, type BreathProgram } from '@/constants/breathwork';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
 
 export default function BreathworkScreen() {
@@ -13,12 +12,12 @@ export default function BreathworkScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-        <Text style={styles.backText}>{tabLabel('read')}</Text>
+        <Text style={styles.backText}>Library</Text>
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>THE INTEND</Text>
-        <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('breath.title')}</Text>
-        <Text style={[styles.sub, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('breath.sub')}</Text>
+        <Text style={styles.h1}>Breathwork</Text>
+        <Text style={styles.sub}>Short, guided breathing sessions to calm the body and steady the mind.</Text>
         <View style={styles.grid}>
           {BREATH_PROGRAMS.map((p) => (
             <ProgramCard key={p.id} program={p} />
@@ -29,11 +28,8 @@ export default function BreathworkScreen() {
   );
 }
 
-function ProgramCard({ program: raw }: { program: BreathProgram }) {
+function ProgramCard({ program }: { program: BreathProgram }) {
   const router = useRouter();
-  // Localise per-render so a Settings language change flips the card
-  // without a re-mount step. Route uses the raw id (language-independent).
-  const program = localizeBreathProgram(raw);
   return (
     <Pressable style={styles.cardWrap} onPress={() => router.push(`/breath/${program.id}`)}>
       <ImageBackground
@@ -47,11 +43,11 @@ function ProgramCard({ program: raw }: { program: BreathProgram }) {
           <Ionicons name="leaf-outline" size={16} color={COLORS.ink} />
         </View>
         <View style={styles.durPill}>
-          <Text style={[styles.cardDuration, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{program.duration}</Text>
+          <Text style={styles.cardDuration}>{program.duration}</Text>
         </View>
       </ImageBackground>
-      <Text style={[styles.cardTitle, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]} numberOfLines={2}>{program.title}</Text>
-      <Text style={[styles.cardSub, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]} numberOfLines={2}>{program.subtitle}</Text>
+      <Text style={styles.cardTitle}>{program.title}</Text>
+      <Text style={styles.cardSub}>{program.subtitle}</Text>
     </Pressable>
   );
 }

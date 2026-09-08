@@ -4,8 +4,7 @@ import { Image } from '@/components/Img';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { SOUNDS, SOUND_CATEGORIES, localizeSound, soundCategoryLabel, type Sound } from '@/constants/sounds';
-import { t, isRTL, tabLabel, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { SOUNDS, SOUND_CATEGORIES, type Sound } from '@/constants/sounds';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppImages, uploadAppImage } from '@/lib/appImages';
 import { useAuth } from '@/lib/auth';
@@ -27,20 +26,20 @@ export default function SoundsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-        <Text style={styles.backText}>{tabLabel('home')}</Text>
+        <Text style={styles.backText}>Home</Text>
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>THE INTEND</Text>
-        <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('sounds.title')}</Text>
-        <Text style={[styles.sub, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('sounds.sub')}</Text>
+        <Text style={styles.h1}>Sounds & Frequencies</Text>
+        <Text style={styles.sub}>Harmonic soundscapes for focus, calm, sleep and energy.</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {SOUND_CATEGORIES.map((c) => {
             const on = c === active;
             return (
               <Pressable key={c} onPress={() => setActive(c)} style={[styles.chip, on && styles.chipOn]}>
-                <Text style={[styles.chipText, on && styles.chipTextOn, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{soundCategoryLabel(c)}</Text>
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>{c}</Text>
               </Pressable>
             );
           })}
@@ -70,12 +69,8 @@ async function pickAndSave(key: string, onBusy: (b: boolean) => void) {
   onBusy(false);
 }
 
-function SoundCard({ sound: raw, isAdmin }: { sound: Sound; isAdmin: boolean }) {
+function SoundCard({ sound, isAdmin }: { sound: Sound; isAdmin: boolean }) {
   const router = useRouter();
-  // Localise per-render so the card follows a Settings language change
-  // without needing a re-mount. Image lookup uses the raw id, since
-  // that key is language-independent.
-  const sound = localizeSound(raw);
   // An admin upload wins, the bundled cover is the fallback, a colour block
   // only when there is neither.
   const appImages = useAppImages();
@@ -99,9 +94,9 @@ function SoundCard({ sound: raw, isAdmin }: { sound: Sound; isAdmin: boolean }) 
       {busy ? (
         <View style={styles.cardBusy}><ActivityIndicator color="#FFFFFF" /></View>
       ) : null}
-      <Text style={[styles.cardTitle, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]} numberOfLines={2}>{sound.title}</Text>
-      <Text style={[styles.cardPurpose, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]} numberOfLines={3}>{sound.purpose}</Text>
-      <Text style={[styles.cardDuration, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{sound.duration}</Text>
+      <Text style={styles.cardTitle}>{sound.title}</Text>
+      <Text style={styles.cardPurpose}>{sound.purpose}</Text>
+      <Text style={styles.cardDuration}>{sound.duration}</Text>
     </Pressable>
   );
 }

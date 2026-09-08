@@ -20,7 +20,6 @@ export const QUOTES: string[] = [
   'Be less impressed and more involved',
   'Judge your success not by the harvest you reap but by the seeds you plant',
   'The universe meets you at your level of audacity',
-  'One of the greatest conflicts in life is the conflict between the ego and the soul',
 ];
 
 export const QUOTES_AR: string[] = [
@@ -35,7 +34,6 @@ export const QUOTES_AR: string[] = [
   'لا تنبهري، بل شاركي',
   'قيّمي نجاحكِ لا بالحصاد الذي تجنينه بل بالبذور التي تزرعينها',
   'الكون يلاقيكِ عند مستوى جرأتكِ',
-  'من أعظم صراعات الحياة، الصراع بين الأنا والروح',
 ];
 
 // The same line all day, the next one tomorrow. Returns the Arabic version

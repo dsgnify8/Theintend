@@ -4,26 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { getCategory, promptsForToday, localizeJournalCategory } from '@/constants/journal';
-import { t, isRTL, getLocale, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { getCategory, promptsForToday } from '@/constants/journal';
 import { createEntry, useCategoryEntries, getJournalDraft, saveJournalDraft, clearJournalDraft, type JournalItem } from '@/lib/journal';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MON_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function fmtDate(iso: string) {
   const d = new Date(iso);
-  const mon = getLocale() === 'ar' ? MON_AR : MON;
-  return `${d.getDate()} ${mon[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default function CategoryScreen() {
   const router = useRouter();
   const { category } = useLocalSearchParams<{ category: string }>();
-  const rawCat = getCategory(String(category));
-  // Localise per-render so a Settings language change flips the page
-  // without a re-mount. All downstream reads of title, subtitle, and
-  // prompts come from the localised view.
-  const cat = rawCat ? localizeJournalCategory(rawCat) : null;
+  const cat = getCategory(String(category));
   const prompts = cat ? promptsForToday(cat) : [];
   const { entries } = useCategoryEntries(String(category));
   const [answers, setAnswers] = useState<string[]>(() => prompts.map(() => ''));
@@ -61,9 +54,9 @@ export default function CategoryScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-          <Text style={styles.backText}>{t('common.back')}</Text>
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
-        <Text style={styles.note}>{t('journal.notFound')}</Text>
+        <Text style={styles.note}>This journal could not be found.</Text>
       </SafeAreaView>
     );
   }
@@ -86,23 +79,23 @@ export default function CategoryScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-        <Text style={styles.backText}>{t('journal.back')}</Text>
+        <Text style={styles.backText}>Journal</Text>
       </Pressable>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Text style={[styles.kicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{isRTL() ? cat.title : cat.title.toUpperCase()}</Text>
-          <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{cat.subtitle}</Text>
-          <Text style={[styles.today, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{fmtDate(new Date().toISOString())}</Text>
+          <Text style={styles.kicker}>{cat.title.toUpperCase()}</Text>
+          <Text style={styles.h1}>{cat.subtitle}</Text>
+          <Text style={styles.today}>{fmtDate(new Date().toISOString())}</Text>
 
           <View style={styles.paper}>
             {prompts.map((p, i) => (
               <View key={i} style={styles.block}>
-                <Text style={[styles.prompt, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{p}</Text>
+                <Text style={styles.prompt}>{p}</Text>
                 <TextInput
-                  style={[styles.input, isRTL() && { textAlign: 'right', writingDirection: 'rtl' }]}
+                  style={styles.input}
                   value={answers[i]}
-                  onChangeText={(txt) => setAnswers((prev) => { const n = [...prev]; n[i] = txt; setJustSaved(false); return n; })}
-                  placeholder={t('journal.writeHere')}
+                  onChangeText={(t) => setAnswers((prev) => { const n = [...prev]; n[i] = t; setJustSaved(false); return n; })}
+                  placeholder="Write here"
                   placeholderTextColor={COLORS.muted}
                   multiline
                   textAlignVertical="top"
@@ -111,26 +104,25 @@ export default function CategoryScreen() {
             ))}
           </View>
 
-          <Text style={[styles.autosaveNote, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.autosaveNote')}</Text>
-          {justSaved ? <Text style={[styles.savedNote, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.savedNote')}</Text> : null}
+          <Text style={styles.autosaveNote}>Your writing saves automatically. Keep a finished page by filing it below, dated, so you can look back on it.</Text>
+          {justSaved ? <Text style={styles.savedNote}>Filed to your past entries below. This page is fresh again.</Text> : null}
           <Pressable style={[styles.saveBtn, (!hasWriting || saving) && styles.btnOff]} disabled={!hasWriting || saving} onPress={save}>
-            {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={[styles.saveText, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.savePage')}</Text>}
+            {saving ? <ActivityIndicator color={COLORS.bg} /> : <Text style={styles.saveText}>Save this page to my journal</Text>}
           </Pressable>
 
-          <Text style={[styles.pastLabel, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{t('journal.pastEntries')}</Text>
+          <Text style={styles.pastLabel}>Your past entries</Text>
           {entries.length === 0 ? (
-            <Text style={[styles.note, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.pastEmpty')}</Text>
+            <Text style={styles.note}>Nothing here yet. Each page you file appears here with its own date.</Text>
           ) : (
             entries.map((e) => {
               const written = e.items.filter((it) => it.answer.trim().length > 0).length;
-              const rtl = isRTL();
               return (
-                <Pressable key={e.id} style={[styles.entryRow, rtl && { flexDirection: 'row-reverse' }]} onPress={() => router.push(`/journaling/entry/${e.id}`)}>
+                <Pressable key={e.id} style={styles.entryRow} onPress={() => router.push(`/journaling/entry/${e.id}`)}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.entryDate, rtl && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{fmtDate(e.createdAt)}</Text>
-                    <Text style={[styles.entryMeta, rtl && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.promptsWritten', { n: written, total: e.items.length })}</Text>
+                    <Text style={styles.entryDate}>{fmtDate(e.createdAt)}</Text>
+                    <Text style={styles.entryMeta}>{written} of {e.items.length} prompts written</Text>
                   </View>
-                  <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={18} color={COLORS.muted} />
+                  <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
                 </Pressable>
               );
             })

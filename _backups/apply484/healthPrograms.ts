@@ -3,8 +3,6 @@
 // Called health programs everywhere, because app/program/ is already the multi
 // session programs an expert runs over weeks. Different thing, different route.
 
-import { getLocale } from '@/lib/i18n';
-
 export type HealthProgram = {
   id: string;
   title: string;
@@ -14,12 +12,6 @@ export type HealthProgram = {
   focus: string;
   weeks: string;
   html: any;
-  // Optional Arabic versions of the reader-facing fields. Empty falls back
-  // to English. Drafts by Claude, Nz to review since brand-facing.
-  arTitle?: string;
-  arFocus?: string;
-  arBlurb?: string;
-  arWeeks?: string;
 };
 
 // In dollars, because it is sold through Apple. Roughly the price of a
@@ -49,10 +41,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'For joints that ache, stiffen or have stopped recovering the way they used to. Nutrition, movement, supplementation and peptide therapy run together over eight weeks.',
     weeks: '8 to 12 weeks',
     html: require('../assets/programs/joint-support.html'),
-    arTitle: 'دعم المفاصل والتجديد',
-    arFocus: 'المفاصل والغضاريف والأوتار',
-    arBlurb: 'للمفاصل التي تؤلم أو تتيبّس أو لم تعد تتعافى كما كانت. تجتمع فيها التغذية والحركة والمكملات والعلاج بالببتيدات على مدى ثمانية أسابيع.',
-    arWeeks: '8 إلى 12 أسبوعاً',
   },
   {
     id: 'weight-management',
@@ -61,10 +49,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'For weight that will not move and the metabolism underneath it. Comes in three levels, from a straightforward start to a full protocol, so it can meet you where you are.',
     weeks: '3 to 6 months',
     html: require('../assets/programs/weight-management.html'),
-    arTitle: 'إدارة الوزن وتحسين الأيض',
-    arFocus: 'الوزن والدهون الحشوية والأيض',
-    arBlurb: 'للوزن الذي لا يتحرّك، وللأيض الذي تحته. يأتي في ثلاثة مستويات، من بداية بسيطة إلى بروتوكول كامل، ليلتقيك حيث أنتِ.',
-    arWeeks: '3 إلى 6 أشهر',
   },
   {
     id: 'acne-skin',
@@ -73,10 +57,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'For skin that keeps breaking out after everything topical has been tried. Works on the gut, inflammation and hormones underneath rather than on the surface.',
     weeks: '8 to 16 weeks',
     html: require('../assets/programs/acne-skin.html'),
-    arTitle: 'علاج حب الشباب وترميم البشرة',
-    arFocus: 'البشرة والالتهاب والأمعاء',
-    arBlurb: 'للبشرة التي تعود لتظهر عليها الحبوب رغم كل ما جُرِّب موضعياً. تعالج الأمعاء والالتهاب والهرمونات في العمق، لا السطح.',
-    arWeeks: '8 إلى 16 أسبوعاً',
   },
   {
     id: 'gut-healing',
@@ -85,10 +65,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'For bloating, irregularity and the sense that food no longer sits well. Built around repairing the lining rather than managing symptoms.',
     weeks: '8 weeks',
     html: require('../assets/programs/gut-healing.html'),
-    arTitle: 'شفاء الجهاز الهضمي وترميمه',
-    arFocus: 'الهضم وبطانة الأمعاء',
-    arBlurb: 'للانتفاخ وعدم الانتظام والشعور بأن الطعام لم يعد يستقر. مبني على إصلاح البطانة لا على إدارة الأعراض.',
-    arWeeks: '8 أسابيع',
   },
   {
     id: 't2d-metabolic',
@@ -97,10 +73,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'A structured approach to insulin sensitivity through fasting, food and targeted support. Written to be read alongside your doctor, not instead of them.',
     weeks: '12 weeks',
     html: require('../assets/programs/t2d-metabolic.html'),
-    arTitle: 'السكري من النوع الثاني ومرحلة ما قبل السكري',
-    arFocus: 'سكر الدم والصحة الأيضية',
-    arBlurb: 'منهج منظّم لتحسين حساسية الإنسولين عبر الصيام والغذاء والدعم المستهدف. مكتوب ليُقرأ إلى جانب طبيبكِ، لا بديلاً عنه.',
-    arWeeks: '12 أسبوعاً',
   },
   {
     id: 'muscle-insulin',
@@ -109,10 +81,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'For anyone who trains hard and sees little for it. Addresses the metabolic reason muscle will not build before addressing the training.',
     weeks: '12 weeks',
     html: require('../assets/programs/muscle-insulin.html'),
-    arTitle: 'بناء العضلات مع مقاومة الإنسولين',
-    arFocus: 'بناء العضلات حين يقاوم الأيض',
-    arBlurb: 'لمن يتدرّب بجد ولا يرى النتيجة. يعالج السبب الأيضي لعدم بناء العضل قبل معالجة التدريب نفسه.',
-    arWeeks: '12 أسبوعاً',
   },
   {
     id: 'muscle-mass',
@@ -121,10 +89,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'Growth and repair together, for people who want to build rather than simply maintain. Training, protein timing and recovery treated as one thing.',
     weeks: '12 weeks',
     html: require('../assets/programs/muscle-mass.html'),
-    arTitle: 'الكتلة العضلية والتجدد',
-    arFocus: 'القوة والتعافي',
-    arBlurb: 'بناء وتعافٍ معاً، لمن يريد أن يبني لا أن يحافظ فقط. التدريب وتوقيت البروتين والتعافي كوحدة واحدة.',
-    arWeeks: '12 أسبوعاً',
   },
   {
     id: 'male-health',
@@ -133,10 +97,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'Energy, drive, sleep and body composition looked at as one system rather than separate complaints. Includes what to test and what the numbers mean.',
     weeks: '12 weeks',
     html: require('../assets/programs/male-health.html'),
-    arTitle: 'الصحة الذكورية الشاملة',
-    arFocus: 'الهرمونات والطاقة والحيوية',
-    arBlurb: 'الطاقة والدافع والنوم وتركيب الجسد كنظام واحد لا كشكاوى منفصلة. يتضمّن ما يجب فحصه وما تعنيه الأرقام.',
-    arWeeks: '12 أسبوعاً',
   },
   {
     id: 'ovarian-longevity',
@@ -145,10 +105,6 @@ export const HEALTH_PROGRAMS: HealthProgram[] = [
     blurb: 'Support for hormonal rhythm and ovarian health across the years it matters most. Gentle, specific, and clear about what it does not claim.',
     weeks: '12 weeks',
     html: require('../assets/programs/ovarian-longevity.html'),
-    arTitle: 'دعم صحة المبيض الطويلة الأمد',
-    arFocus: 'التوازن الهرموني والاحتياطي المبيضي',
-    arBlurb: 'دعم للإيقاع الهرموني وصحة المبايض في السنوات الأكثر أهمية. لطيف، محدّد، وصادق فيما لا يدّعيه.',
-    arWeeks: '12 أسبوعاً',
   },
 ];
 
@@ -181,19 +137,4 @@ export const ALL_PRODUCT_IDS = HEALTH_PROGRAMS.map((p) => productIdFor(p.id));
 
 export function healthProgram(id?: string): HealthProgram | null {
   return id ? HEALTH_PROGRAMS.find((p) => p.id === id) ?? null : null;
-}
-
-// Locale-aware view of a program. Screens that display title, focus, blurb,
-// or weeks should call this rather than reading the raw fields so the app
-// locale is honoured. Empty ar fields fall back to English so nothing goes
-// blank if a translation is missing.
-export function localizeHealthProgram(hp: HealthProgram): HealthProgram {
-  if (getLocale() !== 'ar') return hp;
-  return {
-    ...hp,
-    title: hp.arTitle || hp.title,
-    focus: hp.arFocus || hp.focus,
-    blurb: hp.arBlurb || hp.blurb,
-    weeks: hp.arWeeks || hp.weeks,
-  };
 }

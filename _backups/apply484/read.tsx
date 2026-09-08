@@ -177,32 +177,17 @@ export default function LibraryScreen() {
           </Pressable>
         </View>
 
-        {(shelfEbooks.loading || ebooks.length > 0) ? (
-          // The shelf frame (band + heading) is always shown while loading
-          // so the page does not jump when data arrives. A spinner sits
-          // where the cards will be; once ebooks populate, the ScrollView
-          // takes over. Without this, an empty ebooks list hid the whole
-          // section including its heading, so the page appeared "blank"
-          // for the duration of the network round trip on cold load or
-          // after an admin edit invalidated the cache.
+        {ebooks.length ? (
           <TintBand>
             <View style={styles.shelfHead}>
               <Text style={[styles.shelfTitle, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{t('lib.ebooks')}</Text>
-              {ebooks.length > 0 ? (
-                <Pressable onPress={() => router.push('/ebooks')} hitSlop={8}>
-                  <Text style={styles.seeAll}>{t('lib.seeAll')} {'\u203A'}</Text>
-                </Pressable>
-              ) : null}
+              <Pressable onPress={() => router.push('/ebooks')} hitSlop={8}>
+                <Text style={styles.seeAll}>{t('lib.seeAll')} {'\u203A'}</Text>
+              </Pressable>
             </View>
-            {ebooks.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
-                {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
-              </ScrollView>
-            ) : (
-              <View style={styles.shelfLoader}>
-                <ActivityIndicator color={COLORS.accent} />
-              </View>
-            )}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>
+              {ebooks.map((i) => <TitleCard key={i.id} item={i} uri={images[`library:${i.id}`]} isAdmin={isAdmin} />)}
+            </ScrollView>
           </TintBand>
         ) : null}
 
@@ -394,7 +379,6 @@ const styles = StyleSheet.create({
   hpCta: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: COLORS.pastel, borderRadius: 999, paddingVertical: 9, paddingHorizontal: 18, marginTop: 16 },
   hpCtaText: { fontSize: 13, color: '#241F1B', letterSpacing: 0.3 },
   shelfTitle: { fontFamily: FONT_SERIF, fontSize: 22, color: COLORS.ink, marginBottom: 14 },
-  shelfLoader: { height: 220, alignItems: 'center', justifyContent: 'center' },
   shelf: { gap: 16, paddingRight: 20 },
   shelfCard: { width: 142 },
   shelfCover: { width: 142, height: 196, borderRadius: 14, backgroundColor: COLORS.accentSoft },

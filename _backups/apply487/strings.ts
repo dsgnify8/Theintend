@@ -252,11 +252,6 @@ export const STRINGS = {
   'journal.nextDay':           { en: 'Next day',                       ar: 'اليوم التالي' },
   'journal.notFound':          { en: 'This journal could not be found.', ar: 'تعذّر العثور على هذه الصفحة.' },
   'common.back':               { en: 'Back',                           ar: 'رجوع' },
-
-  // Journal entry viewer
-  'common.delete':             { en: 'Delete',                         ar: 'حذف' },
-  'journal.deleteTitle':       { en: 'Delete this entry?',             ar: 'حذف هذه الصفحة؟' },
-  'journal.deleteBody':        { en: 'This page will be removed for good.', ar: 'ستُحذف هذه الصفحة نهائياً.' },
 } as const satisfies Record<string, Entry>;
 
 export type StringKey = keyof typeof STRINGS;

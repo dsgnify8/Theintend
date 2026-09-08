@@ -22,7 +22,7 @@ import { useAuth } from '@/lib/auth';
 import { snippetOfDay } from '@/constants/ebookSnippets';
 import { LIBRARY } from '@/constants/library';
 import { quoteOfDay } from '@/lib/quoteOfDay';
-import { HEALTH_PROGRAMS, HEALTH_PROGRAM_PRICE_USD, localizeHealthProgram } from '@/constants/healthPrograms';
+import { HEALTH_PROGRAMS, HEALTH_PROGRAM_PRICE_USD } from '@/constants/healthPrograms';
 import { useHomeEbooks } from '@/lib/ebooks';
 
 // Hours 0 to 4 are late night rather than early morning, so they read as
@@ -488,46 +488,35 @@ export default function HomeScreen() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hpRow}>
-          {HEALTH_PROGRAMS.map((raw, i) => {
-            // Localise per-render so a Settings language change flips the
-            // card without a re-mount step. The number, price, and dollar
-            // sign remain Latin digits since they are the same in both
-            // locales; only the text content follows the locale.
-            const hp = localizeHealthProgram(raw);
-            const rtl = isRTL();
-            return (
-              <Pressable key={hp.id} style={styles.hpCard} onPress={() => router.push(`/health-program/${hp.id}`)}>
-                <LinearGradient
-                  colors={['#2E2721', '#3A322A', '#241F1B']}
-                  locations={[0, 0.6, 1]}
-                  style={StyleSheet.absoluteFill}
-                />
-                <LinearGradient
-                  colors={['rgba(241,228,190,0.2)', 'rgba(241,228,190,0.04)', 'rgba(241,228,190,0)']}
-                  style={styles.hpCardHalo}
-                  pointerEvents="none"
-                />
+          {HEALTH_PROGRAMS.map((hp, i) => (
+            <Pressable key={hp.id} style={styles.hpCard} onPress={() => router.push(`/health-program/${hp.id}`)}>
+              <LinearGradient
+                colors={['#2E2721', '#3A322A', '#241F1B']}
+                locations={[0, 0.6, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={['rgba(241,228,190,0.2)', 'rgba(241,228,190,0.04)', 'rgba(241,228,190,0)']}
+                style={styles.hpCardHalo}
+                pointerEvents="none"
+              />
 
-                {/* Title at the top here, where everything else in the app puts
-                    it at the foot of an image. In RTL the number moves to the
-                    right so the whole card reads right-to-left; otherwise the
-                    Arabic title starting from the right would visually collide
-                    with the number sitting at the left. */}
-                <View style={styles.hpCardTop}>
-                  <Text style={[styles.hpNum, rtl && { textAlign: 'right' }]}>{String(i + 1).padStart(2, '0')}</Text>
-                  <Text style={[styles.hpCardTitle, rtl && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]} numberOfLines={3}>{hp.title}</Text>
-                </View>
+              {/* Title at the top here, where everything else in the app puts
+                  it at the foot of an image. */}
+              <View style={styles.hpCardTop}>
+                <Text style={styles.hpNum}>{String(i + 1).padStart(2, '0')}</Text>
+                <Text style={styles.hpCardTitle} numberOfLines={3}>{hp.title}</Text>
+              </View>
 
-                <View style={{ flex: 1 }} />
-                <View style={styles.hpCardRule} />
-                <Text style={[styles.hpCardFocus, rtl && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]} numberOfLines={2}>{hp.focus}</Text>
-                <View style={[styles.hpCardFoot, rtl && { flexDirection: 'row-reverse' }]}>
-                  <Text style={styles.hpCardPrice}>${HEALTH_PROGRAM_PRICE_USD}</Text>
-                  <Text style={[styles.hpCardWeeks, rtl && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{hp.weeks}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
+              <View style={{ flex: 1 }} />
+              <View style={styles.hpCardRule} />
+              <Text style={styles.hpCardFocus} numberOfLines={2}>{hp.focus}</Text>
+              <View style={styles.hpCardFoot}>
+                <Text style={styles.hpCardPrice}>${HEALTH_PROGRAM_PRICE_USD}</Text>
+                <Text style={styles.hpCardWeeks}>{hp.weeks}</Text>
+              </View>
+            </Pressable>
+          ))}
         </ScrollView>
 
         <Pressable style={styles.quoteCard} onPress={() => router.push('/affirmations')}>

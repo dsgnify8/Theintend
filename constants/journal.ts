@@ -1,3 +1,15 @@
+// Journal categories, prompts, and the 30 day challenge.
+//
+// Arabic fields (arTitle, arSubtitle, arPrompts, arRotate) are Claude's
+// first-pass drafts. Nz to review and polish since these are the daily
+// personal-writing prompts users open on the app; brand voice matters
+// heavily here. Length of arPrompts must match prompts, and arRotate
+// must match rotate, or the localizer falls back to English for that
+// category to avoid index mismatches. Same for CHALLENGE_PROMPTS_AR
+// vs CHALLENGE_PROMPTS.
+
+import { getLocale } from '@/lib/i18n';
+
 export type JournalCategory = {
   id: string;
   title: string;
@@ -5,18 +17,31 @@ export type JournalCategory = {
   prompts: string[];
   rotate?: string[];
   rotateCount?: number;
+  arTitle?: string;
+  arSubtitle?: string;
+  arPrompts?: string[];
+  arRotate?: string[];
 };
 
 export const MORNING: JournalCategory = {
   id: 'morning',
   title: 'Morning Journaling',
   subtitle: 'Begin the day on your own terms',
+  arTitle: 'التدوين الصباحي',
+  arSubtitle: 'ابدئي يومكِ بشروطكِ',
   prompts: [
     "What is one thing you are looking forward to today?",
     "How do you want to feel by the end of the day?",
     "What is one intention you can set for the next few hours?",
     "What are you grateful for as you begin today?",
     "What is one small way you can take care of yourself today?",
+  ],
+  arPrompts: [
+    "ما الشيء الذي تتطلّعين إليه اليوم؟",
+    "بأيّ شعور تريدين أن تختمي يومكِ؟",
+    "ما النيّة التي يمكنكِ أن تضعيها للساعات القادمة؟",
+    "لأيّ شيء تشعرين بالامتنان في بداية يومكِ؟",
+    "ما الطريقة الصغيرة التي يمكنكِ أن تعتني بها بنفسكِ اليوم؟",
   ],
   rotateCount: 2,
   rotate: [
@@ -27,12 +52,22 @@ export const MORNING: JournalCategory = {
     "What is one thing you feel proud of right now?",
     "What would the calmest version of you do today?",
   ],
+  arRotate: [
+    "ما الذي يجعل هذا اليوم يبدو يوماً جميلاً؟",
+    "لمن يمكنكِ أن تُظهري القليل من اللطف اليوم؟",
+    "ما الذي يمكنكِ أن تتخلّي عنه قبل أن يبدأ اليوم؟",
+    "أين تريدين أن تضعي انتباهكِ اليوم أكثر شيء؟",
+    "ما الذي تشعرين بالفخر تجاهه الآن؟",
+    "ماذا ستفعل النسخة الأكثر هدوءاً منكِ اليوم؟",
+  ],
 };
 
 export const NIGHT: JournalCategory = {
   id: 'night',
   title: 'Night Journaling',
   subtitle: 'Set the day down before you sleep',
+  arTitle: 'التدوين الليلي',
+  arSubtitle: 'أنزلي عبء اليوم قبل النوم',
   prompts: [
     "What is one moment from today you want to remember?",
     "What did today teach you about yourself?",
@@ -40,6 +75,14 @@ export const NIGHT: JournalCategory = {
     "What is weighing on you that you can release before sleep?",
     "Who or what are you grateful for tonight?",
     "What is one thing you want to do differently tomorrow?",
+  ],
+  arPrompts: [
+    "ما اللحظة من هذا اليوم التي تريدين أن تتذكّريها؟",
+    "ماذا علّمكِ هذا اليوم عن نفسكِ؟",
+    "ما الشيء الذي أحسنتِ التعامل معه اليوم؟",
+    "ما الذي يثقلكِ ويمكنكِ أن تتركيه قبل النوم؟",
+    "لمن أو لأيّ شيء تشعرين بالامتنان هذه الليلة؟",
+    "ما الشيء الذي تريدين أن تفعليه بشكل مختلف غداً؟",
   ],
   rotateCount: 3,
   rotate: [
@@ -51,6 +94,15 @@ export const NIGHT: JournalCategory = {
     "What are you ready to set down for the night?",
     "What made you smile today, even briefly?",
   ],
+  arRotate: [
+    "ما الذي استنزفكِ اليوم، وما الذي أعادكِ إلى نفسكِ؟",
+    "ما الشيء الذي يمكنكِ أن تسامحي نفسكِ عليه الليلة؟",
+    "متى شعرتِ أكثر شيء أنّكِ أنتِ اليوم؟",
+    "ما الانتصار الصغير الذي تحملينه معكِ إلى الغد؟",
+    "ما الذي تحتاجين أن تسمعيه قبل أن تنامي؟",
+    "ما الذي أنتِ مستعدّة أن تتركيه لليل؟",
+    "ما الذي جعلكِ تبتسمين اليوم، ولو للحظة؟",
+  ],
 };
 
 export const THEMES: JournalCategory[] = [
@@ -58,6 +110,8 @@ export const THEMES: JournalCategory[] = [
     id: 'growth',
     title: 'Growth',
     subtitle: 'Stretch into who you are becoming',
+    arTitle: 'النمو',
+    arSubtitle: 'امتدّي نحو من تصبحين',
     prompts: [
       "What are three habits you want to build this year?",
       "How do you define success in your own words?",
@@ -66,11 +120,21 @@ export const THEMES: JournalCategory[] = [
       "What is something new you want to learn this month, and why?",
       "How do you stay motivated when things get hard?",
     ],
+    arPrompts: [
+      "ما ثلاث عادات تريدين أن تبنيها هذه السنة؟",
+      "كيف تعرّفين النجاح بكلماتكِ؟",
+      "ما أكبر حلم لكِ، وما الذي يمنعكِ من الوصول إليه؟",
+      "كيف تتعاملين مع الفشل، وكيف يمكنكِ أن تقابليه بشكل مختلف؟",
+      "ما الشيء الجديد الذي تريدين أن تتعلّميه هذا الشهر، ولماذا؟",
+      "كيف تحافظين على دافعكِ حين تصعب الأمور؟",
+    ],
   },
   {
     id: 'healing',
     title: 'Healing',
     subtitle: 'Make room for what needs tending',
+    arTitle: 'الشفاء',
+    arSubtitle: 'افسحي مكاناً لما يحتاج إلى رعاية',
     prompts: [
       "What emotions have you been avoiding, and why?",
       "What past hurt do you need to forgive yourself for?",
@@ -80,11 +144,22 @@ export const THEMES: JournalCategory[] = [
       "How can you show yourself more kindness?",
       "What does emotional healing mean to you?",
     ],
+    arPrompts: [
+      "ما المشاعر التي كنتِ تتجنّبينها، ولماذا؟",
+      "لأيّ ألم من الماضي تحتاجين أن تسامحي نفسكِ؟",
+      "ما العادات التي تستنزف طاقتكِ وسلامتكِ؟",
+      "كيف تعالجين المشاعر الصعبة؟",
+      "ما الشيء الذي تحتاجين أن تسمعيه الآن؟",
+      "كيف يمكنكِ أن تُظهري لنفسكِ مزيداً من اللطف؟",
+      "ماذا يعني لكِ الشفاء العاطفي؟",
+    ],
   },
   {
     id: 'habits',
     title: 'Habits',
     subtitle: 'Build the days you want to live',
+    arTitle: 'العادات',
+    arSubtitle: 'ابني الأيام التي تريدين أن تعيشيها',
     prompts: [
       "What daily or weekly habits could better care for your mental health?",
       "What daily or weekly habits could better care for your physical health?",
@@ -92,11 +167,20 @@ export const THEMES: JournalCategory[] = [
       "What daily or weekly habits could better care for your spiritual health?",
       "Which habit is quietly holding you back, and what could replace it?",
     ],
+    arPrompts: [
+      "ما العادات اليومية أو الأسبوعية التي تعتني أكثر بصحّتكِ الذهنية؟",
+      "ما العادات اليومية أو الأسبوعية التي تعتني أكثر بصحّتكِ الجسدية؟",
+      "ما العادات اليومية أو الأسبوعية التي تعتني أكثر بصحّتكِ العاطفية؟",
+      "ما العادات اليومية أو الأسبوعية التي تعتني أكثر بصحّتكِ الروحية؟",
+      "أيّ عادة تعطّلكِ بهدوء، وما الذي يمكن أن يحلّ محلّها؟",
+    ],
   },
   {
     id: 'future-desires',
     title: 'Future Desires',
     subtitle: 'Name what you truly want',
+    arTitle: 'رغبات المستقبل',
+    arSubtitle: 'سمّي ما تريدينه حقاً',
     prompts: [
       "If you accomplish only one thing this year, what would make you proud?",
       "If money were not a worry, how would you spend your days?",
@@ -107,11 +191,23 @@ export const THEMES: JournalCategory[] = [
       "What would you do if you knew you could not fail, and what is one step toward it?",
       "Where do you see yourself in five years if you keep growing the way you are now?",
     ],
+    arPrompts: [
+      "لو أنجزتِ شيئاً واحداً فقط هذه السنة، ما الذي يجعلكِ فخورة؟",
+      "لو لم يكن المال قلقاً، كيف كنتِ ستقضين أيامكِ؟",
+      "كيف تصفين نمط حياتكِ المثالي؟",
+      "لو كان الفشل مستحيلاً، ماذا كنتِ ستعملين؟",
+      "كيف تبدو حياتكِ المثالية، وكيف يمكنكِ أن تتقدّمي نحوها؟",
+      "ما نوع الشخص الذي تحتاجين أن تصبحيه لتصنعي الحياة التي تريدين؟",
+      "ماذا ستفعلين لو عرفتِ أنّكِ لن تفشلي، وما الخطوة الأولى نحو ذلك؟",
+      "أين ترين نفسكِ بعد خمس سنوات لو استمررتِ في النموّ كما أنتِ الآن؟",
+    ],
   },
   {
     id: 'self-discovery',
     title: 'Self-Discovery',
     subtitle: 'Get to know yourself again',
+    arTitle: 'اكتشاف الذات',
+    arSubtitle: 'تعرّفي على نفسكِ من جديد',
     prompts: [
       "What makes you unique?",
       "What activities make you lose track of time?",
@@ -123,11 +219,24 @@ export const THEMES: JournalCategory[] = [
       "What limiting beliefs do you need to let go of?",
       "What are three words that describe the person you want to become?",
     ],
+    arPrompts: [
+      "ما الذي يجعلكِ فريدة؟",
+      "ما النشاطات التي تُنسيكِ الوقت؟",
+      "ما المخاوف التي تعيقكِ عن أحلامكِ؟",
+      "كيف يبدو روتينكِ اليومي المثالي؟",
+      "متى تشعرين بالثقة أكثر شيء؟",
+      "أيّ تجربة من الماضي شكّلتكِ أكثر شيء؟",
+      "ما النصيحة التي ستقدّمها نسختكِ المستقبلية لكِ اليوم؟",
+      "ما المعتقدات المُقيِّدة التي تحتاجين أن تتخلّي عنها؟",
+      "ما الكلمات الثلاث التي تصف الشخص الذي تريدين أن تصبحيه؟",
+    ],
   },
   {
     id: 'true-self',
     title: 'Your True Self',
     subtitle: 'Come home to who you really are',
+    arTitle: 'ذاتكِ الحقيقية',
+    arSubtitle: 'عودي إلى من أنتِ فعلاً',
     prompts: [
       "What makes you feel most alive and authentic?",
       "When do you feel most at peace with who you are?",
@@ -142,11 +251,27 @@ export const THEMES: JournalCategory[] = [
       "What strengths do you admire in others that also live in you?",
       "What do you need to forgive yourself for in order to step into your true self?",
     ],
+    arPrompts: [
+      "ما الذي يجعلكِ تشعرين بالحياة والصدق أكثر شيء؟",
+      "متى تشعرين بأكبر سلام مع من أنتِ؟",
+      "كيف تبدو حياتكِ المثالية، وكيف يمكنكِ أن تُواءمي أفعالكِ معها؟",
+      "ما شغفكِ، وكيف يمكنكِ أن ترعيه في حياتكِ اليومية؟",
+      "ما قيمكِ الأساسية، وكيف تقودكِ في قراراتكِ؟",
+      "ما المعتقدات عن نفسكِ التي تريدين أن تتخلّي عنها، ولماذا؟",
+      "كيف تعرّفين النجاح لنفسكِ، بعيداً عن توقّعات الخارج؟",
+      "كيف يبدو حبّ الذات لكِ، وكيف يمكنكِ ممارسته يومياً؟",
+      "ما الذي تخافين التعبير عنه، وماذا سيحدث لو سمحتِ لنفسكِ به؟",
+      "بم تشعرين حين تكونين صادقة مع نفسكِ؟",
+      "ما نقاط القوة التي تعجبكِ في الآخرين وتسكن فيكِ أيضاً؟",
+      "لأيّ شيء تحتاجين أن تسامحي نفسكِ لتخطي إلى ذاتكِ الحقيقية؟",
+    ],
   },
   {
     id: 'romanticizing-life',
     title: 'Romanticizing Life',
     subtitle: 'Find the beauty already here',
+    arTitle: 'الحياة كما تحلمين بها',
+    arSubtitle: 'اكتشفي الجمال الحاضر الآن',
     prompts: [
       "What moments make you feel alive?",
       "How can you create more beauty in your daily routine?",
@@ -164,11 +289,30 @@ export const THEMES: JournalCategory[] = [
       "What activities reconnect you with yourself?",
       "How can you add more intention to your life?",
     ],
+    arPrompts: [
+      "ما اللحظات التي تجعلكِ تشعرين بالحياة؟",
+      "كيف يمكنكِ أن تصنعي المزيد من الجمال في روتينكِ اليومي؟",
+      "ما الأشياء البسيطة التي تجلب لكِ الفرح؟",
+      "كيف سيبدو يوم أحلامكِ؟",
+      "كيف يمكنكِ أن تُبطئي بوعي أكبر؟",
+      "ما الأماكن التي تلهمكِ؟",
+      "ما العادات التي تجعل الحياة تبدو أكثر لطفاً؟",
+      "كيف يمكنكِ أن تجعلي اللحظات العادية مميّزة؟",
+      "ما التجارب الحسية التي تُهدّئكِ؟",
+      "أيّ نسخة من نفسكِ تريدين أن تجسّديها؟",
+      "ما الروتين الذي يجعلكِ تشعرين بالثبات؟",
+      "كيف يمكنكِ أن تمارسي الامتنان يومياً؟",
+      "ماذا تعني لكِ الحياة الهادئة؟",
+      "ما النشاطات التي تعيدكِ إلى نفسكِ؟",
+      "كيف يمكنكِ أن تضيفي المزيد من النيّة إلى حياتكِ؟",
+    ],
   },
   {
     id: 'glow-up-era',
     title: 'Design Your Glow Up Era',
     subtitle: 'Imagine her in full detail',
+    arTitle: 'اصنعي زمنكِ المشرق',
+    arSubtitle: 'تخيّليها بكلّ التفاصيل',
     prompts: [
       "What does the best version of you look and feel like?",
       "How does she dress to reflect her energy?",
@@ -191,6 +335,28 @@ export const THEMES: JournalCategory[] = [
       "How does she romanticize her life?",
       "What is her mantra for this new era?",
     ],
+    arPrompts: [
+      "كيف تبدو أفضل نسخة منكِ وكيف تشعر؟",
+      "كيف ترتدي ملابسها لتعكس طاقتها؟",
+      "كيف يبدو روتينها الصباحي؟",
+      "كيف تحدّث نفسها في داخلها؟",
+      "ما العادات التي تعيش بها يومياً؟",
+      "ما الحدود التي تحميها؟",
+      "أيّ نوع من الناس يحيط بها؟",
+      "كيف تقضي أمسياتها؟",
+      "ما طاقتها المميّزة؟",
+      "كيف تعتني بجسدها؟",
+      "كيف تعتني بذهنها؟",
+      "ما الذي يجلب لها الفرح، صغيره وكبيره؟",
+      "كيف تبدو عطلة نهاية أسبوعها المثالية؟",
+      "أيّ محتوى تستهلك، ولماذا؟",
+      "لأيّ شيء تقول لا؟",
+      "كيف تتحرّك عبر التحديات؟",
+      "ما الأهداف التي تحمّسها أكثر شيء الآن؟",
+      "ما الذي لم تعد تلاحقه؟",
+      "كيف تصنع الرومانسية في حياتها؟",
+      "ما شعارها لهذا الزمن الجديد؟",
+    ],
   },
 ];
 
@@ -198,6 +364,23 @@ export const ALL_CATEGORIES: JournalCategory[] = [MORNING, NIGHT, ...THEMES];
 
 export function getCategory(id: string): JournalCategory | null {
   return ALL_CATEGORIES.find((c) => c.id === id) ?? null;
+}
+
+// Locale-aware view of a category. Screens should call this before reading
+// title, subtitle, prompts, or rotate. Length mismatch between prompts and
+// arPrompts (or rotate and arRotate) falls back to English for that field
+// to avoid index errors downstream.
+export function localizeJournalCategory(cat: JournalCategory): JournalCategory {
+  if (getLocale() !== 'ar') return cat;
+  const arPromptsOK = cat.arPrompts && cat.arPrompts.length === cat.prompts.length;
+  const arRotateOK = cat.arRotate && cat.rotate && cat.arRotate.length === cat.rotate.length;
+  return {
+    ...cat,
+    title: cat.arTitle || cat.title,
+    subtitle: cat.arSubtitle || cat.subtitle,
+    prompts: arPromptsOK ? cat.arPrompts! : cat.prompts,
+    rotate: arRotateOK ? cat.arRotate! : cat.rotate,
+  };
 }
 
 // Morning and night rotate a few of their prompts on a two-day cycle, so the
@@ -217,6 +400,11 @@ export function promptsForToday(cat: JournalCategory): string[] {
 }
 
 export const CHALLENGE_TITLE = '30 Days Writing Challenge';
+export const CHALLENGE_TITLE_AR = 'تحدّي الكتابة لثلاثين يوماً';
+
+export function challengeTitle(): string {
+  return getLocale() === 'ar' ? CHALLENGE_TITLE_AR : CHALLENGE_TITLE;
+}
 
 export const CHALLENGE_PROMPTS: string[] = [
   "What parts of yourself do you try to hide from others, and why?",
@@ -250,3 +438,45 @@ export const CHALLENGE_PROMPTS: string[] = [
   "Which version of you are you ready to release, and who are you becoming?",
   "What truth about yourself are you finally ready to accept with compassion?",
 ];
+
+export const CHALLENGE_PROMPTS_AR: string[] = [
+  "ما الأجزاء من نفسكِ التي تحاولين إخفاءها عن الآخرين، ولماذا؟",
+  "متى تشعرين بأقلّ ثقة، وماذا قد يعكس ذلك عن كيف ترين نفسكِ؟",
+  "ما المشاعر التي تشعرين بأكبر انزعاج عند التعبير عنها، ولماذا؟",
+  "ما الذي يستفزّكِ في الآخرين، وكيف قد يرتبط ذلك بشيء داخلكِ؟",
+  "ما الذي تحكمين به سرّاً على الناس، ولماذا؟",
+  "ما الرسائل الأساسية التي تلقّيتِها في نشأتكِ عن المشاعر أو النجاح أو الحبّ؟",
+  "متى شعرتِ لأوّل مرة بالرفض أو الهجر، وكيف تعاملتِ مع ذلك؟",
+  "ما الذي احتجتِه في طفولتكِ أكثر شيء ولم تحصلي عليه؟",
+  "أيّ ذكريات ما زالت تجعلكِ تشعرين بالعار أو الصغر؟",
+  "ما الأجزاء من شخصيّتكِ التي تخفّفين منها لتكوني مقبولة أو ممدوحة؟",
+  "ماذا تخافين أن يفكّر الناس لو عرفوكِ حقاً؟",
+  "أين في حياتكِ تدّعين أو تؤدّين دوراً؟",
+  "ما الأجزاء من هويتكِ التي تشعرين أنها غير صادقة أو مفروضة؟",
+  "ما الذي تشعرين بالعار منه ولم تعترفي به تماماً؟",
+  "بأيّ طرق تخونين نفسكِ لتُريحي الآخرين؟",
+  "كيف تحضرين عادةً في العلاقات؟ هل تعطين أكثر من اللازم، أم تنسحبين، أم تبحثين عن قبول؟",
+  "ما الأنماط التي تتكرّر في علاقاتكِ؟",
+  "ما الحدود التي يصعب عليكِ الحفاظ عليها، ولماذا؟",
+  "هل هناك شخص في حياتكِ ما زلتِ تشعرين ببعض الاستياء تجاهه؟",
+  "ما الذي تتوقّعينه من الآخرين ولا تمنحينه لنفسكِ؟",
+  "ما المواقف التي تجعلكِ تشعرين بفقدان السيطرة، وكيف تتفاعلين عادةً؟",
+  "متى شكّلتِ موقفاً للحصول على ما تريدين؟",
+  "ما الصفات التي تعجبكِ أو تحسدين الآخرين عليها، وكيف قد تسكن فيكِ أيضاً؟",
+  "أين تُعطين قوّتكِ خوفاً أو من باب العادة؟",
+  "ما القصص التي تحكينها لنفسكِ لتُبقيكِ صغيرة أو آمنة؟",
+  "أيّ جزء منكِ أنتِ مستعدّة لاستعادته وإخراجه إلى النور؟",
+  "بم ستشعرين لو قبلتِ كلّ جزء منكِ تماماً؟",
+  "ماذا سيتغيّر لو توقّفتِ عن البحث عن الموافقة ووثقتِ بصوتكِ؟",
+  "أيّ نسخة منكِ أنتِ مستعدّة أن تطلقيها، ومن تصبحين؟",
+  "أيّ حقيقة عن نفسكِ أنتِ مستعدّة أخيراً لقبولها برأفة؟",
+];
+
+// Locale-aware view of a challenge prompt by index. Length mismatch falls
+// back to English for that index.
+export function challengePromptAt(i: number): string {
+  const en = CHALLENGE_PROMPTS[i] ?? '';
+  if (getLocale() !== 'ar') return en;
+  if (CHALLENGE_PROMPTS_AR.length !== CHALLENGE_PROMPTS.length) return en;
+  return CHALLENGE_PROMPTS_AR[i] ?? en;
+}

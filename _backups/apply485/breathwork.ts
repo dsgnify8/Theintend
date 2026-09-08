@@ -1,14 +1,5 @@
-// The Intend, Breathwork (demo). Replace the patterns / copy with the real
+// The Intend — Breathwork (demo). Replace the patterns / copy with the real
 // class flow when ready. `target` is the circle scale at the end of each phase.
-//
-// Arabic fields (arTitle, arSubtitle, arDuration, arDescription) are Claude
-// first-pass drafts. Nz to review since brand-facing. Empty ar fields fall
-// back to English. The `pattern` phase labels ('Breathe in', 'Hold',
-// 'Breathe out') live on the practice screen and stay English for now;
-// their translation follows in a later apply once the practice screen is
-// on this end.
-
-import { getLocale } from '@/lib/i18n';
 
 export type BreathPhase = { label: string; secs: number; target: number };
 export type BreathProgram = {
@@ -21,10 +12,6 @@ export type BreathProgram = {
   cover: any;
   description: string;
   pattern: BreathPhase[];
-  arTitle?: string;
-  arSubtitle?: string;
-  arDuration?: string;
-  arDescription?: string;
 };
 
 export const BREATH_PROGRAMS: BreathProgram[] = [
@@ -43,10 +30,6 @@ export const BREATH_PROGRAMS: BreathProgram[] = [
       { label: 'Hold', secs: 2, target: 1 },
       { label: 'Breathe out', secs: 6, target: 0.55 },
     ],
-    arTitle: 'تهدئة الجهاز العصبي',
-    arSubtitle: 'زفير أطول للاستقرار',
-    arDuration: '10 دقائق',
-    arDescription: 'ممارسة موجّهة وبطيئة مع زفير أطول، تنقل الجسد بلطف من حالة الاستنفار إلى الراحة.',
   },
   {
     id: 'box-breathing',
@@ -64,10 +47,6 @@ export const BREATH_PROGRAMS: BreathProgram[] = [
       { label: 'Breathe out', secs: 4, target: 0.55 },
       { label: 'Hold', secs: 4, target: 0.55 },
     ],
-    arTitle: 'التنفس المربّع',
-    arSubtitle: 'إيقاع متساوٍ ومنتظم',
-    arDuration: '10 دقائق',
-    arDescription: 'نمط رباعي ثابت لإيجاد تركيز هادئ وتهدئة الذهن قبل أي مهمة تتطلّب حضوراً.',
   },
   {
     id: 'quick-calm',
@@ -84,10 +63,6 @@ export const BREATH_PROGRAMS: BreathProgram[] = [
       { label: 'Hold', secs: 7, target: 1 },
       { label: 'Breathe out', secs: 8, target: 0.5 },
     ],
-    arTitle: 'استرخاء 4-7-8',
-    arSubtitle: 'إعادة ضبط سريعة للهدوء',
-    arDuration: '3 دقائق',
-    arDescription: 'نمط 4-7-8 قصير: شهيق لأربعة، حبس النفس لسبعة، وزفير طويل لثمانية، لإبطاء لحظة قلق أو فرط تحفيز.',
   },
   {
     id: 'sharpen-focus',
@@ -103,24 +78,5 @@ export const BREATH_PROGRAMS: BreathProgram[] = [
       { label: 'Breathe in', secs: 5, target: 1 },
       { label: 'Breathe out', secs: 5, target: 0.55 },
     ],
-    arTitle: 'شحذ التركيز',
-    arSubtitle: 'تنفّس متساوٍ لتركيز الانتباه',
-    arDuration: '5 دقائق',
-    arDescription: 'شهيق وزفير متوازنان بخمس عدّات، يثبّتان الذهن ويجلبان تركيزاً صافياً قبل ما يحتاج حضوركِ الكامل.',
   },
 ];
-
-// Locale-aware view of a program. Screens that display title, subtitle,
-// duration, or description should call this rather than reading the raw
-// fields so the app locale is honoured. Empty ar fields fall back to
-// English.
-export function localizeBreathProgram(p: BreathProgram): BreathProgram {
-  if (getLocale() !== 'ar') return p;
-  return {
-    ...p,
-    title: p.arTitle || p.title,
-    subtitle: p.arSubtitle || p.subtitle,
-    duration: p.arDuration || p.duration,
-    description: p.arDescription || p.description,
-  };
-}

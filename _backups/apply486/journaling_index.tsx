@@ -3,8 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { MORNING, NIGHT, THEMES, CHALLENGE_PROMPTS, localizeJournalCategory, challengeTitle } from '@/constants/journal';
-import { t, isRTL, tabLabel, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { MORNING, NIGHT, THEMES, CHALLENGE_TITLE, CHALLENGE_PROMPTS } from '@/constants/journal';
 import { useEntryCounts, useChallenge } from '@/lib/journal';
 
 export default function JournalHub() {
@@ -19,12 +18,12 @@ export default function JournalHub() {
       <Stack.Screen options={{ headerShown: false }} />
       <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
-        <Text style={styles.backText}>{tabLabel('read')}</Text>
+        <Text style={styles.backText}>Library</Text>
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.kicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('journal.kicker')}</Text>
-        <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{t('journal.h1')}</Text>
-        <Text style={[styles.lede, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }, isRTL() && AR_TEXT]}>{t('journal.lede')}</Text>
+        <Text style={styles.kicker}>YOUR JOURNAL</Text>
+        <Text style={styles.h1}>A quiet page for your thoughts</Text>
+        <Text style={styles.lede}>Write freely. Everything you write is saved as you go, and each page you keep is dated so you can return to it.</Text>
 
         <View style={styles.dailyRow}>
           {daily.map((c) => {
@@ -40,43 +39,37 @@ export default function JournalHub() {
                   size={22}
                   color={night ? '#E8C97D' : COLORS.accent}
                 />
-                <Text style={[styles.dailyTitle, night && styles.dailyTitleNight, isRTL() && { fontFamily: FONT_SERIF_AR }]}>{night ? t('journal.night') : t('journal.morning')}</Text>
-                <Text style={[styles.dailyMeta, night && styles.dailyMetaNight, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.numPrompts', { n: c.prompts.length })}</Text>
+                <Text style={[styles.dailyTitle, night && styles.dailyTitleNight]}>{night ? 'Night' : 'Morning'}</Text>
+                <Text style={[styles.dailyMeta, night && styles.dailyMetaNight]}>{c.prompts.length} prompts</Text>
                 {counts[c.id] ? (
-                  <Text style={[styles.dailyCount, night && styles.dailyCountNight, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.numSaved', { n: counts[c.id] })}</Text>
+                  <Text style={[styles.dailyCount, night && styles.dailyCountNight]}>{counts[c.id]} saved</Text>
                 ) : null}
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{t('journal.exploreByTheme')}</Text>
-        {THEMES.map((raw) => {
-          // Localise per-render so a Settings language change flips the card
-          // without a re-mount. Route uses the raw id (language-independent).
-          const c = localizeJournalCategory(raw);
-          const rtl = isRTL();
-          return (
-            <Pressable key={c.id} style={styles.themeCard} onPress={() => router.push(`/journaling/${c.id}`)}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.themeTitle, rtl && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{c.title}</Text>
-                <Text style={[styles.themeSub, rtl && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{c.subtitle}</Text>
-                <Text style={[styles.themeMeta, rtl && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.numPrompts', { n: c.prompts.length })}</Text>
-                {counts[c.id] ? <Text style={[styles.themeCount, rtl && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.numSavedEntries', { n: counts[c.id] })}</Text> : null}
-              </View>
-              <Ionicons name={rtl ? 'chevron-back' : 'chevron-forward'} size={20} color={COLORS.muted} />
-            </Pressable>
-          );
-        })}
+        <Text style={styles.sectionLabel}>Explore by theme</Text>
+        {THEMES.map((c) => (
+          <Pressable key={c.id} style={styles.themeCard} onPress={() => router.push(`/journaling/${c.id}`)}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.themeTitle}>{c.title}</Text>
+              <Text style={styles.themeSub}>{c.subtitle}</Text>
+              <Text style={styles.themeMeta}>{c.prompts.length} prompts</Text>
+              {counts[c.id] ? <Text style={styles.themeCount}>{counts[c.id]} saved entries</Text> : null}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+          </Pressable>
+        ))}
 
-        <Text style={[styles.sectionLabel, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{t('journal.deeperPractice')}</Text>
+        <Text style={styles.sectionLabel}>A deeper practice</Text>
         <Pressable style={styles.challengeCard} onPress={() => router.push('/journaling/challenge')}>
-          <Text style={[styles.challengeKicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{t('journal.challengeKicker')}</Text>
-          <Text style={[styles.challengeTitle, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{challengeTitle()}</Text>
-          <Text style={[styles.challengeSub, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{t('journal.challengeSub')}</Text>
-          <View style={[styles.challengeFoot, isRTL() && { flexDirection: 'row-reverse' }]}>
-            <Text style={[styles.challengeProgress, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.challengeProgress', { n: challengeDone, total: CHALLENGE_PROMPTS.length })}</Text>
-            <View style={styles.challengeBtn}><Text style={[styles.challengeBtnText, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0 }]}>{t('journal.open')}</Text></View>
+          <Text style={styles.challengeKicker}>30 DAY PRACTICE</Text>
+          <Text style={styles.challengeTitle}>{CHALLENGE_TITLE}</Text>
+          <Text style={styles.challengeSub}>One prompt a day for thirty days. Turn the page each day and look back on everything you have written.</Text>
+          <View style={styles.challengeFoot}>
+            <Text style={styles.challengeProgress}>{challengeDone} of {CHALLENGE_PROMPTS.length} days written</Text>
+            <View style={styles.challengeBtn}><Text style={styles.challengeBtnText}>Open</Text></View>
           </View>
         </Pressable>
       </ScrollView>

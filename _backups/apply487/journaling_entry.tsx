@@ -4,16 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS, FONT_SERIF } from '@/constants/brand';
-import { getCategory, localizeJournalCategory } from '@/constants/journal';
-import { t, isRTL, getLocale, AR_TEXT, FONT_SANS_AR, FONT_SERIF_AR } from '@/lib/i18n';
+import { getCategory } from '@/constants/journal';
 import { getEntry, updateEntry, deleteEntry, type JournalEntry } from '@/lib/journal';
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MON_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 function fmtDate(iso: string) {
   const d = new Date(iso);
-  const mon = getLocale() === 'ar' ? MON_AR : MON;
-  return `${d.getDate()} ${mon[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default function EntryScreen() {
@@ -45,26 +42,23 @@ export default function EntryScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers]);
 
-  // Localise per-render so a Settings language change flips the page
-  // header without a re-mount. Raw category is used only to resolve the id.
-  const rawCat = entry ? getCategory(entry.categoryId) : null;
-  const cat = rawCat ? localizeJournalCategory(rawCat) : null;
+  const cat = entry ? getCategory(entry.categoryId) : null;
 
   const remove = () => {
     if (!entry) return;
-    Alert.alert(t('journal.deleteTitle'), t('journal.deleteBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('common.delete'), style: 'destructive', onPress: async () => { await deleteEntry(entry.id); router.back(); } },
+    Alert.alert('Delete this entry?', 'This page will be removed for good.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await deleteEntry(entry.id); router.back(); } },
     ]);
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={[styles.topBar, isRTL() && { flexDirection: 'row-reverse' }]}>
+      <View style={styles.topBar}>
         <Pressable style={styles.backBar} onPress={() => router.back()} hitSlop={10}>
-          <Ionicons name={isRTL() ? 'chevron-forward' : 'chevron-back'} size={22} color={COLORS.ink} />
-          <Text style={styles.backText}>{t('common.back')}</Text>
+          <Ionicons name="chevron-back" size={22} color={COLORS.ink} />
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
         {entry ? (
           <Pressable onPress={remove} hitSlop={10}>
@@ -76,23 +70,23 @@ export default function EntryScreen() {
       {loading ? (
         <View style={styles.loaderBox}><ActivityIndicator color={COLORS.accent} /></View>
       ) : !entry ? (
-        <Text style={[styles.note, isRTL() && { fontFamily: FONT_SANS_AR, textAlign: 'right', letterSpacing: 0 }]}>{t('journal.notFound')}</Text>
+        <Text style={styles.note}>This entry could not be found.</Text>
       ) : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <Text style={[styles.kicker, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{isRTL() ? (cat?.title ?? t('journal.kicker')) : (cat?.title ?? 'JOURNAL').toUpperCase()}</Text>
-            <Text style={[styles.h1, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{fmtDate(entry.createdAt)}</Text>
-            <Text style={[styles.today, isRTL() && { fontFamily: FONT_SANS_AR, letterSpacing: 0, textAlign: 'right' }]}>{saved ? t('journal.saved') : t('journal.autosaveShort')}</Text>
+            <Text style={styles.kicker}>{(cat?.title ?? 'JOURNAL').toUpperCase()}</Text>
+            <Text style={styles.h1}>{fmtDate(entry.createdAt)}</Text>
+            <Text style={styles.today}>{saved ? 'Saved' : 'Your writing saves automatically'}</Text>
 
             <View style={styles.paper}>
               {entry.items.map((it, i) => (
                 <View key={i} style={styles.block}>
-                  <Text style={[styles.prompt, isRTL() && { fontFamily: FONT_SERIF_AR, textAlign: 'right' }]}>{it.prompt}</Text>
+                  <Text style={styles.prompt}>{it.prompt}</Text>
                   <TextInput
-                    style={[styles.input, isRTL() && { textAlign: 'right', writingDirection: 'rtl' }]}
+                    style={styles.input}
                     value={answers[i]}
-                    onChangeText={(txt) => setAnswers((prev) => { const n = [...prev]; n[i] = txt; setSaved(false); return n; })}
-                    placeholder={t('journal.writeHere')}
+                    onChangeText={(t) => setAnswers((prev) => { const n = [...prev]; n[i] = t; setSaved(false); return n; })}
+                    placeholder="Write here"
                     placeholderTextColor={COLORS.muted}
                     multiline
                     textAlignVertical="top"
