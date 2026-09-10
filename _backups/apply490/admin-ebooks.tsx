@@ -14,7 +14,6 @@ import { COLORS, FONT_SERIF } from '@/constants/brand';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { deleteEbook, loadEbookForEdit, loadEbooksRaw, saveEbook, slugify, type Ebook } from '@/lib/ebooks';
-import { LIBRARY, localizeLibraryItem, type LibraryItem } from '@/constants/library';
 
 const WASH = ['rgba(107,97,87,0.13)', 'rgba(107,97,87,0.04)', 'rgba(107,97,87,0)'];
 
@@ -77,9 +76,8 @@ export default function AdminEbooks() {
   // The id follows the title until someone types their own, since an id that
   // has already been read from cannot be changed without losing the position.
   useEffect(() => {
-    if (!form || form._idTouched || !form._isNew || form._isBundled) return;
+    if (!form || form._idTouched || !form._isNew) return;
     const next = slugify(form.title || '');
-    if (!next) return;  // keep any existing id rather than clearing it
     if (next !== form.id) setForm((f: any) => ({ ...f, id: next }));
   }, [form?.title]);
 
@@ -94,91 +92,56 @@ export default function AdminEbooks() {
   }
 
   const pickHtml = async () => {
-    // Auto-generate a temporary id when the form has none, so the picker
-    // works even before the user has typed a title. The real id follows
-    // the title once the user starts typing (via the slugify useEffect).
-    // Storage filename does not have to match the final id.
-    const id = form?.id?.trim() || `draft-${Date.now()}`;
-
+    if (!form?.id) { setStatus('Give it a title first, so the file has a name.'); return; }
+    // Loaded on the press rather than at the top of the file. It is a native
+    // module, and importing one that is not in the running build throws before
+    // the screen can be defined at all.
     let DocumentPicker: any;
     try {
       DocumentPicker = require('expo-document-picker');
-    } catch (e: any) {
-      Alert.alert('File picker unavailable', 'The expo-document-picker package is not installed in this build. Paste a URL into the field below instead, or add the package and rebuild.');
+    } catch {
+      setStatus('Choosing a file needs the next build. Paste a link below for now.');
       return;
     }
 
-    let res: any;
-    try {
-      res = await DocumentPicker.getDocumentAsync({ type: ['text/html', 'application/xhtml+xml', 'public.html', '*/*'], copyToCacheDirectory: true });
-    } catch (e: any) {
-      Alert.alert('Could not open file picker', e?.message ?? 'Unknown error opening the file picker.');
-      return;
-    }
+    const res = await DocumentPicker.getDocumentAsync({ type: ['text/html', 'public.html'], copyToCacheDirectory: true });
     if (res.canceled || !res.assets?.[0]?.uri) return;
-
     setBusy('html');
     setStatus(null);
     try {
+      // Html is text, so it can be read and sent as a string. No file system
+      // module needed for this one.
       const text = await (await fetch(res.assets[0].uri)).text();
       if (!text.trim()) throw new Error('That file came back empty.');
-      const url = await putFile(pathFor(id, '.html', lang), text, 'text/html');
+      const url = await putFile(pathFor(form.id, '.html', lang), text, 'text/html');
       set(lang === 'ar' ? 'arFileUrl' : 'file_url', url);
       setStatus(`${res.assets[0].name} uploaded (${lang === 'ar' ? 'Arabic' : 'English'}).`);
     } catch (e: any) {
-      Alert.alert('Upload failed', e?.message ?? 'Unknown error uploading the file.');
+      setStatus(`Upload failed: ${e?.message ?? 'unknown error'}`);
     }
     setBusy(null);
   };
 
   const pickCover = async () => {
-    const id = form?.id?.trim() || `draft-${Date.now()}`;
-
-    // iOS 14+ needs explicit permission before the library launches. Without
-    // this, launchImageLibraryAsync silently returns canceled and looks
-    // like nothing happened.
-    try {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (perm.status !== 'granted') {
-        Alert.alert('Photo access needed', 'Grant photo library access in Settings so you can choose a cover image.');
-        return;
-      }
-    } catch (e: any) {
-      Alert.alert('Permission check failed', e?.message ?? 'Could not check photo library permission.');
-      return;
-    }
-
-    let res: any;
-    try {
-      res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [3, 4], quality: 0.75, base64: true });
-    } catch (e: any) {
-      Alert.alert('Could not open picker', e?.message ?? 'Unknown error opening the image picker.');
-      return;
-    }
+    if (!form?.id) { setStatus('Give it a title first, so the file has a name.'); return; }
+    const res = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [3, 4], quality: 0.75, base64: true });
     if (res.canceled || !res.assets?.[0]?.base64) return;
-
     setBusy('cover');
     setStatus(null);
     try {
-      const url = await putFile(pathFor(id, '.jpg', lang), decode(res.assets[0].base64), 'image/jpeg');
+      const url = await putFile(pathFor(form.id, '.jpg', lang), decode(res.assets[0].base64), 'image/jpeg');
       set(lang === 'ar' ? 'arCoverUrl' : 'cover_url', url);
       setStatus(`Cover uploaded (${lang === 'ar' ? 'Arabic' : 'English'}).`);
     } catch (e: any) {
-      Alert.alert('Upload failed', e?.message ?? 'Unknown error uploading the cover.');
+      setStatus(`Upload failed: ${e?.message ?? 'unknown error'}`);
     }
     setBusy(null);
   };
 
   const save = async () => {
-    if (!form?.id?.trim()) { Alert.alert('Missing id', 'It needs an id. The title usually fills it in.'); return; }
-    if (!form?.title?.trim()) { Alert.alert('Missing title', 'It needs a title.'); return; }
-    // Bundled ebooks have their English HTML in the app bundle already, so an
-    // Arabic-only overlay does not need an English file_url. Non-bundled
-    // (fully DB) ebooks still need one, since there is no fallback.
-    if (!form?._isBundled && !form?.file_url?.trim()) {
-      Alert.alert('Missing file', 'It needs a file. Choose one or paste a link.');
-      return;
-    }
+    if (!form?.id?.trim()) { setStatus('It needs an id. The title usually fills it in.'); return; }
+    if (!form?.title?.trim()) { setStatus('It needs a title.'); return; }
+    if (!form?.file_url?.trim()) { setStatus('It needs a file. Choose one or paste a link.'); return; }
 
     setBusy('save');
     setStatus(null);
@@ -186,7 +149,7 @@ export default function AdminEbooks() {
     // Arabic into i18n merged with any existing i18n keys so unrelated
     // languages (fr, fa) are preserved.
     const {
-      _isNew, _idTouched, _isBundled,
+      _isNew, _idTouched,
       arTitle, arAuthor, arDescription, arLength, arTag, arReadTime,
       arFileUrl, arCoverUrl, i18nRaw,
       ...row
@@ -218,7 +181,7 @@ export default function AdminEbooks() {
       i18n: nextI18n,
     } as any);
     setBusy(null);
-    if (error) { Alert.alert('Could not save', error.message); return; }
+    if (error) { setStatus(`Could not save: ${error.message}`); return; }
     setForm(null);
     reload();
   };
@@ -259,10 +222,7 @@ export default function AdminEbooks() {
 
           {form ? (
             <View style={styles.card}>
-              <Text style={styles.formHead}>{form._isBundled ? `${form.title} (bundled + overlay)` : form._isNew ? 'New e-book' : form.title}</Text>
-              {form._isBundled ? (
-                <Text style={styles.bundledNote}>English HTML and cover live in the app bundle and cannot be changed here. Use the Arabic tab to upload the Arabic HTML and Arabic cover.</Text>
-              ) : null}
+              <Text style={styles.formHead}>{form._isNew ? 'New e-book' : form.title}</Text>
 
               {/* Language tab. Controls the value of all per-language text
                   fields below. Field labels stay English per admin rules;
@@ -283,8 +243,8 @@ export default function AdminEbooks() {
                     label="Id"
                     value={form.id}
                     onChangeText={(t: string) => { set('_idTouched', true); set('id', slugify(t)); }}
-                    note={form._isBundled ? 'Locked - matches the bundled ebook slug so the Arabic overlay attaches correctly.' : form._isNew ? 'Follows the English title. Change it only if you mean to.' : 'Cannot change once people have read it.'}
-                    editable={form._isNew && !form._isBundled}
+                    note={form._isNew ? 'Follows the English title. Change it only if you mean to.' : 'Cannot change once people have read it.'}
+                    editable={form._isNew}
                   />
                   <Field label="Author" value={form.arAuthor ?? ''} onChangeText={(t: string) => set('arAuthor', t)} rtl />
                   <Field label="Description" value={form.arDescription ?? ''} onChangeText={(t: string) => set('arDescription', t)} multiline rtl />
@@ -297,8 +257,8 @@ export default function AdminEbooks() {
                     label="Id"
                     value={form.id}
                     onChangeText={(t: string) => { set('_idTouched', true); set('id', slugify(t)); }}
-                    note={form._isBundled ? 'Locked - matches the bundled ebook slug so the Arabic overlay attaches correctly.' : form._isNew ? 'Follows the title. Change it only if you mean to.' : 'Cannot change once people have read it.'}
-                    editable={form._isNew && !form._isBundled}
+                    note={form._isNew ? 'Follows the title. Change it only if you mean to.' : 'Cannot change once people have read it.'}
+                    editable={form._isNew}
                   />
                   <Field label="Author" value={form.author} onChangeText={(t: string) => set('author', t)} />
                   <Field label="Description" value={form.description} onChangeText={(t: string) => set('description', t)} multiline />
@@ -410,133 +370,55 @@ export default function AdminEbooks() {
 
           {loading ? (
             <ActivityIndicator color={COLORS.accent} style={{ marginTop: 24 }} />
+          ) : items.length === 0 ? (
+            <Text style={styles.emptyText}>Nothing added yet. The four in the app are still there.</Text>
           ) : (
-            <>
-              {items.map((b) => {
-                // A DB row that matches a bundled ebook (id in LIBRARY) is an
-                // overlay: bundled English HTML is the file, DB Arabic is the
-                // overlay. Label so admins know why the file picker allows an
-                // empty English slot on that row.
-                const bundledMatch = LIBRARY.find((i) => i.id === b.id && i.type === 'E-book');
-                return (
-                  <View key={b.id} style={styles.row2}>
-                    {b.cover_url ? (
-                      <Image source={{ uri: b.cover_url }} style={styles.thumb} resizeMode="cover" />
-                    ) : bundledMatch?.cover ? (
-                      <Image source={bundledMatch.cover as any} style={styles.thumb} resizeMode="cover" />
-                    ) : (
-                      <View style={[styles.thumb, { backgroundColor: b.color, alignItems: 'center', justifyContent: 'center' }]}>
-                        <Ionicons name="book-outline" size={18} color="rgba(255,255,255,0.9)" />
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowTitle} numberOfLines={1}>{b.title || bundledMatch?.title}</Text>
-                      <Text style={styles.rowMeta} numberOfLines={1}>{b.author || bundledMatch?.author}</Text>
-                      {bundledMatch ? <Text style={styles.bundledTag}>Bundled + Arabic overlay</Text> : null}
-                      {!b.published ? <Text style={styles.hidden}>Not on the shelf</Text> : null}
-                    </View>
-                    <Pressable onPress={async () => {
-                      setStatus(null);
-                      setLang('en');
-                      const raw = await loadEbookForEdit(b.id);
-                      if (!raw) { Alert.alert('Load failed', 'Could not load that one.'); return; }
-                      setForm({
-                        ...raw.en,
-                        cover_url: raw.en.cover_url ?? '',
-                        tag: raw.en.tag ?? '',
-                        read_time: raw.en.read_time ?? '',
-                        arTitle: raw.ar.title,
-                        arAuthor: raw.ar.author,
-                        arDescription: raw.ar.description,
-                        arLength: raw.ar.length,
-                        arTag: raw.ar.tag,
-                        arReadTime: raw.ar.read_time,
-                        arFileUrl: raw.ar.file_url,
-                        arCoverUrl: raw.ar.cover_url,
-                        i18nRaw: raw.i18nRaw,
-                        _isNew: false,
-                        _isBundled: !!bundledMatch,
-                      });
-                    }} hitSlop={10}>
-                      <Ionicons name="create-outline" size={19} color={COLORS.muted} />
-                    </Pressable>
-                    <Pressable onPress={() => remove(b)} hitSlop={10}>
-                      <Ionicons name="trash-outline" size={18} color="#8F4A3B" />
-                    </Pressable>
+            items.map((b) => (
+              <View key={b.id} style={styles.row2}>
+                {b.cover_url ? (
+                  <Image source={{ uri: b.cover_url }} style={styles.thumb} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.thumb, { backgroundColor: b.color, alignItems: 'center', justifyContent: 'center' }]}>
+                    <Ionicons name="book-outline" size={18} color="rgba(255,255,255,0.9)" />
                   </View>
-                );
-              })}
-
-              {/* Bundled ebooks that do not yet have a DB overlay. Editing
-                  one creates a new DB row with the bundled id and populates
-                  the form with the bundled English + Arabic text so an
-                  admin only needs to upload the Arabic HTML + cover. */}
-              {(() => {
-                const dbIds = new Set(items.map((x) => x.id));
-                const bundledOnly = LIBRARY.filter((i) => i.type === 'E-book' && !dbIds.has(i.id));
-                if (bundledOnly.length === 0) return null;
-                return bundledOnly.map((i) => (
-                  <View key={`bundled-${i.id}`} style={styles.row2}>
-                    {i.cover ? (
-                      <Image source={i.cover as any} style={styles.thumb} resizeMode="cover" />
-                    ) : (
-                      <View style={[styles.thumb, { backgroundColor: i.color, alignItems: 'center', justifyContent: 'center' }]}>
-                        <Ionicons name="book-outline" size={18} color="rgba(255,255,255,0.9)" />
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowTitle} numberOfLines={1}>{i.title}</Text>
-                      <Text style={styles.rowMeta} numberOfLines={1}>{i.author}</Text>
-                      <Text style={styles.bundledTag}>Bundled - add Arabic version</Text>
-                    </View>
-                    <Pressable onPress={() => {
-                      setStatus(null);
-                      setLang('ar');
-                      // Populate the form from library.ts. This is a NEW DB
-                      // row so _isNew stays true, but the id is fixed to
-                      // match the bundled ebook (so the merge works) and
-                      // _isBundled tells save to skip the English file
-                      // requirement. English fields carry the bundled
-                      // values through as-is; Arabic fields prefill from
-                      // the bundled ar* strings.
-                      setForm({
-                        id: i.id,
-                        title: i.title,
-                        author: i.author,
-                        description: i.description ?? '',
-                        length: i.length ?? '',
-                        color: i.color,
-                        file_url: '',
-                        cover_url: '',
-                        tag: '',
-                        read_time: '',
-                        published: true,
-                        on_home: false,
-                        sort: 100,
-                        arTitle: i.arTitle ?? '',
-                        arAuthor: i.arAuthor ?? '',
-                        arDescription: i.arDescription ?? '',
-                        arLength: i.arLength ?? '',
-                        arTag: '',
-                        arReadTime: '',
-                        arFileUrl: '',
-                        arCoverUrl: '',
-                        i18nRaw: {},
-                        _isNew: true,
-                        _idTouched: true,  // lock the id to the bundled slug
-                        _isBundled: true,
-                      });
-                    }} hitSlop={10}>
-                      <Ionicons name="add-circle-outline" size={22} color={COLORS.accent} />
-                    </Pressable>
-                  </View>
-                ));
-              })()}
-
-              {items.length === 0 && LIBRARY.filter((i) => i.type === 'E-book').length === 0 ? (
-                <Text style={styles.emptyText}>Nothing added yet.</Text>
-              ) : null}
-            </>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle} numberOfLines={1}>{b.title}</Text>
+                  <Text style={styles.rowMeta} numberOfLines={1}>{b.author}</Text>
+                  {!b.published ? <Text style={styles.hidden}>Not on the shelf</Text> : null}
+                </View>
+                <Pressable onPress={async () => {
+                  setStatus(null);
+                  setLang('en');
+                  // Fetch the raw row so both languages come in fresh. Fixes
+                  // the pre-Stage-3 bug where editing while the app was in
+                  // Arabic locale wrote Arabic back into English columns.
+                  const raw = await loadEbookForEdit(b.id);
+                  if (!raw) { setStatus('Could not load that one.'); return; }
+                  setForm({
+                    ...raw.en,
+                    cover_url: raw.en.cover_url ?? '',
+                    tag: raw.en.tag ?? '',
+                    read_time: raw.en.read_time ?? '',
+                    arTitle: raw.ar.title,
+                    arAuthor: raw.ar.author,
+                    arDescription: raw.ar.description,
+                    arLength: raw.ar.length,
+                    arTag: raw.ar.tag,
+                    arReadTime: raw.ar.read_time,
+                    arFileUrl: raw.ar.file_url,
+                    arCoverUrl: raw.ar.cover_url,
+                    i18nRaw: raw.i18nRaw,
+                    _isNew: false,
+                  });
+                }} hitSlop={10}>
+                  <Ionicons name="create-outline" size={19} color={COLORS.muted} />
+                </Pressable>
+                <Pressable onPress={() => remove(b)} hitSlop={10}>
+                  <Ionicons name="trash-outline" size={18} color="#8F4A3B" />
+                </Pressable>
+              </View>
+            ))
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -610,8 +492,6 @@ const styles = StyleSheet.create({
   rowTitle: { fontFamily: FONT_SERIF, fontSize: 15, color: COLORS.ink },
   rowMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   hidden: { fontSize: 11, color: COLORS.accent, marginTop: 3 },
-  bundledTag: { fontSize: 11, color: COLORS.accent, marginTop: 2, fontStyle: 'italic' },
-  bundledNote: { fontSize: 12, lineHeight: 17, color: COLORS.muted, marginTop: 6, marginBottom: 6, fontStyle: 'italic' },
   emptyText: { fontSize: 14, color: COLORS.muted, paddingVertical: 24, textAlign: 'center' },
   tabBar: { flexDirection: 'row', backgroundColor: COLORS.bg, borderRadius: 999, padding: 4, borderWidth: 1, borderColor: COLORS.line, marginBottom: 16 },
   tab: { flex: 1, paddingVertical: 9, borderRadius: 999, alignItems: 'center' },

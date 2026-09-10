@@ -236,17 +236,7 @@ function PracticeTile({ practice, uri, isAdmin }: { practice: Practice; uri?: st
   const [busy, setBusy] = useState(false);
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.tile,
-        // Always set the practice color as the tile's solid bg. When an
-        // uploaded image exists, the ImageBackground sits on top of it.
-        // If the image ever briefly fails to paint (e.g. during the press
-        // re-render), the eye sees the practice color underneath rather
-        // than the cream app background bleeding through as a flash.
-        { backgroundColor: practice.color },
-        // Suppress iOS's default press highlight with a light explicit dim.
-        pressed && { opacity: 0.94 },
-      ]}
+      style={[styles.tile, !uri && { backgroundColor: practice.color }]}
       onPress={() => router.push(practice.route as any)}
       onLongPress={isAdmin ? () => pickAndSave(practice.key, setBusy) : undefined}
       delayLongPress={450}

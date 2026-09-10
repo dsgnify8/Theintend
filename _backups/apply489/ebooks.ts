@@ -43,13 +43,8 @@ export function fromRow(r: any): Ebook {
     description: pick(r.description ?? '', ar.description),
     length: pick(r.length ?? '', ar.length),
     color: r.color,
-    // file_url and cover_url swap with locale the same way the text fields
-    // do. When the app is in Arabic and i18n.ar.file_url is filled, that
-    // wins; otherwise the English canonical url is used. Same for the
-    // cover. This flows all the way to the reader through asShelfItem
-    // without any change on the ebook viewer side.
-    file_url: pick(r.file_url, ar.file_url),
-    cover_url: pick(r.cover_url ?? null, ar.cover_url) ?? null,
+    file_url: r.file_url,
+    cover_url: r.cover_url ?? null,
     tag: pick(r.tag ?? null, ar.tag),
     read_time: pick(r.read_time ?? null, ar.read_time),
     on_home: !!r.on_home,
@@ -70,42 +65,6 @@ export function asShelfItem(b: Ebook): ShelfItem {
     description: b.description,
     url: b.file_url,
     coverUrl: b.cover_url ?? undefined,
-  };
-}
-
-// Look up a bundled ebook by id from constants/library.ts. Used when merging
-// a DB overlay with its bundled counterpart so admin-uploaded Arabic can
-// sit on top of the bundled English HTML/cover.
-function findBundledEbook(id: string): LibraryItem | undefined {
-  return LIBRARY.find((i) => i.id === id && i.type === 'E-book');
-}
-
-// Merged view of a DB ebook that may or may not have a bundled counterpart.
-// The DB row wins for any field it has (non-empty). Empty fields fall
-// through to the bundled version. For files/covers this means: uploaded
-// URL if set, else the bundled html/cover asset. That is how an
-// admin-uploaded Arabic file lands on the shelf without a re-upload of
-// the English file. fromRow has already resolved the locale, so b.file_url
-// is the right-language URL (Arabic if in Arabic and Arabic uploaded,
-// else English canonical, which for a bundled ebook is empty in DB and
-// gets covered by the bundled html asset below).
-export function asShelfItemMerged(b: Ebook): ShelfItem {
-  const bundled = findBundledEbook(b.id);
-  const localizedBundled = bundled ? localizeLibraryItem(bundled) : null;
-  const hasFileUrl = !!(b.file_url && b.file_url.trim());
-  const hasCoverUrl = !!(b.cover_url && b.cover_url.trim());
-  return {
-    id: b.id,
-    title: b.title || localizedBundled?.title || '',
-    author: b.author || localizedBundled?.author || '',
-    type: 'E-book',
-    color: b.color || bundled?.color || '#5C4632',
-    length: b.length || localizedBundled?.length || '',
-    description: b.description || localizedBundled?.description || '',
-    url: hasFileUrl ? b.file_url : undefined,
-    html: hasFileUrl ? undefined : bundled?.html,
-    coverUrl: hasCoverUrl ? b.cover_url : undefined,
-    cover: hasCoverUrl ? undefined : bundled?.cover,
   };
 }
 
@@ -149,23 +108,18 @@ export function useShelfEbooks(): { items: ShelfItem[]; loading: boolean; reload
     return () => { listeners.delete(l); };
   }, [reload]);
 
-  // An uploaded row that matches a bundled id sits in the bundled position,
-  // merged with the bundled fallback (bundled English HTML/cover stays as
-  // source; DB provides Arabic HTML/cover overlay and any English overrides).
-  // Uploaded rows with ids not in LIBRARY appear after the bundled ones in
-  // DB sort order.
-  const uploadedById = new Map(uploaded.map((b) => [b.id, b]));
-  const bundledList = LIBRARY.filter((i) => i.type === 'E-book').map((i) => {
-    const db = uploadedById.get(i.id);
-    if (db) {
-      uploadedById.delete(i.id);
-      return asShelfItemMerged(db);
-    }
-    return localizeLibraryItem(i) as ShelfItem;
-  });
-  const dbOnly = [...uploadedById.values()].map(asShelfItemMerged);
+  // An uploaded book with the same id replaces the bundled one, so a book can
+  // be revised without a build. Both keep their place in the order, since the
+  // replaced one holds the position its bundled version had. Bundled items are
+  // run through localizeLibraryItem so their title/author/description follow
+  // the app locale (Arabic content lives on the LibraryItem itself; uploaded
+  // items already come from a locale-aware DB path via fromRow).
+  const uploadedIds = new Set(uploaded.map((b) => b.id));
+  const bundled = (LIBRARY.filter((i) => i.type === 'E-book'))
+    .filter((i) => !uploadedIds.has(i.id))
+    .map(localizeLibraryItem) as ShelfItem[];
 
-  return { items: [...bundledList, ...dbOnly], loading, reload };
+  return { items: [...bundled, ...uploaded.map(asShelfItem)], loading, reload };
 }
 
 // Everything, published or not, for admin.
@@ -197,20 +151,15 @@ export function useHomeEbooks(): HomeBook[] {
           .order('sort');
         if (!alive || !data) return;
         // fromRow applies locale-aware picks before the projection below, so
-        // the home carousel matches whatever the shelf shows. Cover falls back
-        // through the merged view so a bundled ebook's cover shows when the
-        // DB row has none (e.g. Arabic overlay with no Arabic cover uploaded).
-        setItems(data.map(fromRow).map((b) => {
-          const merged = asShelfItemMerged(b);
-          return {
-            id: b.id,
-            tag: (b.tag || b.author || 'THE INTEND').toUpperCase(),
-            time: b.read_time || b.length || 'Guided e-book',
-            title: merged.title,
-            blurb: merged.description,
-            coverUrl: merged.coverUrl ?? '',
-          };
-        }));
+        // the home carousel matches whatever the shelf shows.
+        setItems(data.map(fromRow).map((b) => ({
+          id: b.id,
+          tag: (b.tag || b.author || 'THE INTEND').toUpperCase(),
+          time: b.read_time || b.length || 'Guided e-book',
+          title: b.title,
+          blurb: b.description,
+          coverUrl: b.cover_url ?? '',
+        })));
       } catch {}
     })();
     return () => { alive = false; };
@@ -232,18 +181,15 @@ export function useAllEbooks() {
   return { items, loading, reload };
 }
 
-// One book by id, from either place, for the reader. If a DB row exists, it
-// is merged with any bundled counterpart via asShelfItemMerged so the reader
-// gets the right file (uploaded URL or bundled html) and cover for the
-// current locale, with graceful fallback to bundled English when Arabic is
-// not filled in.
+// One book by id, from either place, for the reader.
 export async function findEbook(id: string): Promise<ShelfItem | null> {
+  // The table first, so what opens is what the shelf showed. A bundled book
+  // that has been replaced must not open its old self.
   try {
     const { data } = await supabase.from('ebooks').select('*').eq('id', id).maybeSingle();
-    if (data) return asShelfItemMerged(fromRow(data));
+    if (data) return asShelfItem(fromRow(data));
   } catch {}
-  const bundled = LIBRARY.find((i) => i.id === id);
-  return bundled ? (localizeLibraryItem(bundled) as ShelfItem) : null;
+  return (LIBRARY.find((i) => i.id === id) as ShelfItem | undefined) ?? null;
 }
 
 export async function saveEbook(b: Partial<Ebook> & { id: string }): Promise<{ error: any }> {
@@ -282,7 +228,7 @@ export function slugify(title: string): string {
 // i18n object so a save can merge instead of replace.
 export async function loadEbookForEdit(id: string): Promise<{
   en: Ebook;
-  ar: { title: string; author: string; description: string; length: string; tag: string; read_time: string; file_url: string; cover_url: string };
+  ar: { title: string; author: string; description: string; length: string; tag: string; read_time: string };
   i18nRaw: any;
 } | null> {
   try {
@@ -316,11 +262,6 @@ export async function loadEbookForEdit(id: string): Promise<{
         length: ar.length ?? '',
         tag: ar.tag ?? '',
         read_time: ar.read_time ?? '',
-        // Arabic-only file and cover, held under i18n.ar rather than a
-        // separate column. Empty means fall back to the English file
-        // when someone reads the book in Arabic.
-        file_url: ar.file_url ?? '',
-        cover_url: ar.cover_url ?? '',
       },
       i18nRaw,
     };

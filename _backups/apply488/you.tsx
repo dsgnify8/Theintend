@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
   progressTitle: { fontFamily: FONT_SERIF, fontSize: 17, color: COLORS.ink },
   progressSub: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
 
-  bookingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.72)', padding: 16, marginBottom: 10 },
+  bookingRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 16, borderWidth: 1, borderColor: COLORS.line, padding: 16, marginBottom: 10 },
   bookingIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.ink, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   bookingTitle: { fontFamily: FONT_SERIF, fontSize: 16, color: COLORS.ink },
   bookingMeta: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
